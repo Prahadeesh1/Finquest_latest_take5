@@ -1,0 +1,91 @@
+/* Add these styles to your index.css file */
+
+/* Chat Widget Styles */
+.chatbot-popup {
+    @apply bg-white rounded-lg shadow-xl w-80 sm:w-96 h-96 flex flex-col overflow-hidden soft-shadow animate-fade-in;
+  }
+  
+  .chat-header {
+    @apply bg-finance-primary text-white p-4 flex justify-between items-center;
+  }
+  
+  .header-info {
+    @apply flex items-center gap-2;
+  }
+  
+  .header-info svg {
+    @apply h-6 w-6 fill-white;
+  }
+  
+  .logo-text {
+    @apply font-medium;
+  }
+  
+  .chat-body {
+    @apply flex-grow p-4 overflow-y-auto bg-gray-50;
+    max-height: calc(100% - 130px);
+  }
+  
+  .chat-footer {
+    @apply p-3 border-t border-gray-200;
+  }
+  
+  .chat-form {
+    @apply flex gap-2;
+  }
+  
+  .message-input {
+    @apply finance-input flex-grow py-2 text-sm;
+  }
+  
+  .message {
+    @apply flex gap-2 mb-4 items-start;
+  }
+  
+  .bot-message {
+    @apply max-w-[85%];
+  }
+  
+  .bot-message svg {
+    @apply h-6 w-6 min-w-6 fill-finance-primary mt-1;
+  }
+  
+  .user-message {
+    @apply ml-auto max-w-[85%];
+  }
+  
+  .message-text {
+    @apply bg-gray-100 rounded-lg p-3 text-sm;
+  }
+  
+  .bot-message .message-text {
+    @apply bg-finance-primary/10;
+  }
+  
+  .user-message .message-text {
+    @apply bg-gray-200;
+  }
+  
+  .chat-toggle-button {
+    @apply h-14 w-14 rounded-full bg-finance-primary hover:bg-finance-primary/90 shadow-lg hover-lift flex items-center justify-center;
+  }
+  
+  .chat-toggle-button svg {
+    @apply h-8 w-8 fill-white;
+  }
+  
+  /* Fix for material icons button */
+  .material-symbols-rounded {
+    @apply hover:bg-white/20 p-1 rounded-full;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
