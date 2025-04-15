@@ -10,8 +10,12 @@ import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import Learn from "./pages/Learn";
 import Community from "./pages/Community";
-import RiskWise from "./pages/riskwise";
+import RiskWise from "./RiskWise/RiskWIseMainPage";
 import ChatWidget from "./components/chat/ChatWidget";
+import ConservativePage from "./pages/ConservativePage";
+import ModeratePage from "./pages/ModeratePage";
+import AggressivePage from "./pages/AggressivePage";
+import AssessmentPage from "./pages/AssessmentPage";
 
 // Create the client outside of the component
 const queryClient = new QueryClient();
@@ -31,6 +35,10 @@ function App() {
             <Route path="/learn" element={<Learn />} />
             <Route path="/community" element={<Community />} />
             <Route path="/RiskWise" element={<RiskWise />} />
+            <Route path="/conservative" element={<ConservativePage />} />
+            <Route path="/moderate" element={<ModeratePage />} />
+            <Route path="/aggressive" element={<AggressivePage />} />
+            <Route path="/assessment" element={<AssessmentPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

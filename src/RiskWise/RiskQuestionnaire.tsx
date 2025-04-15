@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -5,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronLeft } from "lucide-react";
+import ResultsScreen from "./ResultsScreen";
 
 interface Question {
   id: number;
@@ -250,6 +252,8 @@ const RiskQuestionnaire: React.FC<RiskQuestionnaireProps> = ({ onComplete }) => 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(-1));
   const [scores, setScores] = useState({ safe: 0, moderate: 0, aggressive: 0 });
+  const [showResults, setShowResults] = useState(false);
+  const [profile, setProfile] = useState("");
 
   const handleAnswer = (answerIndex: number) => {
     const newAnswers = [...answers];
@@ -294,20 +298,34 @@ const RiskQuestionnaire: React.FC<RiskQuestionnaireProps> = ({ onComplete }) => 
     setScores(finalScores);
 
     // Determine the highest score
-    let profile = "moderate";
+    let determinedProfile = "moderate";
     let maxScore = moderateScore;
     
     if (safeScore > maxScore) {
-      profile = "safe";
+      determinedProfile = "safe";
       maxScore = safeScore;
     }
     
     if (aggressiveScore > maxScore) {
-      profile = "aggressive";
+      determinedProfile = "aggressive";
     }
 
-    onComplete(profile);
+    setProfile(determinedProfile);
+    setShowResults(true);
+    onComplete(determinedProfile);
   };
+
+  const handleStartOver = () => {
+    setCurrentQuestion(0);
+    setAnswers(Array(questions.length).fill(-1));
+    setScores({ safe: 0, moderate: 0, aggressive: 0 });
+    setShowResults(false);
+  };
+
+  // If results should be shown, render the ResultsScreen component
+  if (showResults) {
+    return <ResultsScreen profile={profile} onStartOver={handleStartOver} />;
+  }
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const question = questions[currentQuestion];
