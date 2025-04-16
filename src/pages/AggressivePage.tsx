@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import Navbar from '@/components/layout/Navbar';
 
 const AggressivePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
       <section className="bg-red-50 py-16">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap items-center">

@@ -1,19 +1,24 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import Navbar from '@/components/layout/Navbar';
 import { ChevronRight, TrendingDown, BarChart2, TrendingUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import './riskwise.css'; 
+import { Footer } from 'react-day-picker';
 
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
+      <div className="bg-white">
+      </div>
+      <Navbar />
+      <div className="min-h-screen bg-blue-50">
       {/* Hero Section */}
-      <section className="bg-gray-100 py-20">
-        <div className="container mx-auto px-4 text-center">
+      <section className="bg-blue-100 py-20">
+        <div className="container mx-auto px-4 text-center ">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Invest Smarter Based on Your Risk Profile
           </h1>
@@ -22,7 +27,7 @@ const HomePage = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link to="/assessment">
-              <Button size="lg" className="bg-riskwise-moderate hover:bg-riskwise-aggressive text-white">
+              <Button size="lg" className="bg-riskwise-moderate hover:bg-riskwise-aggressive text-black bg-blue-400">
                 Assess Your Risk Profile
               </Button>
             </Link>
@@ -75,7 +80,7 @@ const HomePage = () => {
               </ul>
               
               <Link to="/conservative">
-                <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-50">
+                <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-500">
                   Explore Conservative Options
                 </Button>
               </Link>
@@ -110,7 +115,7 @@ const HomePage = () => {
               </ul>
               
               <Link to="/moderate">
-                <Button variant="outline" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-50">
+                <Button variant="outline" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500">
                   Explore Moderate Options
                 </Button>
               </Link>
@@ -145,7 +150,7 @@ const HomePage = () => {
               </ul>
               
               <Link to="/aggressive">
-                <Button variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-50">
+                <Button variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-500">
                   Explore Aggressive Options
                 </Button>
               </Link>
@@ -165,7 +170,7 @@ const HomePage = () => {
           </p>
 
           <Tabs defaultValue="stocks" className="max-w-4xl mx-auto">
-            <TabsList className="grid grid-cols-4 mb-8">
+            <TabsList className="grid grid-cols-4 mb-8 bg-blue-50 text-blakc-600">
               <TabsTrigger value="stocks">Stocks</TabsTrigger>
               <TabsTrigger value="bonds">Bonds</TabsTrigger>
               <TabsTrigger value="funds">Funds</TabsTrigger>
@@ -176,28 +181,28 @@ const HomePage = () => {
               <div className="bg-white p-6 rounded-lg">
                 <h3 className="text-2xl font-bold mb-4">Stocks</h3>
                 <p className="text-gray-700 mb-8">
-                  Stocks represent ownership in a company. When you buy a stock, you're purchasing a share of the company's assets and earnings.
+                Stocks represent ownership in a company. When you buy a stock, you're purchasing a share of the company's assets and earnings.
                 </p>
                 
                 <div className="grid md:grid-cols-3 gap-6">
                   <Card className="p-5 border border-gray-100">
                     <h4 className="text-lg font-semibold mb-2">Growth Stocks</h4>
                     <p className="text-sm text-gray-600">
-                      Companies expected to grow faster than the market, often reinvest earnings and rarely pay dividends.
+                    Companies expected to grow faster than the market, often reinvest earnings and rarely pay dividends.
                     </p>
                   </Card>
                   
                   <Card className="p-5 border border-gray-100">
                     <h4 className="text-lg font-semibold mb-2">Value Stocks</h4>
                     <p className="text-sm text-gray-600">
-                      Companies trading below what analysts consider their intrinsic value, often paying dividends.
+                    Companies trading below what analysts consider their intrinsic value, often paying dividends.
                     </p>
                   </Card>
                   
                   <Card className="p-5 border border-gray-100">
                     <h4 className="text-lg font-semibold mb-2">Dividend Stocks</h4>
                     <p className="text-sm text-gray-600">
-                      Companies that distribute profits to shareholders regularly, providing income and potential growth.
+                    Companies that distribute profits to shareholders regularly, providing income and potential growth.
                     </p>
                   </Card>
                 </div>
@@ -211,7 +216,28 @@ const HomePage = () => {
                   Bonds are loans made to corporations or governments that pay fixed interest over time and return principal at maturity.
                 </p>
                 
-                {/* Bond content would go here */}
+                <div className="grid md:grid-cols-3 gap-6">
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Government Bonds</h4>
+                    <p className="text-sm text-gray-600">
+                    Debt securities issued by a government to support spending. Often considered the safest type of bond.
+                    </p>
+                  </Card>
+                  
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Corporate Bonds</h4>
+                    <p className="text-sm text-gray-600">
+                    Debt securities issued by corporations to fund expansion or operations. Higher yield but more risk than government bonds.
+                    </p>
+                  </Card>
+                  
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Municipal Bonds</h4>
+                    <p className="text-sm text-gray-600">
+                    Debt securities issued by states, cities, or counties. Interest is often exempt from federal taxes.
+                    </p>
+                  </Card>
+                </div>
               </div>
             </TabsContent>
             
@@ -219,10 +245,31 @@ const HomePage = () => {
               <div className="bg-white p-6 rounded-lg">
                 <h3 className="text-2xl font-bold mb-4">Funds</h3>
                 <p className="text-gray-700 mb-6">
-                  Investment funds pool money from many investors to purchase a diversified portfolio of securities.
+                Investment funds pool money from many investors to purchase a diversified portfolio of securities.
                 </p>
                 
-                {/* Funds content would go here */}
+                <div className="grid md:grid-cols-3 gap-6">
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Mutual Funds</h4>
+                    <p className="text-sm text-gray-600">
+                    Professionally managed investment funds that pool money to purchase securities according to specific strategies.
+                    </p>
+                  </Card>
+                  
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">ETFs</h4>
+                    <p className="text-sm text-gray-600">
+                    Exchange-Traded Funds trade like stocks but represent a basket of assets tracking an index, sector, or commodity.
+                    </p>
+                  </Card>
+                  
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Index Funds</h4>
+                    <p className="text-sm text-gray-600">
+                    Passive investment funds designed to replicate the performance of a specific index like the S&P 500.
+                    </p>
+                  </Card>
+                </div>
               </div>
             </TabsContent>
             
@@ -233,7 +280,28 @@ const HomePage = () => {
                   Alternative investments include real estate, commodities, private equity, and other non-traditional assets.
                 </p>
                 
-                {/* Alternatives content would go here */}
+                <div className="grid md:grid-cols-3 gap-6">
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Real Estate</h4>
+                    <p className="text-sm text-gray-600">
+                    Direct property ownership or via REITs, offering income potential and possible appreciation over time.
+                    </p>
+                  </Card>
+                  
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Commodities</h4>
+                    <p className="text-sm text-gray-600">
+                    Physical goods like gold, silver, oil, or agricultural products, often used as inflation hedges.
+                    </p>
+                  </Card>
+                  
+                  <Card className="p-5 border border-gray-100">
+                    <h4 className="text-lg font-semibold mb-2">Private Equity</h4>
+                    <p className="text-sm text-gray-600">
+                    Investing in private companies not listed on public exchanges, typically longer-term with potentially higher returns.
+                    </p>
+                  </Card>
+                </div>
               </div>
             </TabsContent>
           </Tabs>
@@ -241,7 +309,7 @@ const HomePage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-riskwise-moderate py-20 text-white">
+      <section className="bg-riskwise-moderate py-20 text-black bg-blue-700">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Start Your Investment Journey?
@@ -250,12 +318,13 @@ const HomePage = () => {
             Assess your risk profile to discover investment options tailored to your financial goals and risk tolerance.
           </p>
           <Link to="/assessment">
-            <Button size="lg" className="bg-white text-riskwise-moderate hover:bg-gray-100">
+            <Button size="lg" className="bg-white text-riskwise-moderate hover:bg-blue-400">
               Take the Risk Assessment
             </Button>
           </Link>
         </div>
       </section>
+      </div>
     </div>
   );
 };
