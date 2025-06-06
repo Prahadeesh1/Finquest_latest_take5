@@ -555,7 +555,7 @@ const AggressivePage = () => {
           </div>
         </div>
       </section>
-      {/*Prompts users to take a risk assessment */}
+      {/*Call to action: Prompts users to take a risk assessment */}
       <section className="py-16 bg-red-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
