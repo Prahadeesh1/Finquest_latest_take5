@@ -10,14 +10,18 @@ const Forum = () => {
       <Navbar />
       <main className="flex-grow py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Main title for the forum page */}
           <h1 className="text-3xl font-bold text-gray-900">Community Forum</h1>
+          {/* Introductory Forum */}
           <p className="mt-4 text-lg text-gray-600">
             Join discussions with other members of the FinanceFlow community.
           </p>
-          
+          {/* Container for individual forum posts */}
           <div className="mt-8 space-y-6">
+            {/* Example of a single forum post */}
             <div className="finance-card p-6">
               <div className="flex items-start space-x-4">
+                {/* User avatar placeholder */}
                 <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center">
                   <span className="font-bold text-gray-700">JD</span>
                 </div>
@@ -26,10 +30,13 @@ const Forum = () => {
                     <h3 className="font-semibold">John Doe</h3>
                     <span className="text-sm text-gray-500">2 hours ago</span>
                   </div>
+                  {/* Post title */}
                   <h2 className="text-lg font-semibold mt-1">Getting started with index funds</h2>
+                  {/* Post content */}
                   <p className="text-gray-600 mt-2">
                     I'm new to investing and looking to start with index funds. Any recommendations for beginners?
                   </p>
+                  {/* Interaction section: likes and comments */}
                   <div className="flex items-center space-x-4 mt-4 text-sm text-gray-500">
                     <div className="flex items-center space-x-1">
                       <ThumbsUp className="h-4 w-4" />
@@ -43,7 +50,7 @@ const Forum = () => {
                 </div>
               </div>
             </div>
-            
+            {/* 2nd example of a forum post */}
             <div className="finance-card p-6">
               <div className="flex items-start space-x-4">
                 <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center">
