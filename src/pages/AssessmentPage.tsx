@@ -14,12 +14,14 @@ const AssessmentPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 py-16">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
+          {/* Main title of the assessment page. */}
           <h1 className="text-3xl font-bold mb-4 text-center">Risk Assessment Questionnaire</h1>
+          {/* Introductory text explaining the questionnaire's purpose. */}
           <p className="text-lg text-gray-600 mb-10 text-center">
             Answer these questions to determine which investment approach is best suited 
             for your goals, timeline, and comfort with risk.
           </p>
-          
+          {/* Renders the RiskQuestionnaire component, passing the handleComplete function as a prop. */}
           <RiskQuestionnaire onComplete={handleComplete} />
         </div>
       </div>
