@@ -6,19 +6,27 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { TrendingUp, LogIn } from "lucide-react";
 
+//Defines login page component
 const Login = () => {
-  return (
+  return (//Main content for the entire page
     <div className="min-h-screen flex flex-col">
+      {/* Renders the navigation bar at the top of the page. */}
       <Navbar />
+
+      {/* Main content for the login form */}
       <main className="flex-grow flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        {/* Container for the login form */}
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="flex justify-center">
+              {/* Main logo of the Login Page */}
               <TrendingUp className="h-12 w-12 text-finance-primary" />
             </div>
+            {/* Title for the Login Page */}
             <h2 className="mt-6 text-3xl font-bold text-gray-900">
               Log in to your account
             </h2>
+            {/* Link to the registration page for new users. */}
             <p className="mt-2 text-sm text-gray-600">
               Or{" "}
               <Link
@@ -32,6 +40,7 @@ const Login = () => {
           <div className="mt-8 bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <form className="space-y-6">
               <div>
+                {/* Email address input field. */}
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-gray-700"
@@ -49,7 +58,7 @@ const Login = () => {
                   />
                 </div>
               </div>
-
+              {/* Password input field. */}
               <div>
                 <label
                   htmlFor="password"
@@ -84,7 +93,7 @@ const Login = () => {
                     Remember me
                   </label>
                 </div>
-
+                {/* Forgot Password input field. */}
                 <div className="text-sm">
                   <Link
                     to="/forgot-password"
@@ -94,7 +103,7 @@ const Login = () => {
                   </Link>
                 </div>
               </div>
-
+              {/* Submit button for logging in. */}
               <div>
                 <Button type="submit" className="w-full finance-button-primary flex justify-center">
                   <LogIn className="h-4 w-4 mr-2" />
@@ -102,7 +111,7 @@ const Login = () => {
                 </Button>
               </div>
             </form>
-
+            {/* Section for "Or continue with" social login options. */}
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
@@ -115,13 +124,16 @@ const Login = () => {
                 </div>
               </div>
 
+              {/* Social login buttons (Facebook, Twitter, Google). */}
               <div className="mt-6 grid grid-cols-3 gap-3">
+                {/* Facebook login button. */}
                 <div>
                   <a
                     href="#"
                     className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                   >
                     <span className="sr-only">Sign in with Facebook</span>
+                    {/* Facebook SVG icon */}
                     <svg
                       className="h-5 w-5"
                       fill="currentColor"
@@ -136,7 +148,7 @@ const Login = () => {
                     </svg>
                   </a>
                 </div>
-
+                {/* Twitter login button. */}
                 <div>
                   <a
                     href="#"
@@ -153,7 +165,7 @@ const Login = () => {
                     </svg>
                   </a>
                 </div>
-
+                {/* Google login button. */}     
                 <div>
                   <a
                     href="#"
