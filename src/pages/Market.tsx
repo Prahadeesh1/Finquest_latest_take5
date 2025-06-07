@@ -5,39 +5,43 @@ import Footer from "@/components/layout/Footer";
 import { BarChart3, TrendingDown, TrendingUp } from "lucide-react";
 
 const Market = () => {
-  return (
+  return ( //Main content for the entire page
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Navbar />{/* Renders the navigation bar */}
       <main className="flex-grow py-12">
+        {/* Main content area for the Market Overview */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Main title for this page */}
           <h1 className="text-3xl font-bold text-gray-900">Market Overview</h1>
           <p className="mt-4 text-lg text-gray-600">
             Stay up to date with the latest market trends and financial insights.
           </p>
           
+          {/* Grid layout for displaying different market category cards. */}
           <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {/* Market card for Stock Market trends. */}
             <div className="finance-card p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Stock Market</h2>
-                <TrendingUp className="h-6 w-6 text-finance-secondary" />
+                <TrendingUp className="h-6 w-6 text-finance-secondary" /> {/* Icon indicating an upward trend */}
               </div>
               <p className="text-gray-600 mb-4">Current trends and analysis for stock markets.</p>
               <div className="finance-button-outline w-full text-center">View Details</div>
             </div>
-            
+            {/* Market card for Cryptocurrencies trends. */}
             <div className="finance-card p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Cryptocurrencies</h2>
-                <TrendingDown className="h-6 w-6 text-destructive" />
+                <TrendingDown className="h-6 w-6 text-destructive" /> {/* Icon indicating a downward trend */}
               </div>
               <p className="text-gray-600 mb-4">Latest cryptocurrency prices and market updates.</p>
               <div className="finance-button-outline w-full text-center">View Details</div>
             </div>
-            
+            {/* Market card for Market Analysis trends. */}
             <div className="finance-card p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold">Market Analysis</h2>
-                <BarChart3 className="h-6 w-6 text-finance-primary" />
+                <BarChart3 className="h-6 w-6 text-finance-primary" />{/* Icon for a bar chart, representing analysis */}
               </div>
               <p className="text-gray-600 mb-4">Expert analysis and market predictions.</p>
               <div className="finance-button-outline w-full text-center">View Details</div>
