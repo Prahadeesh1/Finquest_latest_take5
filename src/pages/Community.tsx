@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// Sample data for posts
+// Sample data for community posts to be displayed
 const communityPosts = [
   {
     id: 1,
@@ -77,7 +77,7 @@ const communityPosts = [
   },
 ];
 
-// Filter options
+// Filter options displayed on the community page
 const filterOptions = [
   { name: "Hot", icon: Flame },
   { name: "New", icon: Clock },
@@ -86,7 +86,9 @@ const filterOptions = [
 ];
 
 const Community = () => {
+  //State to manage the currently active filter for posts
   const [activeFilter, setActiveFilter] = useState("Hot");
+  //State to manage the search query entered by user
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
@@ -102,7 +104,7 @@ const Community = () => {
           </div>
           
           <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-            {/* Main content area */}
+            {/* Main content area for posts and creation. */}
             <div className="lg:col-span-8">
               {/* Search and filter bar */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 mb-6 flex flex-col sm:flex-row gap-3 items-center">
@@ -119,6 +121,7 @@ const Community = () => {
                   />
                 </div>
                 
+                {/* Renders filter buttons based on filterOptions state. */}
                 <div className="flex items-center overflow-x-auto hide-scrollbar space-x-1 w-full sm:w-auto">
                   {filterOptions.map((filter) => (
                     <Button
@@ -137,6 +140,7 @@ const Community = () => {
                     </Button>
                   ))}
                   
+                  {/* Button for filter/sort options. */}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -147,10 +151,10 @@ const Community = () => {
                 </div>
               </div>
               
-              {/* Create post box */}
+              {/* Used for creating new posts (PostBox) */}
               <CreatePostBox />
               
-              {/* Posts list */}
+              {/* Posts list which renders community posts using sample data */}
               <div className="space-y-4">
                 {communityPosts.map((post) => (
                   <CommunityPost
@@ -168,7 +172,7 @@ const Community = () => {
                 ))}
               </div>
               
-              {/* Load more button */}
+              {/* Button to load more posts */}
               <div className="mt-6 text-center">
                 <Button variant="outline" className="w-full sm:w-auto">
                   Load More Posts
@@ -176,11 +180,12 @@ const Community = () => {
               </div>
             </div>
             
-            {/* Sidebar */}
+            {/* Sidebar content including CommunitySidebar and CommunityList */}
             <div className="mt-8 lg:mt-0 lg:col-span-4">
               <div className="sticky top-20">
                 <CommunitySidebar />
                 
+                {/* Displays a List of communities (hidden on small screens) */}
                 <div className="mt-6 hidden lg:block">
                   <CommunityList />
                 </div>
