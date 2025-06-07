@@ -5,10 +5,13 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
 
+//Main ConservativePage component for displaying conservative investment options
 const ConservativePage = () => {
-  return (
+  return (//Main container for the entire page
     <div className="min-h-screen bg-gray-50">
+      {/* Navbar component for site navigation */}
       <Navbar />
+      {/* Introduces the Conservative Profile and its characteristics */}
       <section className="bg-blue-50 py-16">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap items-center">
@@ -29,6 +32,7 @@ const ConservativePage = () => {
                 </Button>
               </div>
             </div>
+            {/* Right column: Key Characteristics card */}
             <div className="w-full lg:w-5/12 mt-8 lg:mt-0">
               <Card className="bg-white p-6 shadow-lg rounded-lg">
                 <h3 className="text-xl font-medium mb-4 flex items-center">
@@ -37,6 +41,7 @@ const ConservativePage = () => {
                   </svg>
                   Key Characteristics
                 </h3>
+                {/* Short description */}
                 <p className="text-gray-600 mb-4">Lower risk, stable returns</p>
                 <ul className="space-y-3">
                   <li className="flex items-center">
@@ -66,6 +71,7 @@ const ConservativePage = () => {
         </div>
       </section>
 
+      {/* Popular Investment Options section with Tabs */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">
@@ -75,6 +81,7 @@ const ConservativePage = () => {
             These investment vehicles are commonly recommended for conservative investors seeking stability and income.
           </p>
 
+          {/* Tabs component which shows different clickable investment categories */}
           <Tabs defaultValue="bonds" className="max-w-5xl mx-auto">
             <TabsList className="grid grid-cols-4 w-full">
               <TabsTrigger value="bonds">Bonds</TabsTrigger>
@@ -82,7 +89,7 @@ const ConservativePage = () => {
               <TabsTrigger value="dividend">Dividend Stocks</TabsTrigger>
               <TabsTrigger value="cds">CDs & Fixed Income</TabsTrigger>
             </TabsList>
-            
+            {/* TabsContent: Displays content for "Government & Municipal Bonds" tab */}
             <TabsContent value="bonds" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -168,6 +175,7 @@ const ConservativePage = () => {
               </div>
             </TabsContent>
             
+            {/* TabsContent: Displays content for "Cash and Equivalent" tab */}
             <TabsContent value="cash" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -253,6 +261,7 @@ const ConservativePage = () => {
               </div>
             </TabsContent>
             
+            {/* TabsContent: Displays content for "Dividend Stocks" tab */}
             <TabsContent value="dividend" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -338,6 +347,7 @@ const ConservativePage = () => {
               </div>
             </TabsContent>
             
+            {/* TabsContent: Displays content for "CDs & Fixed Income" tab */}
             <TabsContent value="cds" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -426,20 +436,24 @@ const ConservativePage = () => {
         </div>
       </section>
 
+      {/* Portfolio Allocation section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
+          {/* Section heading */}
           <h2 className="text-3xl font-bold text-center mb-16">
             Conservative Portfolio Allocation
           </h2>
+          {/* Section description */}
           <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
             A typical conservative portfolio emphasizes capital preservation with some income generation.
           </p>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Sample Conservative Allocation card */}
             <Card className="p-6">
               <h3 className="text-xl font-bold mb-2">Sample Conservative Allocation</h3>
               <p className="text-sm text-gray-600 mb-6">A balanced approach focused on stability with some income potential</p>
-              
+              {/* Allocation bars for different asset classes */}
               <div className="space-y-4 mb-4">
                 <div>
                   <div className="flex justify-between mb-1">
@@ -492,11 +506,11 @@ const ConservativePage = () => {
                 </div>
               </div>
             </Card>
-            
+            {/* Expected Outcomes card */}
             <Card className="p-6">
               <h3 className="text-xl font-bold mb-2">Expected Outcomes</h3>
               <p className="text-sm text-gray-600 mb-6">Historical performance metrics for conservative portfolios</p>
-              
+              {/* Outcome metrics with simulated progress bars */}
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-2">
@@ -546,7 +560,7 @@ const ConservativePage = () => {
           </div>
         </div>
       </section>
-
+      {/*Call to action: Prompts users to take a risk assessment */}
       <section className="py-16 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
