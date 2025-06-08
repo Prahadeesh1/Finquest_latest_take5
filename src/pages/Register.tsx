@@ -6,10 +6,15 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { TrendingUp, Mail, CheckCircle } from "lucide-react";
 
+/**
+ * Register Component
+ * Renders the user registration page. It includes a form for new account creation
+ * and a promotional section highlighting the benefits of joining the community.
+ */
 const Register = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Navbar /> {/* Renders the site's main navigation bar. */}
       <main className="flex-grow bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -23,6 +28,7 @@ const Register = () => {
                 </h2>
                 <p className="mt-2 text-sm text-gray-600">
                   Already have an account?{" "}
+                   {/* Links login page for existing users */}
                   <Link
                     to="/login"
                     className="font-medium text-finance-primary hover:text-finance-primary/90"
@@ -33,6 +39,7 @@ const Register = () => {
               </div>
               <form className="mt-8 space-y-6">
                 <div className="rounded-md shadow-sm -space-y-px">
+                  {/* Grid for First Name and Last Name input */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">
@@ -59,6 +66,7 @@ const Register = () => {
                       />
                     </div>
                   </div>
+                  {/* Email address input field */}
                   <div className="mb-4">
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                       Email address
@@ -72,6 +80,7 @@ const Register = () => {
                       className="finance-input mt-1"
                     />
                   </div>
+                  {/* Password input field with requirements */}
                   <div className="mb-4">
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                       Password
@@ -89,6 +98,7 @@ const Register = () => {
                     </div>
                   </div>
                   <div>
+                     {/* Confirm password input fields */}
                     <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
                       Confirm password
                     </label>
@@ -102,7 +112,7 @@ const Register = () => {
                     />
                   </div>
                 </div>
-
+                {/* Users can select their experience level */}
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700">
                     Your experience level
@@ -168,7 +178,7 @@ const Register = () => {
                     </div>
                   </div>
                 </div>
-
+                {/* Newsletter subscription container */}
                 <div className="flex items-center">
                   <input
                     id="newsletter"
@@ -189,7 +199,7 @@ const Register = () => {
                 </div>
               </form>
             </div>
-
+            
             <div className="hidden lg:block">
               <div className="bg-gradient-to-br from-finance-primary to-finance-secondary rounded-xl overflow-hidden shadow-xl h-full flex items-center justify-center">
                 <div className="p-10 text-white max-w-md">
@@ -197,6 +207,7 @@ const Register = () => {
                     Join our growing community
                   </h3>
                   <div className="space-y-4">
+                    {/* List of benefits */}
                     <div className="flex items-start">
                       <CheckCircle className="h-6 w-6 text-white mr-2 flex-shrink-0" />
                       <p>Access exclusive educational content tailored to your experience level</p>
@@ -214,9 +225,11 @@ const Register = () => {
                       <p>Track your progress and grow your financial knowledge</p>
                     </div>
                   </div>
+                  {/* Community members display */}
                   <div className="mt-8 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
                     <div className="flex items-center space-x-4">
                       <div className="flex -space-x-2">
+                        {/* Dynamically renders initials for 3 'members' */}
                         {[1, 2, 3].map((i) => (
                           <div
                             key={i}
