@@ -1,15 +1,20 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 
+/**
+ * NotFound Component
+ * Displays a 404 error page for non-existent routes.
+ * It also logs the attempted path for debugging and monitoring purposes.
+ */
 const NotFound = () => {
-  const location = useLocation();
-
+  const location = useLocation(); // Gets the current location object, including the pathname.
+  // Logs a 404 error to the console whenever a user tries to access a route that doesn't exist.
   useEffect(() => {
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-  }, [location.pathname]);
+  }, [location.pathname]);// Dependency array ensures this effect runs only when the pathname changes.
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
