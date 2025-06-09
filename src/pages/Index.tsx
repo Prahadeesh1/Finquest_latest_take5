@@ -1,4 +1,3 @@
-
 import React from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -24,11 +23,11 @@ const Index = () => {
         {/*Highlights the key learning paths present in the website(Beginners, Intermediate and Advanced) */}
         <UserSegmentSection />
         {/*Showcases 3 key testimonials */}
-        <TestimonialSection />
+        {/*<TestimonialSection />*/}
         {/*Allows users to sign to the Newsletter to get up to date information tailored to their business preferences */}
         <NewsletterSection />
         {/*Showcases additional details of the website */}
-        <CTASection />
+        {/*<CTASection />*/}
       </main>
       <Footer />
     </div>
