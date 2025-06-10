@@ -6,10 +6,13 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
 
+//Main ModeratePage component for displaying moderate investment options
 const ModeratePage = () => {
-  return (
+  return (//Main container for the entire page
     <div className="min-h-screen bg-gray-50">
+      {/* Navbar component for site navigation */}
       <Navbar />
+      {/* Introduces the Moderate Profile and its characteristics */}
       <section className="bg-yellow-50 py-16">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap items-center">
@@ -30,6 +33,7 @@ const ModeratePage = () => {
                 </Button>
               </div>
             </div>
+            {/* Right column: Key Characteristics card */}
             <div className="w-full lg:w-5/12 mt-8 lg:mt-0">
               <Card className="bg-white p-6 shadow-lg rounded-lg">
                 <h3 className="text-xl font-medium mb-4 flex items-center">
@@ -38,6 +42,7 @@ const ModeratePage = () => {
                   </svg>
                   Key Characteristics
                 </h3>
+                {/* Short description */}
                 <p className="text-gray-600 mb-4">Balanced risk and return profile</p>
                 <ul className="space-y-3">
                   <li className="flex items-center">
@@ -66,7 +71,7 @@ const ModeratePage = () => {
           </div>
         </div>
       </section>
-
+      {/* Popular Investment Options section with Tabs */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-4">
@@ -75,7 +80,7 @@ const ModeratePage = () => {
           <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
             These investment vehicles are commonly recommended for moderate investors seeking balanced growth and stability.
           </p>
-
+          {/* Tabs component which shows different clickable investment categories */}
           <Tabs defaultValue="balanced" className="max-w-5xl mx-auto">
             <TabsList className="grid grid-cols-4 w-full">
               <TabsTrigger value="balanced">Balanced Funds</TabsTrigger>
@@ -83,7 +88,7 @@ const ModeratePage = () => {
               <TabsTrigger value="stocks">Dividend Growth</TabsTrigger>
               <TabsTrigger value="reits">REITs</TabsTrigger>
             </TabsList>
-            
+            {/* TabsContent: Displays content for "Balanced Mutual Funds" tab */}
             <TabsContent value="balanced" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -168,7 +173,7 @@ const ModeratePage = () => {
                 </div>
               </div>
             </TabsContent>
-            
+            {/* TabsContent: Displays content for "Index Funds" tab */}
             <TabsContent value="index" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -253,7 +258,7 @@ const ModeratePage = () => {
                 </div>
               </div>
             </TabsContent>
-            
+            {/* TabsContent: Displays content for "Dividend Growth Stocks" tab */}
             <TabsContent value="stocks" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -338,7 +343,7 @@ const ModeratePage = () => {
                 </div>
               </div>
             </TabsContent>
-            
+            {/* TabsContent: Displays content for "Real Estate Investment Trusts (REITs)" tab */}
             <TabsContent value="reits" className="mt-6">
               <div className="grid md:grid-cols-5 gap-6">
                 <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
@@ -426,21 +431,24 @@ const ModeratePage = () => {
           </Tabs>
         </div>
       </section>
-
+      {/* Portfolio Allocation section */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
+          {/* Section heading */}
           <h2 className="text-3xl font-bold text-center mb-16">
             Moderate Portfolio Allocation
           </h2>
+          {/* Section description */}
           <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
             A typical moderate portfolio balances growth and stability for medium-term financial goals.
           </p>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Sample Moderate Allocation card */}
             <Card className="p-6">
               <h3 className="text-xl font-bold mb-2">Sample Moderate Allocation</h3>
               <p className="text-sm text-gray-600 mb-6">A balanced approach with emphasis on long-term growth</p>
-              
+              {/* Allocation bars for different asset classes */}
               <div className="space-y-4 mb-4">
                 <div>
                   <div className="flex justify-between mb-1">
@@ -493,11 +501,11 @@ const ModeratePage = () => {
                 </div>
               </div>
             </Card>
-            
+            {/* Expected Outcomes card */}
             <Card className="p-6">
               <h3 className="text-xl font-bold mb-2">Expected Outcomes</h3>
               <p className="text-sm text-gray-600 mb-6">Historical performance metrics for moderate portfolios</p>
-              
+              {/* Outcome metrics with simulated progress bars */}
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between mb-2">
@@ -547,7 +555,7 @@ const ModeratePage = () => {
           </div>
         </div>
       </section>
-
+      {/*Call to action: Prompts users to take a risk assessment */}
       <section className="py-16 bg-yellow-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">

@@ -5,11 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Shield, TrendingUp, BarChart3 } from 'lucide-react';
 
 interface ResultsScreenProps {
-  profile: string;
-  onStartOver: () => void;
+  profile: string; //Determines which type of investor they fall into
+  onStartOver: () => void; //Callback function to reset the quiz or start over
 }
 
+/**
+ * ResultsScreen Component
+ * Displays the investment profile results based on the 'profile' prop.
+ * It renders a personalized card with recommended asset allocation (via a Pie Chart)
+ * and tailored investment recommendations.
+ */
 const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) => {
+  // Dynamically fetches data (title, description, icon, colors, allocation, recommendations)
+  // based on the 'profile' prop received ('safe', 'aggressive', or 'moderate' as default).
   const getProfileData = () => {
     switch (profile) {
       case 'safe':
@@ -50,7 +58,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
             'Maintain a small cash reserve for opportunistic investments'
           ]
         };
-      default:
+      default: // Default to 'moderate' if no matching profile is found.
         return {
           title: 'Moderate Investor',
           description: 'You balance growth with stability for a well-rounded portfolio.',
@@ -72,13 +80,14 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
     }
   };
 
-  const profileData = getProfileData();
+  const profileData = getProfileData();// Get the specific data for the determined profile.
 
   return (
+    // Main Card component dynamically styled based on the investor profile's color.
     <Card className={`w-full border-riskwise-${profileData.color} border-2 animate-scale-in`}>
       <CardHeader className={`bg-riskwise-${profileData.color}/10`}>
         <div className="flex items-center gap-3">
-          {profileData.icon}
+          {profileData.icon} {/* Displays the icon relevant to the investor profile. */}
           <CardTitle className="text-2xl">{profileData.title}</CardTitle>
         </div>
         <CardDescription className="text-base mt-1">
@@ -90,6 +99,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
           <div>
             <h3 className="font-medium text-lg mb-3">Recommended Asset Allocation</h3>
             <div className="h-64">
+              {/* Responsive container for the Pie Chart to ensure it scales correctly. */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -103,12 +113,13 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
                     dataKey="value"
                     label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   >
+                    {/* Maps over allocation data to render each slice with its specific color. */}
                     {profileData.allocation.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => `${value}%`} />
-                  <Legend />
+                  <Tooltip formatter={(value) => `${value}%`} />{/* Shows value as percentage on hover. */}
+                  <Legend /> {/* Displays labels for each slice category. */}
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -116,6 +127,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
           <div>
             <h3 className="font-medium text-lg mb-3">Recommendations</h3>
             <ul className="list-disc pl-5 space-y-2">
+              {/* Renders a list of personalized recommendations for the profile. */}
               {profileData.recommendations.map((rec, i) => (
                 <li key={i} className="text-gray-700">{rec}</li>
               ))}
@@ -124,6 +136,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
         </div>
       </CardContent>
       <CardFooter>
+        {/* Button to restart the quiz, triggering the onStartOver callback. */}
         <Button 
           variant="outline"
           onClick={onStartOver}
