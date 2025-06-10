@@ -1,0 +1,1 @@
+Welcome to Alpha Vantage! Your API key is: 49ONGUL8C0MHQFG8. Please record this API key at a safe place for future data access.
