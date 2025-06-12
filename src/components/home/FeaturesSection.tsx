@@ -84,7 +84,7 @@ const item = {
 
 const FeaturesSection = () => {
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 py-24 dark:from-gray-900 dark:to-gray-800">
+    <div className="bg-white dark:bg-blue-900 py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="lg:text-center">
           <h2 className="text-sm font-semibold text-finance-primary uppercase tracking-wide">

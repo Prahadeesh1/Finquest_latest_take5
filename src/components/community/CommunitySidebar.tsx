@@ -15,7 +15,7 @@ const CommunitySidebar = () => {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-finance-primary h-16 relative"></div>
+        <div className="bg-finance-primary h-10 relative"></div>
         <div className="p-4 pt-0">
           <div className="flex items-end -mt-6 mb-4">
             <div className="bg-white p-2 rounded-lg shadow-sm">
@@ -56,7 +56,7 @@ const CommunitySidebar = () => {
           <ul className="space-y-3 text-sm">
             <li className="flex items-start">
               <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-              <span>Created Apr 10, 2023</span>
+              <span>Created March 31, 2025</span>
             </li>
             <li className="flex items-start">
               <BookMarked className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -64,7 +64,7 @@ const CommunitySidebar = () => {
             </li>
             <li className="flex items-start">
               <MessageCircle className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-              <span>Share experiences, ask questions, and learn together</span>
+              <span>Share experiences, ask questions, and learn together as a group</span>
             </li>
             <li className="flex items-start">
               <BookOpen className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -91,21 +91,21 @@ const CommunitySidebar = () => {
           <ul className="space-y-3">
             <li className="flex items-center">
               <div className="h-8 w-8 rounded-full bg-finance-primary/20 flex items-center justify-center text-finance-primary font-medium mr-2">
-                JD
+                SC
               </div>
-              <span>John Davis</span>
+              <span>Sathivada Chandan Akshaj</span>
             </li>
             <li className="flex items-center">
               <div className="h-8 w-8 rounded-full bg-finance-secondary/20 flex items-center justify-center text-finance-secondary font-medium mr-2">
-                SK
+                UP
               </div>
-              <span>Sarah Kim</span>
+              <span>Umapathy Prahadeesh</span>
             </li>
             <li className="flex items-center">
               <div className="h-8 w-8 rounded-full bg-finance-accent/20 flex items-center justify-center text-finance-accent font-medium mr-2">
-                RL
+                SS
               </div>
-              <span>Robert Liu</span>
+              <span>Shreyaa Sathappan</span>
             </li>
           </ul>
         </div>
