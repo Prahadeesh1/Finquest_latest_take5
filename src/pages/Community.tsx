@@ -92,7 +92,9 @@ const Community = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
+    
     <div className="min-h-screen flex flex-col bg-gray-50">
+     {/*<div className="min-h-screen flex flex-col bg-blue-100"> */}
       <Navbar />
       <main className="flex-grow py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -194,6 +196,7 @@ const Community = () => {
           </div>
         </div>
       </main>
+
       <Footer />
     </div>
   );
