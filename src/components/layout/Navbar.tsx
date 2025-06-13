@@ -7,7 +7,8 @@ import {
   Menu, 
   X, 
   TrendingUp, 
-  LogIn 
+  LogIn,
+  Calendar
 } from "lucide-react";
 
 const Navbar = () => {
@@ -42,6 +43,12 @@ const Navbar = () => {
               <div className="flex items-center space-x-1">
                 <Users className="h-4 w-4" />
                 <span>Community</span>
+              </div>
+            </Link>
+            <Link to="/events" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-finance-primary hover:bg-gray-50 transition-colors">
+              <div className="flex items-center space-x-1">
+                <Calendar className="h-4 w-4" />
+                <span>Events</span>
               </div>
             </Link>
             <Link to="/riskwise" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-finance-primary hover:bg-gray-50 transition-colors">
@@ -105,6 +112,17 @@ const Navbar = () => {
               <div className="flex items-center space-x-2">
                 <Users className="h-5 w-5" />
                 <span>Community</span>
+              </div>
+            </Link>
+
+            <Link 
+              to="/events" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-finance-primary hover:bg-gray-50 transition-colors"
+              onClick={toggleMenu}
+            >
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5" />
+                <span>Events</span>
               </div>
             </Link>
 
