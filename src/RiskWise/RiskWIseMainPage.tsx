@@ -6,7 +6,7 @@ import { ChevronRight, TrendingDown, BarChart2, TrendingUp } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import './riskwise.css'; 
-import { Footer } from 'react-day-picker';
+import Footer from "@/components/layout/Footer";
 
 
 const HomePage = () => {
@@ -307,7 +307,7 @@ const HomePage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-blue-300 via-blue-400 to-blue-500 py-20 text-black">
+      <section className="bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200 py-5 text-black">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Start Your Investment Journey?
@@ -322,6 +322,7 @@ const HomePage = () => {
           </Link>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
