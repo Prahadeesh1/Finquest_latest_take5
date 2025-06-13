@@ -1,101 +1,16 @@
-const handleStockSelection = (stockSymbol: string) => {
-    setSelectedStocks(prev => 
-      prev.includes(stockSymbol) 
-        ? prev.filter(s => s !== stockSymbol)
-        : [...prev, stockSymbol]
-    );
-  };
-
-  const fetchStockData = async (symbol: string) => {
-    try {
-      const response = await fetch(
-        `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`
-      );
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error(`Error fetching data for ${symbol}:`, error);
-      return null;
-    }
-  };
-
-  const fetchAllStockData = async (symbols: string[]) => {
-    const promises = symbols.map(symbol => fetchStockData(symbol));
-    const results = await Promise.all(promises);
-    
-    const stockDataMap: any = {};
-    symbols.forEach((symbol, index) => {
-      if (results[index]) {
-        stockDataMap[symbol] = results[index];
-      }
-    });
-    
-    return stockDataMap;
-  };
-
-  const generateEmailContent = (stocksData: any) => {
-    const selectedStockInfo = profileData.stocks?.filter(stock => 
-      selectedStocks.includes(stock.symbol)
-    ) || [];
-
-    let emailContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .header { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .stock-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-        .stock-symbol { color: #2563eb; font-weight: bold; font-size: 18px; }
-        .metric { display: inline-block; margin-right: 20px; }
-        .metric-label { font-weight: bold; }
-        .disclaimer { background-color: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Your Personalized Stock Analysis Report</h1>
-        <p>Risk Profile: <strong>${profileData.title}</strong></p>
-        <p>Generated on: ${new Date().toLocaleDateString()}</p>
-    </div>
-    
-    <h2>Selected Stocks Analysis</h2>
-`;
-
-    selectedStockInfo.forEach(stock => {
-      const alphaData = stocksData[stock.symbol];
-      
-      emailContent += `
-    <div class="stock-card">
-        <div class="stock-symbol">${stock.symbol} - ${stock.name}</div>
-        <p><strong>Sector:</strong> ${stock.sector}</p>
-        <p><strong>Risk Level:</strong> ${stock.risk}</p>
-        ${stock.dividend ? `<p><strong>Dividend Yield:</strong> ${stock.dividend}</p>` : ''}
-        ${stock.growth ? `<p><strong>Expected Growth:</strong> ${stock.growth}</p>` : ''}
-        
-        ${alphaData && alphaData.Symbol ? `
-        <h4>Current Market Data:</h4>
-        <div>
-            ${alphaData.MarketCapitalization ? `<span class="metric"><span class="metric-label">Market Cap:</span> ${alphaData.MarketCapitalization}</span>` : ''}
-            ${alphaData.PERatio ? `<span class="metric"><span class="metric-label">P/E Ratio:</span> ${alphaData.PERatio}</span>` : ''}
-            ${alphaData.DividendYield ? `<span class="metric"><span class="metric-label">Current Dividend:</span> ${alphaData.DividendYield}</span>` : ''}
-        </div>
-        <div>
-            ${alpimport React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Button } from '@/components/ui/button';
-import { Shield, TrendingUp, BarChart3, Check, ExternalLink, X, Mail, Loader2 } from 'lucide-react';
+import { Shield, TrendingUp, BarChart3, Check, ExternalLink, X, Loader2 } from 'lucide-react';
 
 interface ResultsScreenProps {
   profile: string;
   onStartOver: () => void;
 }
 
-// Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
-  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 relative">
@@ -118,9 +33,6 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
   const [emailSent, setEmailSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [stockData, setStockData] = useState<any>({});
-  
-  // Replace with your actual Alpha Vantage API key
-  const ALPHA_VANTAGE_API_KEY = 'YOUR_API_KEY_HERE';
 
   const getProfileData = () => {
     switch (profile) {
@@ -231,52 +143,58 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
   const profileData = getProfileData();
 
   const handleStockSelection = (stockSymbol: string) => {
-    setSelectedStocks(prev => 
-      prev.includes(stockSymbol) 
+    setSelectedStocks(prev =>
+      prev.includes(stockSymbol)
         ? prev.filter(s => s !== stockSymbol)
         : [...prev, stockSymbol]
     );
   };
 
   const handleSendEmail = async () => {
-    if (!email || selectedStocks.length === 0) return;
-    
-    setIsLoading(true);
-    
-    try {
-      const response = await fetch('http://localhost:3001/api/send-stock-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email,
-          selectedStocks: selectedStocks,
-          riskProfile: profileData.title
-        }),
-      });
+  if (!email || selectedStocks.length === 0) return;
 
-      const result = await response.json();
+  setIsLoading(true);
 
-      if (response.ok) {
-        setEmailSent(true);
-        // Reset after 4 seconds
-        setTimeout(() => {
-          setEmailSent(false);
-          setSelectedStocks([]);
-          setEmail('');
-          setIsModalOpen(false);
-          setIsLoading(false);
-        }, 4000);
-      } else {
-        throw new Error(result.error || 'Failed to send email');
-      }
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Failed to send email: ' + error.message);
-      setIsLoading(false);
+  try {
+    const res = await fetch('http://localhost:3001/api/send-stock-analysis', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        selectedStocks,
+        profile,
+      }),
+    });
+
+    // Read response text first
+    const text = await res.text();
+    let data = null;
+    if (text) {
+      data = JSON.parse(text);
     }
-  };
+
+    if (res.ok && data?.success) {
+      setEmailSent(true);
+      console.log('Email sent:', data.message);
+
+      setTimeout(() => {
+        setEmailSent(false);
+        setSelectedStocks([]);
+        setEmail('');
+        setIsModalOpen(false);
+      }, 3000);
+    } else {
+      console.error('Error:', data?.message || 'Unknown error');
+      alert(`Error: ${data?.message || 'Failed to send email'}`);
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Failed to send email. Try again later.');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const renderModalContent = () => {
     if (emailSent) {
@@ -284,134 +202,42 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
         <div className="text-center py-8">
           <div className="text-green-600 text-6xl mb-4">✓</div>
           <h2 className="text-xl font-semibold mb-2 text-green-600">Email Sent Successfully!</h2>
-          <p className="text-gray-700 mb-2">Your detailed stock analysis has been sent to:</p>
-          <p className="font-semibold text-blue-600">{email}</p>
-          <p className="text-sm text-gray-500 mt-4">
-            The email includes real-time data for {selectedStocks.length} selected stock{selectedStocks.length !== 1 ? 's' : ''} with current prices, market metrics, and investment insights.
-          </p>
-        </div>
-      );
-    }
-
-    if (isLoading) {
-      return (
-        <div className="text-center py-8">
-          <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Fetching Real-Time Stock Data...</h2>
-          <p className="text-gray-700 mb-2">Getting current market data for your selected stocks</p>
-          <div className="text-sm text-gray-500">
-            <p>• Fetching live stock prices from Alpha Vantage</p>
-            <p>• Gathering company fundamentals and metrics</p>
-            <p>• Preparing personalized analysis report</p>
-          </div>
+          <p className="text-gray-700">Your selected stock recommendations have been sent to {email}</p>
         </div>
       );
     }
 
     return (
       <>
-        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <Mail className="h-5 w-5" />
-          Recommended Stocks for {profileData.title}
-        </h2>
-        
+        <h2 className="text-xl font-semibold mb-4">Recommended Stocks for {profileData.title}</h2>
         <div className="max-h-96 overflow-y-auto">
           <div className="space-y-3 mb-4">
-            {profileData.stocks?.map((stock, index) => (
-              <div key={stock.symbol} className="border rounded-lg p-3 bg-gray-50 hover:bg-gray-100 transition-colors">
+            {profileData.stocks?.map((stock) => (
+              <div key={stock.symbol} className="border rounded-lg p-3 bg-gray-50">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-blue-600">{stock.symbol}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        stock.risk === 'Low' ? 'bg-green-100 text-green-800' :
-                        stock.risk === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
-                        stock.risk === 'High' ? 'bg-red-100 text-red-800' :
-                        'bg-purple-100 text-purple-800'
-                      }`}>
-                        {stock.risk} Risk
-                      </span>
+                      <span className="text-sm bg-gray-200 px-2 py-1 rounded">{stock.risk}</span>
                     </div>
-                    <h4 className="font-medium text-gray-900">{stock.name}</h4>
+                    <h4 className="font-medium">{stock.name}</h4>
                     <p className="text-sm text-gray-600">{stock.sector}</p>
                     <div className="flex gap-4 mt-2 text-sm">
-                      {stock.dividend && (
-                        <span className="text-green-600 font-medium">
-                          📊 Dividend: {stock.dividend}
-                        </span>
-                      )}
-                      {stock.growth && (
-                        <span className="text-blue-600 font-medium">
-                          📈 Growth: {stock.growth}
-                        </span>
-                      )}
+                      {stock.dividend && <span className="text-green-600">Dividend: {stock.dividend}</span>}
+                      {stock.growth && <span className="text-blue-600">Growth: {stock.growth}</span>}
                     </div>
                   </div>
                   {(profile === 'moderate' || profile === 'aggressive') && (
-                    <label className="flex items-center cursor-pointer">
+                    <label className="flex items-center">
                       <input
                         type="checkbox"
                         checked={selectedStocks.includes(stock.symbol)}
                         onChange={() => handleStockSelection(stock.symbol)}
-                        className="mr-2 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        className="mr-2"
                       />
-                      <span className="text-sm font-medium">Select</span>
+                      <span className="text-sm">Select</span>
                     </label>
                   )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {profile === 'safe' && (
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4">
-              <p className="text-blue-800 text-sm">
-                💡 <strong>Conservative Approach:</strong> These dividend-paying stocks are recommended for their stability and consistent income. Perfect for risk-averse investors seeking steady returns.
-              </p>
-            </div>
-          )}
-
-          {(profile === 'moderate' || profile === 'aggressive') && (
-            <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Get Real-Time Analysis via Email
-              </h3>
-              <p className="text-sm text-gray-700 mb-3">
-                Select stocks you're interested in and receive a comprehensive analysis with:
-              </p>
-              <ul className="text-xs text-gray-600 mb-4 space-y-1">
-                <li>• Live stock prices and daily performance</li>
-                <li>• Key financial metrics (P/E ratio, market cap, dividends)</li>
-                <li>• 52-week high/low ranges</li>
-                <li>• Company overviews and sector analysis</li>
-                <li>• Personalized investment recommendations</li>
-              </ul>
-              <div className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-gray-500">
-                    {selectedStocks.length} stock{selectedStocks.length !== 1 ? 's' : ''} selected
-                  </span>
-                  {selectedStocks.length > 0 && (
-                    <span className="text-blue-600 font-medium">
-                      Real-time data will be fetched
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </>
-    );
-  };
                 </div>
               </div>
             ))}
@@ -502,7 +328,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
               </ul>
             </div>
           </div>
-          
+
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
             <h3 className="font-medium text-lg mb-3">Investment Examples</h3>
             <ul className="space-y-2 text-sm">
@@ -527,7 +353,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 w-full"
             onClick={() => setIsModalOpen(true)}
           >
-            Get Personalized Advice
+            {isLoading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : 'Get Personalized Advice'}
           </Button>
           <Button 
             className="w-full bg-blue-500 hover:bg-blue-600"
@@ -562,10 +388,10 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ profile, onStartOver }) =
             ) : (
               <Button 
                 onClick={handleSendEmail}
-                disabled={!email || selectedStocks.length === 0}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400"
+                disabled={!email || selectedStocks.length === 0 || isLoading}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 flex justify-center items-center"
               >
-                Send to Email ({selectedStocks.length})
+                {isLoading ? <Loader2 className="animate-spin h-5 w-5 mr-2" /> : `Send to Email (${selectedStocks.length})`}
               </Button>
             )}
           </div>

@@ -16,6 +16,7 @@ import ConservativePage from "./pages/ConservativePage";
 import ModeratePage from "./pages/ModeratePage";
 import AggressivePage from "./pages/AggressivePage";
 import AssessmentPage from "./pages/AssessmentPage";
+import Events from "./pages/events"; // Updated import to follow naming convention
 
 // Create the client outside of the component
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ function App() {
             <Route path="/moderate" element={<ModeratePage />} />
             <Route path="/aggressive" element={<AggressivePage />} />
             <Route path="/assessment" element={<AssessmentPage />} />
+            <Route path="/events" element={<Events />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
