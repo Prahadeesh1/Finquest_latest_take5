@@ -50,7 +50,7 @@ const CommunityPost = ({
           <div className="flex-1">
             <div className="flex items-center space-x-2 text-xs text-gray-500 mb-1">
               <span className="bg-finance-light px-2 py-0.5 rounded-full text-finance-primary font-medium">
-                r/{community}
+              {community}
               </span>
               <span>Posted by u/{author} • {timePosted}</span>
             </div>

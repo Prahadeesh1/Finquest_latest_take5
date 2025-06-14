@@ -59,7 +59,7 @@ const CommunityList = () => {
               
               <div className="flex-1">
                 <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-medium text-blue-900">r/{community.name}</h3>
+                  <h3 className="font-medium text-blue-900">{community.name}</h3>
                   <div className="flex items-center text-xs text-blue-300">
                     <Users className="h-3 w-3 mr-1" />
                     <span>{community.memberCount.toLocaleString()}</span>

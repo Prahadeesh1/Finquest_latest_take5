@@ -497,14 +497,13 @@ export default function FinanceEventsSection() {
                     >
                       Create Event
                     </button>
-                    
                   </div>
                 </div>
               </div>
             </div>
-            <Footer/>
           </div>
         )}
+        <Footer/>
       </div>
     </div>
   );

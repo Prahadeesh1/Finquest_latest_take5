@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 
 const CommunitySidebar = () => {
   return (
-    <div className="space-y-6 mt-4">
+    <div className="space-y-4 mt-4">
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="bg-finance-primary h-10 relative"></div>
         <div className="p-4 pt-0">
@@ -81,12 +81,11 @@ const CommunitySidebar = () => {
           </Link>
         </div>
       </div>
-      
+      {/*
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100">
           <h3 className="font-semibold">Community Moderators</h3>
         </div>
-        
         <div className="p-4">
           <ul className="space-y-3">
             <li className="flex items-center">
@@ -110,6 +109,7 @@ const CommunitySidebar = () => {
           </ul>
         </div>
         
+        
         <div className="p-4 border-t border-gray-100">
           <Link to="/contact-mods">
             <Button variant="outline" size="sm" className="w-full">
@@ -117,7 +117,9 @@ const CommunitySidebar = () => {
             </Button>
           </Link>
         </div>
+        
       </div>
+      */}
     </div>
   );
 };
