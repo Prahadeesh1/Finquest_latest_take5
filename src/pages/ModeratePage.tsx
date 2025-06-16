@@ -3,8 +3,23 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
+import { 
+  TrendingUp, DollarSign, PieChart, BarChart3, Target, Shield, Coins, Wallet,LineChart,Calculator,Banknote,CreditCard,ArrowRight,Star
+} from 'lucide-react';
+
+const Card = ({ children, className }) => (
+  <div className={`rounded-lg ${className}`}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children, className }) => (
+  <div className={className}>
+    {children}
+  </div>
+);
+
 
 //Main ModeratePage component for displaying moderate investment options
 const ModeratePage = () => {
@@ -13,64 +28,110 @@ const ModeratePage = () => {
       {/* Navbar component for site navigation */}
       <Navbar />
       {/* Introduces the Moderate Profile and its characteristics */}
-      <section className="bg-yellow-50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap items-center">
-            <div className="w-full lg:w-7/12 pr-0 lg:pr-8">
-              <div className="bg-yellow-100 text-yellow-700 inline-block py-1 px-3 rounded-full text-sm font-medium mb-4">
-                Moderate Profile
-              </div>
-              <h1 className="text-4xl font-bold mb-4">Moderate Investment Options</h1>
-              <p className="text-lg text-gray-700 mb-6">
-                Moderate investments balance growth potential with stability. These options are suitable for investors with medium to long-term financial goals who can tolerate some market volatility.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Button className="bg-yellow-600 hover:bg-yellow-700 text-white">
-                  Learn More
-                </Button>
-                <Button variant="outline" className="border-yellow-600 text-yellow-600 hover:bg-yellow-50">
-                  Compare Options
-                </Button>
-              </div>
+      <section className="relative pt-20 pb-32 overflow-hidden">
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 via-amber-700 to-orange-800"></div>
+      
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white rounded-full mix-blend-overlay animate-pulse"></div>
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-white rounded-full mix-blend-overlay animate-pulse delay-1000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-white rounded-full mix-blend-overlay animate-pulse delay-500"></div>
+      </div>
+      
+      {/* Floating elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 animate-bounce">
+          <TrendingUp className="w-8 h-8 text-white/20" />
+        </div>
+        <div className="absolute top-40 right-20 animate-bounce" style={{ animationDelay: '1s' }}>
+          <PieChart className="w-10 h-10 text-white/20" />
+        </div>
+        <div className="absolute bottom-40 left-20 animate-bounce" style={{ animationDelay: '0.5s' }}>
+          <BarChart3 className="w-12 h-12 text-white/20" />
+        </div>
+        <div className="absolute top-32 right-1/3 animate-bounce" style={{ animationDelay: '1.5s' }}>
+          <Target className="w-6 h-6 text-white/20" />
+        </div>
+        <div className="absolute bottom-32 right-12 animate-bounce" style={{ animationDelay: '2s' }}>
+          <Coins className="w-9 h-9 text-white/20" />
+        </div>
+        <div className="absolute top-1/2 left-8 animate-bounce" style={{ animationDelay: '2.5s' }}>
+          <Wallet className="w-7 h-7 text-white/20" />
+        </div>
+        <div className="absolute bottom-16 right-1/4 animate-bounce" style={{ animationDelay: '3s' }}>
+          <Calculator className="w-8 h-8 text-white/20" />
+        </div>
+        <div className="absolute top-24 left-1/3 animate-bounce" style={{ animationDelay: '0.8s' }}>
+          <LineChart className="w-6 h-6 text-white/20" />
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="flex flex-wrap items-center min-h-[500px]">
+          <div className="w-full lg:w-7/12 pr-0 lg:pr-8">
+            <div className="bg-white/20 backdrop-blur-sm text-white inline-block py-2 px-4 rounded-full text-sm font-medium mb-6 border border-white/30">
+              <BarChart3 className="w-4 h-4 inline mr-2" />
+              Moderate Profile
             </div>
-            {/* Right column: Key Characteristics card */}
-            <div className="w-full lg:w-5/12 mt-8 lg:mt-0">
-              <Card className="bg-white p-6 shadow-lg rounded-lg">
-                <h3 className="text-xl font-medium mb-4 flex items-center">
-                  <svg className="w-6 h-6 text-yellow-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Key Characteristics
-                </h3>
-                {/* Short description */}
-                <p className="text-gray-600 mb-4">Balanced risk and return profile</p>
-                <ul className="space-y-3">
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-3"></div>
-                    <span className="text-gray-700">Growth and income balanced</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-3"></div>
-                    <span className="text-gray-700">Medium market volatility</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-3"></div>
-                    <span className="text-gray-700">Some inflation protection</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-3"></div>
-                    <span className="text-gray-700">Time horizon of 5-10 years</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500 mr-3"></div>
-                    <span className="text-gray-700">Diversified asset mix</span>
-                  </li>
-                </ul>
-              </Card>
+            
+            <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
+              Moderate
+              <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                Investment Options
+              </span>
+            </h1>
+            
+            <p className="text-xl text-amber-100 mb-8 leading-relaxed max-w-xl">
+              Balance growth potential with stability through our expertly managed moderate investment strategies, perfect for medium to long-term financial goals.
+            </p>
+            
+            <div className="flex flex-wrap gap-4">
+              <Button size="lg" className="bg-white text-amber-600 hover:bg-amber-50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                <TrendingUp className="w-5 h-5 mr-2" />
+                Explore Options
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="border-white/30 text-amber-700 hover:bg-white/10 backdrop-blur-sm"
+              >
+                Compare Strategies
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
             </div>
           </div>
+          
+          {/* Enhanced Key Characteristics card */}
+          <div className="w-full lg:w-5/12 mt-12 lg:mt-0">
+            <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 rounded-2xl border">
+              <CardContent className="p-8">
+                <h3 className="text-2xl font-bold mb-2 flex items-center text-white">
+                  <Star className="w-6 h-6 text-yellow-300 mr-3" />
+                  Key Characteristics
+                </h3>
+                <p className="text-amber-100 mb-6 text-lg">Balanced risk and return profile</p>
+                
+                <ul className="space-y-4">
+                  {[
+                    'Growth and income balanced',
+                    'Medium market volatility',
+                    'Some inflation protection',
+                    'Time horizon of 5-10 years',
+                    'Diversified asset mix'
+                  ].map((item, index) => (
+                    <li key={index} className="flex items-center text-white">
+                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-300 to-orange-300 mr-4 animate-pulse"></div>
+                      <span className="text-amber-50">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </section>
+      </div>
+    </section>
       {/* Popular Investment Options section with Tabs */}
       <section className="py-16">
         <div className="container mx-auto px-4">
