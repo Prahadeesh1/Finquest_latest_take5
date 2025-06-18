@@ -164,7 +164,7 @@ export default function FinanceEventsSection() {
       organizer: '',
       tags: [],
     });
-    setShowAddForm(false);
+    setShowAddForm(false); 
   };
 
   const handleTagInput = (value: string) => {
@@ -502,10 +502,11 @@ export default function FinanceEventsSection() {
                 </div>
               </div>
             </div>
-            <Footer/>
+            
           </div>
         )}
       </div>
+      <Footer/>
     </div>
   );
 }

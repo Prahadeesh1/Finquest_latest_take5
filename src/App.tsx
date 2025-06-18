@@ -16,7 +16,11 @@ import ConservativePage from "./pages/ConservativePage";
 import ModeratePage from "./pages/ModeratePage";
 import AggressivePage from "./pages/AggressivePage";
 import AssessmentPage from "./pages/AssessmentPage";
-import Events from "./pages/events"; // Updated import to follow naming convention
+import Events from "./pages/events";
+import Dashboard from "./pages/DashBoard"; // ✅ MISSING IMPORT
+import ForgotPassword from "./pages/ForgotPassword"; // ✅ MISSING IMPORT
+import { AuthProvider } from "./contexts/Auth"; // ✅ MISSING IMPORT
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Create the client outside of the component
 const queryClient = new QueryClient();
@@ -28,22 +32,66 @@ function App() {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <ChatWidget />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/learn" element={<Learn />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/RiskWise" element={<RiskWise />} />
-            <Route path="/conservative" element={<ConservativePage />} />
-            <Route path="/moderate" element={<ModeratePage />} />
-            <Route path="/aggressive" element={<AggressivePage />} />
-            <Route path="/assessment" element={<AssessmentPage />} />
-            <Route path="/events" element={<Events />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AuthProvider>
+            <ChatWidget />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+
+              {/* Protected routes */}
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/learn" element={
+                <ProtectedRoute>
+                  <Learn />
+                </ProtectedRoute>
+              } />
+              <Route path="/community" element={
+                <ProtectedRoute>
+                  <Community />
+                </ProtectedRoute>
+              } />
+              <Route path="/RiskWise" element={
+                <ProtectedRoute>
+                  <RiskWise />
+                </ProtectedRoute>
+              } />
+              <Route path="/conservative" element={
+                <ProtectedRoute>
+                  <ConservativePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/moderate" element={
+                <ProtectedRoute>
+                  <ModeratePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/aggressive" element={
+                <ProtectedRoute>
+                  <AggressivePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/assessment" element={
+                <ProtectedRoute>
+                  <AssessmentPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/events" element={
+                <ProtectedRoute>
+                  <Events />
+                </ProtectedRoute>
+              } />
+
+              {/* Catch-all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
