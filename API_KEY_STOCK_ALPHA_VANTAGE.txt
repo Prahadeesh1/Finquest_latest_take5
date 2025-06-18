@@ -1,5 +1,3 @@
-Welcome to Alpha Vantage! Your API key is: 49ONGUL8C0MHQFG8. Please record this API key at a safe place for future data access.
-
-
+Welcome to Alpha Vantage! Your dedicated access key is: CAPPU15VABNGPY87. Please record this API key at a safe place for future data access.
 
 VITE_API_URL=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyDK3y1PPy58dRo-pfHihWG21BA0TAuvu8E
