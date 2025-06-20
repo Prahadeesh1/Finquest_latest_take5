@@ -593,7 +593,7 @@ const ConservativePage = () => {
         </div>
       </section>
       {/*Call to action: Prompts users to take a risk assessment */}
-      <section className="py-16 bg-blue-600 text-white">
+      <section className="py-16 bg-blue-800 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Build Your Conservative Portfolio?
