@@ -81,7 +81,6 @@ const CommunitySidebar = () => {
           </Link>
         </div>
       </div>
-      {/*
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-100">
           <h3 className="font-semibold">Community Moderators</h3>
@@ -119,7 +118,6 @@ const CommunitySidebar = () => {
         </div>
         
       </div>
-      */}
     </div>
   );
 };
