@@ -24,11 +24,16 @@ const HomePage = () => {
             Learn about different investment options tailored to your risk tolerance and financial goals.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <div className="relative group">
             <Link to="/assessment">
               <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300">
                 Assess Your Risk Profile
               </Button>
             </Link>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
+                Take a short quiz with 10 MCQs to determine which type of investment suits you the best
+              </div>
+            </div>
             <Link to="#investment-types">
               <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white bg-white/80 backdrop-blur-sm shadow-lg">
                 Explore Investments
