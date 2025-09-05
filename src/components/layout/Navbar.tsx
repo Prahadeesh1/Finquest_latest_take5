@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BookOpen,
@@ -36,54 +37,47 @@ const Navbar = () => {
           <div className="hidden md:flex md:items-center md:space-x-6">
             {/* Learn */}
             <div className="relative group">
-            <Link
-              to="/learn"
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
-            >
-              <div className="flex items-center space-x-1">
+              <Link
+                to="/learn"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
+              >
                 <BookOpen className="h-4 w-4" />
                 <span>Learn</span>
-              </div>
-            </Link>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
+              </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
                 Take part in short courses to improve your financial knowledge
               </div>
             </div>
 
             {/* Community */}
             <div className="relative group">
-            <Link
-              to="/community"
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
-            >
-              <div className="flex items-center space-x-1">
+              <Link
+                to="/community"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
+              >
                 <Users className="h-4 w-4" />
                 <span>Community</span>
-              </div>
-            </Link>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
+              </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
                 Join communities and meet people of similar interests in finance
               </div>
             </div>
-            
 
             {/* Events */}
             <div className="relative group">
-            <Link
-              to="/events"
-              className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
-            >
-              <div className="flex items-center space-x-1">
+              <Link
+                to="/events"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
+              >
                 <Calendar className="h-4 w-4" />
                 <span>Events</span>
-              </div>
-            </Link>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
+              </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
                 Take part in live workshops/seminars hosted by industry professionals
               </div>
             </div>
 
-            {/* RiskWise - Fixed */}
+            {/* RiskWise */}
             <div className="relative group">
               <Link
                 to="/riskwise"
@@ -92,7 +86,6 @@ const Navbar = () => {
                 <Users className="h-4 w-4" />
                 <span>RiskWise</span>
               </Link>
-              {/* Tooltip */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
                 Analyse and assess your financial risks easily.
               </div>
@@ -120,6 +113,18 @@ const Navbar = () => {
               </Button>
             </Link>
           </div>
+          <Link
+          to="/profile"
+          className="group relative block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-finance-primary hover:bg-finance-primary/10 transition-colors flex items-center space-x-2"
+          onClick={toggleMenu}
+          >
+          <User className="h-5 w-5 text-black" />
+          <span>Profile</span>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50 pointer-events-none group-hover:pointer-events-auto">
+          View your User profile
+          </div>
+          </Link>
+
 
           {/* Mobile Menu Toggle */}
           <div className="flex md:hidden items-center">
@@ -204,6 +209,16 @@ const Navbar = () => {
                 <Button className="w-full justify-center bg-finance-primary hover:bg-finance-primary/90">
                   Get Started
                 </Button>
+              </Link>
+
+              {/* ✅ Mobile Profile Link with UserIcon */}
+              <Link
+                to="/profile"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-finance-primary hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                onClick={toggleMenu}
+              >
+                <User className="h-5 w-5 text-black" />
+                <span>Profile</span>
               </Link>
             </div>
           </div>
