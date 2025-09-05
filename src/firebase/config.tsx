@@ -1,10 +1,10 @@
-// src/lib/firebase.js
+// src/firebase/config.tsx
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';  // ✅ Firestore for user profiles
+import { getDatabase } from 'firebase/database';    // ✅ Realtime DB for forum
 import { getAnalytics } from 'firebase/analytics';
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCIpQEksUxxObvO67lTNeCV1IhdpL3jAT4",
   authDomain: "finquest-4e97e.firebaseapp.com",
@@ -16,16 +16,11 @@ const firebaseConfig = {
   measurementId: "G-QP6J37R7V4"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
-
-// Initialize Cloud Firestore and get a reference to the service
-export const db = getFirestore(app);
-
-// Initialize Analytics (optional)
+export const db = getFirestore(app);   // ✅ use this in AuthContext for user data
+export const rtdb = getDatabase(app);  // ✅ use this in your forum feature
 export const analytics = getAnalytics(app);
 
 export default app;

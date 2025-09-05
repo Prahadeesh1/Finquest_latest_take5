@@ -1,0 +1,60 @@
+{
+  "users": {
+    "user_id_1": {
+      "uid": "user_id_1",
+      "displayName": "John Doe",
+      "email": "john@example.com",
+      "firstName": "John",
+      "lastName": "Doe",
+      "experienceLevel": "beginner",
+      "financeAreas": ["investing", "budgeting"],
+      "reputation": 0,
+      "joinDate": "2024-01-15T10:30:00Z",
+      "postCount": 0,
+      "commentCount": 0,
+      "newsletter": true
+    }
+  },
+  "posts": {
+    "post_id_1": {
+      "authorId": "user_id_1",
+      "title": "Best Investment Strategy for Beginners",
+      "content": "I'm looking for advice on...",
+      "category": "investing",
+      "tags": ["beginner", "stocks"],
+      "createdAt": "2024-01-20T10:30:00Z",
+      "likesCount": 0,
+      "commentsCount": 0,
+      "viewsCount": 0
+    }
+  },
+  "comments": {
+    "comment_id_1": {
+      "postId": "post_id_1",
+      "authorId": "user_id_2",
+      "content": "Great question! I'd recommend...",
+      "createdAt": "2024-01-20T11:15:00Z",
+      "likesCount": 0
+    }
+  },
+  "postLikes": {
+    "post_id_1": {
+      "user_id_1": true,
+      "user_id_2": true
+    }
+  },
+  "categories": {
+    "investing": {
+      "name": "Investing",
+      "description": "Stocks, bonds, ETFs, and investment strategies",
+      "color": "#4CAF50",
+      "postCount": 0
+    },
+    "budgeting": {
+      "name": "Budgeting",
+      "description": "Personal budgeting tips and strategies", 
+      "color": "#2196F3",
+      "postCount": 0
+    }
+  }
+}

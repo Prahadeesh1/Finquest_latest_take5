@@ -9,7 +9,7 @@ import {
   updateProfile,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore'; // ✅ keeping your Firestore code
 import { auth, db } from '../firebase/config';
 
 interface UserData {
@@ -34,7 +34,7 @@ interface AuthContextType {
     newsletter: boolean
   ) => Promise<void>;
   logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>; // ✅ included
   loading: boolean;
 }
 
@@ -62,16 +62,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     newsletter: boolean
   ) => {
     try {
-      // Create user with email and password
+      // ✅ Firebase auth create user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Update the user's display name
+      // ✅ Update Firebase Auth profile display name
       await updateProfile(user, {
         displayName: `${firstName} ${lastName}`
       });
 
-      // Store additional user data in Firestore
+      // ✅ Store user data in Firestore
       const userDocData: UserData = {
         firstName,
         lastName,
@@ -108,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // ✅ Reset password (kept, just confirming it’s correct)
   const resetPassword = async (email: string) => {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -117,7 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch user data from Firestore
+  // ✅ Firestore fetch user data
   const fetchUserData = async (user: User) => {
     try {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
@@ -149,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     register,
     logout,
-    resetPassword,
+    resetPassword, // ✅ exposed here
     loading
   };
 
