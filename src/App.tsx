@@ -16,6 +16,7 @@ import ConservativePage from "./pages/ConservativePage";
 import ModeratePage from "./pages/ModeratePage";
 import AggressivePage from "./pages/AggressivePage";
 import AssessmentPage from "./pages/AssessmentPage";
+import UserProfile from "./pages/UserProfile";
 import Events from "./pages/events";
 import Dashboard from "./pages/DashBoard"; // ✅ MISSING IMPORT
 import ForgotPassword from "./pages/ForgotPassword"; // ✅ MISSING IMPORT
@@ -87,6 +88,7 @@ function App() {
                   <Events />
                 </ProtectedRoute>
               } />
+              <Route path="/Profile" element={<UserProfile/>} />
 
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

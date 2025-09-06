@@ -183,10 +183,10 @@ export default function FinanceEventsSection() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Renders the navigation bar at the top of the page. */}
       <Navbar/>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto p-6">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
             Finance Events Hub

@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
+import { Shield, TrendingUp, DollarSign, PieChart, Star, ArrowRight } from 'lucide-react';
 
 //Main ConservativePage component for displaying conservative investment options
 const ConservativePage = () => {
@@ -12,59 +13,90 @@ const ConservativePage = () => {
       {/* Navbar component for site navigation */}
       <Navbar />
       {/* Introduces the Conservative Profile and its characteristics */}
-      <section className="bg-blue-50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap items-center">
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800"></div>
+        
+        {/* Animated background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white rounded-full mix-blend-overlay animate-pulse"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-white rounded-full mix-blend-overlay animate-pulse delay-1000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-white rounded-full mix-blend-overlay animate-pulse delay-500"></div>
+        </div>
+        
+        {/* Floating elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 animate-float">
+            <Shield className="w-8 h-8 text-white/20" />
+          </div>
+          <div className="absolute top-40 right-20 animate-float delay-1000">
+            <TrendingUp className="w-10 h-10 text-white/20" />
+          </div>
+          <div className="absolute bottom-40 left-20 animate-float delay-500">
+            <DollarSign className="w-12 h-12 text-white/20" />
+          </div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-wrap items-center min-h-[500px]">
             <div className="w-full lg:w-7/12 pr-0 lg:pr-8">
-              <div className="bg-blue-100 text-blue-700 inline-block py-1 px-3 rounded-full text-sm font-medium mb-4">
+              <div className="bg-white/20 backdrop-blur-sm text-white inline-block py-2 px-4 rounded-full text-sm font-medium mb-6 border border-white/30">
+                <Shield className="w-4 h-4 inline mr-2" />
                 Conservative Profile
               </div>
-              <h1 className="text-4xl font-bold mb-4">Conservative Investment Options</h1>
-              <p className="text-lg text-gray-700 mb-6">
-                Conservative investments prioritize capital preservation and steady income over growth potential. These options are well-suited for risk-averse investors, those near retirement, or anyone with short to medium-term financial goals.
+              
+              <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
+                Conservative
+                <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                  Investment Options
+                </span>
+              </h1>
+              
+              <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-xl">
+                Prioritize capital preservation and steady income with our carefully curated conservative investment strategies designed for risk-averse investors.
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Learn More
+              
+              <div className="flex flex-wrap gap-4">
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <TrendingUp className="w-5 h-5 mr-2" />
+                  Explore Options
                 </Button>
-                <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                  Compare Options
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white/30 text-blue-500 hover:bg-white/10 backdrop-blur-sm"
+                >
+                  Compare Strategies
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
             </div>
-            {/* Right column: Key Characteristics card */}
-            <div className="w-full lg:w-5/12 mt-8 lg:mt-0">
-              <Card className="bg-white p-6 shadow-lg rounded-lg">
-                <h3 className="text-xl font-medium mb-4 flex items-center">
-                  <svg className="w-6 h-6 text-blue-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-                  </svg>
-                  Key Characteristics
-                </h3>
-                {/* Short description */}
-                <p className="text-gray-600 mb-4">Lower risk, stable returns</p>
-                <ul className="space-y-3">
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
-                    <span className="text-gray-700">Capital preservation focused</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
-                    <span className="text-gray-700">Regular income generation</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
-                    <span className="text-gray-700">Lower volatility and risk</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
-                    <span className="text-gray-700">May not keep pace with inflation</span>
-                  </li>
-                  <li className="flex items-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 mr-3"></div>
-                    <span className="text-gray-700">Typically shorter time horizons</span>
-                  </li>
-                </ul>
+            
+            {/* Enhanced Key Characteristics card */}
+            <div className="w-full lg:w-5/12 mt-12 lg:mt-0">
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-bold mb-2 flex items-center text-white">
+                    <Star className="w-6 h-6 text-yellow-300 mr-3" />
+                    Key Characteristics
+                  </h3>
+                  <p className="text-blue-100 mb-6 text-lg">Lower risk, stable returns</p>
+                  
+                  <ul className="space-y-4">
+                    {[
+                      'Capital preservation focused',
+                      'Regular income generation',
+                      'Lower volatility and risk',
+                      'May not keep pace with inflation',
+                      'Typically shorter time horizons'
+                    ].map((item, index) => (
+                      <li key={index} className="flex items-center text-white">
+                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-300 to-orange-300 mr-4 animate-pulse"></div>
+                        <span className="text-blue-50">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
               </Card>
             </div>
           </div>
@@ -561,7 +593,7 @@ const ConservativePage = () => {
         </div>
       </section>
       {/*Call to action: Prompts users to take a risk assessment */}
-      <section className="py-16 bg-blue-600 text-white">
+      <section className="py-16 bg-blue-800 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">
             Ready to Build Your Conservative Portfolio?
