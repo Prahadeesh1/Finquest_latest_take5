@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -13,7 +12,9 @@ import {
   Star, 
   BarChart,
   Search,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Users,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -92,108 +93,181 @@ const Community = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50">
       <Navbar />
-      <main className="flex-grow py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Community</h1>
-            <p className="mt-2 text-lg text-gray-600">
-              Join discussions, share insights, and connect with fellow financial learners.
-            </p>
-          </div>
-          
-          <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-            {/* Main content area for posts and creation. */}
-            <div className="lg:col-span-8">
-              {/* Search and filter bar */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-3 mb-6 flex flex-col sm:flex-row gap-3 items-center">
-                <div className="relative flex-1 w-full">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    className="finance-input pl-10 py-2 text-sm w-full"
-                    placeholder="Search within community"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                
-                {/* Renders filter buttons based on filterOptions state. */}
-                <div className="flex items-center overflow-x-auto hide-scrollbar space-x-1 w-full sm:w-auto">
-                  {filterOptions.map((filter) => (
-                    <Button
-                      key={filter.name}
-                      variant={activeFilter === filter.name ? "default" : "ghost"}
-                      size="sm"
-                      className={`flex items-center space-x-1 whitespace-nowrap ${
-                        activeFilter === filter.name 
-                          ? "bg-finance-primary hover:bg-finance-primary/90" 
-                          : "text-gray-600 hover:text-finance-primary"
-                      }`}
-                      onClick={() => setActiveFilter(filter.name)}
-                    >
-                      <filter.icon className="h-4 w-4" />
-                      <span>{filter.name}</span>
-                    </Button>
-                  ))}
-                  
-                  {/* Button for filter/sort options. */}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-gray-600 hover:text-finance-primary ml-1"
-                  >
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
+      
+      <main className="flex-grow">
+        {/* Hero Section */}
+        <div className="bg-white bg-gradient-to-b from-blue-50 via-blue-100">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full p-3">
+                  <Users className="h-8 w-8 text-white" />
                 </div>
               </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+                Financial Learning Community
+              </h1>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                Connect with fellow learners, share your financial journey, and grow together. 
+                Whether you're just starting or have years of experience, everyone has something to learn and teach.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">1,247</div>
+              <div className="text-gray-600">Active Members</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">89</div>
+              <div className="text-gray-600">Discussions Today</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">456</div>
+              <div className="text-gray-600">Questions Answered</div>
+            </div>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Sidebar - Moved to left for better hierarchy */}
+            <div className="lg:col-span-2 order-2 lg:order-1">
+              <div className="space-y-6">
+                {/* Popular Communities */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <Star className="h-5 w-5 text-yellow-500 mr-2" />
+                    Popular Communities
+                  </h3>
+                  <CommunityList />
+                </div>
+
+                {/* Community Guidelines */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Community Guidelines
+                  </h3>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li>• Be respectful and helpful</li>
+                    <li>• Share knowledge freely</li>
+                    <li>• Ask questions without fear</li>
+                    <li>• Support fellow learners</li>
+                  </ul>
+                </div>
+
+                <CommunitySidebar />
+              </div>
+            </div>
+
+            {/* Main Posts Area */}
+            <div className="lg:col-span-3 order-1 lg:order-2">
+              {/* Search and Filter Section */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
+                <div className="flex flex-col space-y-4">
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm placeholder-gray-500"
+                      placeholder="Search discussions, topics, or ask a question..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  
+                  {/* Filter Buttons */}
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-sm font-medium text-gray-700 flex items-center mr-4">
+                      Sort by:
+                    </span>
+                    {filterOptions.map((filter) => (
+                      <Button
+                        key={filter.name}
+                        variant={activeFilter === filter.name ? "default" : "outline"}
+                        size="sm"
+                        className={`flex items-center space-x-2 rounded-full ${
+                          activeFilter === filter.name 
+                            ? "bg-blue-600 hover:bg-blue-700 text-white" 
+                            : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                        }`}
+                        onClick={() => setActiveFilter(filter.name)}
+                      >
+                        <filter.icon className="h-4 w-4" />
+                        <span>{filter.name}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Create Post Section */}
+              <div className="mb-8">
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-6 mb-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <MessageCircle className="h-6 w-6 text-white" />
+                    <h2 className="text-xl font-semibold text-white">
+                      Start a Discussion
+                    </h2>
+                  </div>
+                  <p className="text-blue-100 mb-4">
+                    Got a question? Want to share your experience? Create a post and connect with the community!
+                  </p>
+                </div>
+                <CreatePostBox />
+              </div>
               
-              {/* Used for creating new posts (PostBox) */}
-              <CreatePostBox />
-              
-              {/* Posts list which renders community posts using sample data */}
-              <div className="space-y-4">
-                {communityPosts.map((post) => (
-                  <CommunityPost
-                    key={post.id}
-                    title={post.title}
-                    author={post.author}
-                    authorAvatar={post.authorAvatar}
-                    community={post.community}
-                    timePosted={post.timePosted}
-                    content={post.content}
-                    upvotes={post.upvotes}
-                    commentCount={post.commentCount}
-                    isBookmarked={post.isBookmarked}
-                  />
+              {/* Posts Feed */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Recent Discussions
+                  </h2>
+                  <span className="text-sm text-gray-500">
+                    {communityPosts.length} posts
+                  </span>
+                </div>
+                
+                {communityPosts.map((post, index) => (
+                  <div key={post.id} className="transform transition-all duration-200 hover:scale-[1.02]">
+                    <CommunityPost
+                      title={post.title}
+                      author={post.author}
+                      authorAvatar={post.authorAvatar}
+                      community={post.community}
+                      timePosted={post.timePosted}
+                      content={post.content}
+                      upvotes={post.upvotes}
+                      commentCount={post.commentCount}
+                      isBookmarked={post.isBookmarked}
+                    />
+                  </div>
                 ))}
               </div>
               
-              {/* Button to load more posts */}
-              <div className="mt-6 text-center">
-                <Button variant="outline" className="w-full sm:w-auto">
-                  Load More Posts
+              {/* Load More Button */}
+              <div className="mt-10 text-center">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="bg-white border-2 border-gray-200 hover:bg-gray-50 px-8 py-3 rounded-full font-medium"
+                >
+                  Load More Discussions
                 </Button>
-              </div>
-            </div>
-            
-            {/* Sidebar content including CommunitySidebar and CommunityList */}
-            <div className="mt-8 lg:mt-0 lg:col-span-4">
-              <div className="sticky top-20">
-                <CommunitySidebar />
-                
-                {/* Displays a List of communities (hidden on small screens) */}
-                <div className="mt-6 hidden lg:block">
-                  <CommunityList />
-                </div>
               </div>
             </div>
           </div>
         </div>
       </main>
+
       <Footer />
     </div>
   );
