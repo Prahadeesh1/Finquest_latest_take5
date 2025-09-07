@@ -9,7 +9,7 @@ import {
   updateProfile,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore'; // ✅ keeping your Firestore code
+import { doc, setDoc, getDoc, updateDoc, Timestamp } from 'firebase/firestore'; // ✅ Added updateDoc
 import { auth, db } from '../firebase/config';
 
 interface UserData {
@@ -18,7 +18,15 @@ interface UserData {
   email: string;
   experienceLevel: string;
   newsletter: boolean;
-  createdAt: Date;
+  createdAt: Date | Timestamp;
+  // ✅ Added new optional fields for profile functionality
+  avatarUrl?: string;
+  description?: string;
+  following?: string[];
+  activityLog?: Array<{
+    action: string;
+    timestamp: Date | Timestamp;
+  }>;
 }
 
 interface AuthContextType {
@@ -34,7 +42,8 @@ interface AuthContextType {
     newsletter: boolean
   ) => Promise<void>;
   logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>; // ✅ included
+  resetPassword: (email: string) => Promise<void>;
+  updateUserProfile: (updates: Partial<UserData>) => Promise<void>; // ✅ Added this function
   loading: boolean;
 }
 
@@ -71,14 +80,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         displayName: `${firstName} ${lastName}`
       });
 
-      // ✅ Store user data in Firestore
-      const userDocData: UserData = {
+      // ✅ Store user data in Firestore - Fixed timestamp issue
+      const userDocData = {
         firstName,
         lastName,
         email,
         experienceLevel,
         newsletter,
-        createdAt: new Date()
+        createdAt: Timestamp.fromDate(new Date()).toDate(), // ✅ This should work
+        // ✅ Initialize optional fields
+        avatarUrl: '',
+        description: '',
+        following: [],
+        activityLog: [{
+          action: 'Account created',
+          timestamp: Timestamp.fromDate(new Date()).toDate()
+        }]
       };
 
       await setDoc(doc(db, 'users', user.uid), userDocData);
@@ -108,7 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // ✅ Reset password (kept, just confirming it’s correct)
   const resetPassword = async (email: string) => {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -118,12 +134,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // ✅ New function to update user profile
+  const updateUserProfile = async (updates: Partial<UserData>) => {
+    if (!currentUser || !userData) {
+      throw new Error('No authenticated user');
+    }
+
+    try {
+      // Update Firestore document
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      
+      // Filter out undefined values to prevent Firestore errors
+      const cleanUpdates: any = {};
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          cleanUpdates[key] = value;
+        }
+      });
+      
+      // Add activity log entry
+      const updatedActivityLog = [
+        ...(userData.activityLog || []),
+        {
+          action: 'Profile updated',
+          timestamp: new Date()
+        }
+      ];
+
+      const updateData = {
+        ...cleanUpdates,
+        activityLog: updatedActivityLog
+      };
+
+      await updateDoc(userDocRef, updateData);
+
+      // Update local state (merge with existing data)
+      setUserData(prev => prev ? { ...prev, ...cleanUpdates } : null);
+
+      // Update Firebase Auth display name if name changed
+      if (updates.firstName || updates.lastName) {
+        const newDisplayName = `${updates.firstName || userData.firstName} ${updates.lastName || userData.lastName}`;
+        await updateProfile(currentUser, {
+          displayName: newDisplayName
+        });
+      }
+
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+  };
+
   // ✅ Firestore fetch user data
   const fetchUserData = async (user: User) => {
     try {
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
-        setUserData(userDoc.data() as UserData);
+        const data = userDoc.data() as UserData;
+        setUserData(data);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -150,7 +218,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     register,
     logout,
-    resetPassword, // ✅ exposed here
+    resetPassword,
+    updateUserProfile, // ✅ Added this to the context value
     loading
   };
 
