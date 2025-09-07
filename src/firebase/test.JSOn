@@ -1,60 +1,285 @@
 {
-  "users": {
-    "user_id_1": {
-      "uid": "user_id_1",
-      "displayName": "John Doe",
-      "email": "john@example.com",
-      "firstName": "John",
-      "lastName": "Doe",
-      "experienceLevel": "beginner",
-      "financeAreas": ["investing", "budgeting"],
-      "reputation": 0,
-      "joinDate": "2024-01-15T10:30:00Z",
-      "postCount": 0,
-      "commentCount": 0,
-      "newsletter": true
+  "communities": {
+    "stockmarket": {
+      "name": "StockMarket",
+      "description": "Discussion about stock markets, trading strategies, and investment trends.",
+      "memberCount": 0,
+      "createdAt": "2025-01-15T08:00:00.000Z",
+      "createdBy": "system",
+      "isPublic": true,
+      "tags": ["stocks", "trading", "investing"],
+      "moderators": ["system"],
+      "rules": [
+        "Be respectful to all members",
+        "No spam or promotional content",
+        "Stay on topic - focus on stock market discussions",
+        "Provide sources for market claims"
+      ]
+    },
+    "budgeting-101": {
+      "name": "Budgeting 101",
+      "description": "Tips, advice, and discussions about managing personal finances and budgeting.",
+      "memberCount": 0,
+      "createdAt": "2025-01-15T08:00:00.000Z",
+      "createdBy": "system",
+      "isPublic": true,
+      "tags": ["budgeting", "personal-finance", "savings"],
+      "moderators": ["system"],
+      "rules": [
+        "Be respectful and supportive",
+        "Share practical budgeting tips",
+        "No financial advice - share experiences only",
+        "Keep discussions beginner-friendly"
+      ]
+    },
+    "easy-invest-hub": {
+      "name": "Easy Invest Hub",
+      "description": "A supportive community for those who are new to investing.",
+      "memberCount": 0,
+      "createdAt": "2025-01-15T08:00:00.000Z",
+      "createdBy": "system",
+      "isPublic": true,
+      "tags": ["investing", "beginners", "education"],
+      "moderators": ["system"],
+      "rules": [
+        "Encourage questions from beginners",
+        "Provide educational resources",
+        "No get-rich-quick schemes",
+        "Be patient and helpful"
+      ]
+    },
+    "golden-horizon": {
+      "name": "The Golden Horizon",
+      "description": "Discuss strategies for planning a comfortable and stress-free retirement.",
+      "memberCount": 0,
+      "createdAt": "2025-01-15T08:00:00.000Z",
+      "createdBy": "system",
+      "isPublic": true,
+      "tags": ["retirement", "planning", "long-term"],
+      "moderators": ["system"],
+      "rules": [
+        "Focus on retirement planning strategies",
+        "Share experiences constructively",
+        "Consider different age groups",
+        "Respect diverse financial situations"
+      ]
+    },
+    "wealthbuilders-hub": {
+      "name": "WealthBuilders Hub",
+      "description": "Discuss tips and strategies used to improve finance",
+      "memberCount": 0,
+      "createdAt": "2025-01-15T08:00:00.000Z",
+      "createdBy": "system",
+      "isPublic": true,
+      "tags": ["wealth-building", "strategies", "finance"],
+      "moderators": ["system"],
+      "rules": [
+        "Share proven wealth-building strategies",
+        "Discuss both successes and failures",
+        "Focus on long-term approaches",
+        "No unrealistic promises"
+      ]
+    },
+    "financeflow-together": {
+      "name": "FinanceFlow Together",
+      "description": "A community for financial education, discussions, and collaboration on all aspects of personal finance and investing.",
+      "memberCount": 42800,
+      "createdAt": "2025-03-31T08:00:00.000Z",
+      "createdBy": "system",
+      "isPublic": true,
+      "tags": ["education", "collaboration", "general-finance"],
+      "moderators": ["sathivada-chandan", "umapathy-prahadeesh", "shreyaa-sathappan"],
+      "rules": [
+        "Educational focus - learn and teach",
+        "Collaborate and support each other",
+        "All experience levels welcome",
+        "Follow community guidelines"
+      ],
+      "onlineMembers": 2400
     }
   },
   "posts": {
-    "post_id_1": {
-      "authorId": "user_id_1",
-      "title": "Best Investment Strategy for Beginners",
-      "content": "I'm looking for advice on...",
-      "category": "investing",
-      "tags": ["beginner", "stocks"],
-      "createdAt": "2024-01-20T10:30:00Z",
-      "likesCount": 0,
-      "commentsCount": 0,
-      "viewsCount": 0
+    "post_1": {
+      "id": "post_1",
+      "title": "How do I start investing with only $500?",
+      "content": "I have $500 saved up and want to start investing. What's the best approach for a complete beginner? Should I go with ETFs, individual stocks, or something else? Any advice would be appreciated!",
+      "author": "newbie_investor",
+      "authorId": "user_001",
+      "community": "easy-invest-hub",
+      "createdAt": "2025-09-07T06:00:00.000Z",
+      "upvotes": 24,
+      "downvotes": 2,
+      "commentCount": 12,
+      "isBookmarked": false,
+      "tags": ["beginner", "investing", "ETFs"],
+      "type": "text"
+    },
+    "post_2": {
+      "id": "post_2",
+      "title": "Just reached my first $10k in investments!",
+      "content": "After consistently saving and investing for the past year, I've finally reached $10,000 in my investment portfolio! It's not much compared to some of you, but it feels like a huge milestone for me. Just wanted to share my small victory!",
+      "author": "growing_wealth",
+      "authorId": "user_002",
+      "community": "wealthbuilders-hub",
+      "createdAt": "2025-09-07T03:00:00.000Z",
+      "upvotes": 156,
+      "downvotes": 3,
+      "commentCount": 42,
+      "isBookmarked": true,
+      "tags": ["milestone", "success-story", "investing"],
+      "type": "text"
+    },
+    "post_3": {
+      "id": "post_3",
+      "title": "The importance of emergency funds before investing",
+      "content": "I see a lot of newcomers rushing to invest without having an emergency fund. Here's why that's risky: An emergency fund should cover 3-6 months of expenses and be easily accessible. Without it, you might be forced to sell investments at a loss during emergencies. Always build your safety net first!",
+      "author": "finance_educator",
+      "authorId": "user_003",
+      "community": "financeflow-together",
+      "createdAt": "2025-09-06T22:00:00.000Z",
+      "upvotes": 89,
+      "downvotes": 5,
+      "commentCount": 23,
+      "isBookmarked": false,
+      "tags": ["emergency-fund", "education", "risk-management"],
+      "type": "text"
+    },
+    "post_4": {
+      "id": "post_4",
+      "title": "Market analysis: Tech stocks outlook for Q2 2025",
+      "content": "With recent shifts in the tech sector, I've analyzed potential trends for Q2 2025. Major tech companies are leaning heavily into AI integration, which might drive growth, but regulatory concerns in Europe could impact global operations. What are your thoughts on how this might affect the sector?",
+      "author": "market_watcher",
+      "authorId": "user_004",
+      "community": "stockmarket",
+      "createdAt": "2025-09-06T18:00:00.000Z",
+      "upvotes": 67,
+      "downvotes": 8,
+      "commentCount": 31,
+      "isBookmarked": false,
+      "tags": ["market-analysis", "tech-stocks", "Q2-2025"],
+      "type": "text"
+    },
+    "post_5": {
+      "id": "post_5",
+      "title": "How I paid off $30k in student loans in 18 months",
+      "content": "I wanted to share my journey of becoming debt-free! I managed to pay off $30,000 in student loans in just 18 months by following a strict budget, taking on side gigs, and minimizing expenses. Happy to share more details about my strategy if anyone's interested.",
+      "author": "debt_free_now",
+      "authorId": "user_005",
+      "community": "budgeting-101",
+      "createdAt": "2025-09-06T08:00:00.000Z",
+      "upvotes": 213,
+      "downvotes": 7,
+      "commentCount": 87,
+      "isBookmarked": false,
+      "tags": ["debt-free", "student-loans", "success-story"],
+      "type": "text"
     }
   },
   "comments": {
-    "comment_id_1": {
-      "postId": "post_id_1",
-      "authorId": "user_id_2",
-      "content": "Great question! I'd recommend...",
-      "createdAt": "2024-01-20T11:15:00Z",
-      "likesCount": 0
+    "post_1": {
+      "comment_1": {
+        "id": "comment_1",
+        "postId": "post_1",
+        "author": "experienced_trader",
+        "authorId": "user_006",
+        "content": "Start with index funds or ETFs! They're diversified and perfect for beginners. VTI or VOO are great choices.",
+        "createdAt": "2025-09-07T06:30:00.000Z",
+        "upvotes": 8,
+        "downvotes": 0,
+        "replies": {
+          "reply_1": {
+            "id": "reply_1",
+            "commentId": "comment_1",
+            "author": "newbie_investor",
+            "authorId": "user_001",
+            "content": "Thanks! I'll look into those options.",
+            "createdAt": "2025-09-07T07:00:00.000Z",
+            "upvotes": 2,
+            "downvotes": 0
+          }
+        }
+      },
+      "comment_2": {
+        "id": "comment_2",
+        "postId": "post_1",
+        "author": "budget_guru",
+        "authorId": "user_007",
+        "content": "Make sure you have an emergency fund first! Don't invest money you might need soon.",
+        "createdAt": "2025-09-07T06:45:00.000Z",
+        "upvotes": 12,
+        "downvotes": 1,
+        "replies": {}
+      }
     }
   },
-  "postLikes": {
-    "post_id_1": {
-      "user_id_1": true,
-      "user_id_2": true
+  "userCommunities": {
+    "user_001": {
+      "easy-invest-hub": {
+        "joinedAt": "2025-09-01T08:00:00.000Z",
+        "role": "member",
+        "postCount": 3,
+        "commentCount": 15
+      },
+      "budgeting-101": {
+        "joinedAt": "2025-09-05T08:00:00.000Z",
+        "role": "member",
+        "postCount": 0,
+        "commentCount": 5
+      }
     }
   },
-  "categories": {
-    "investing": {
-      "name": "Investing",
-      "description": "Stocks, bonds, ETFs, and investment strategies",
-      "color": "#4CAF50",
-      "postCount": 0
+  "userBookmarks": {
+    "user_002": {
+      "post_2": {
+        "bookmarkedAt": "2025-09-07T03:30:00.000Z"
+      }
+    }
+  },
+  "userVotes": {
+    "user_001": {
+      "post_1": "upvote",
+      "post_3": "upvote",
+      "comment_1": "upvote"
     },
-    "budgeting": {
-      "name": "Budgeting",
-      "description": "Personal budgeting tips and strategies", 
-      "color": "#2196F3",
-      "postCount": 0
+    "user_002": {
+      "post_1": "upvote",
+      "post_2": "upvote",
+      "post_4": "downvote"
+    }
+  },
+  "notifications": {
+    "user_001": {
+      "notif_1": {
+        "id": "notif_1",
+        "type": "comment",
+        "message": "experienced_trader commented on your post",
+        "postId": "post_1",
+        "fromUser": "experienced_trader",
+        "createdAt": "2025-09-07T06:30:00.000Z",
+        "isRead": false
+      }
+    }
+  },
+  "analytics": {
+    "dailyStats": {
+      "2025-09-07": {
+        "totalPosts": 5,
+        "totalComments": 87,
+        "activeUsers": 234,
+        "newRegistrations": 12
+      }
+    },
+    "communityStats": {
+      "stockmarket": {
+        "totalPosts": 145,
+        "totalMembers": 892,
+        "growthRate": "5.2%"
+      },
+      "budgeting-101": {
+        "totalPosts": 203,
+        "totalMembers": 1247,
+        "growthRate": "8.1%"
+      }
     }
   }
 }
