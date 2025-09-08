@@ -10,6 +10,9 @@ import Footer from "@/components/layout/Footer";
 
 
 const HomePage = () => {
+  const handleCardClick = () => {
+  window.scrollTo(0, 0);
+  };
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200">
       <Navbar />
@@ -34,7 +37,7 @@ const HomePage = () => {
                 Take a short quiz with 10 MCQs to determine which type of investment suits you the best
               </div>
             </div>
-            <Link to="#investment-types">
+            <Link to="#investment-types" onClick={handleCardClick}>
               <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white bg-white/80 backdrop-blur-sm shadow-lg">
                 Explore Investments
               </Button>
@@ -82,7 +85,7 @@ const HomePage = () => {
                 </li>
               </ul>
               
-              <Link to="/conservative">
+              <Link to="/conservative" onClick={handleCardClick}>
                 <Button variant="outline" className="w-full border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white transition-all duration-300">
                   Explore Conservative Options
                 </Button>
@@ -117,7 +120,7 @@ const HomePage = () => {
                 </li>
               </ul>
               
-              <Link to="/moderate">
+              <Link to="/moderate" onClick={handleCardClick}>
                 <Button variant="outline" className="w-full border-yellow-500 text-yellow-600 hover:bg-yellow-500 hover:text-white transition-all duration-300">
                   Explore Moderate Options
                 </Button>
@@ -152,7 +155,7 @@ const HomePage = () => {
                 </li>
               </ul>
               
-              <Link to="/aggressive">
+              <Link to="/aggressive" onClick={handleCardClick}>
                 <Button variant="outline" className="w-full border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-all duration-300">
                   Explore Aggressive Options
                 </Button>
@@ -330,6 +333,7 @@ const HomePage = () => {
       <Footer />
     </div>
   );
+  window.scrollTo(0, 0);
 };
 
 export default HomePage;

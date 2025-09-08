@@ -1,6 +1,5 @@
-
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Users, TrendingUp, BookOpen, Wallet, Bell, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +10,7 @@ const communities = [
     memberCount: 0,
     icon: TrendingUp,
     color: "text-finance-primary bg-finance-primary/10",
+    route: "/CommunityPages/stockmarketpage",
   },
   {
     name: "Budgeting 101",
@@ -18,6 +18,7 @@ const communities = [
     memberCount: 0,
     icon: Wallet,
     color: "text-finance-secondary bg-finance-secondary/10",
+    route: "/CommunityPages/Budgeting101",
   },
   {
     name: "Easy Invest Hub",
@@ -25,24 +26,18 @@ const communities = [
     memberCount: 0,
     icon: BookOpen,
     color: "text-finance-accent bg-finance-accent/10",
-  },
-  {
-    name: "The Golden Horizon",
-    description: "Discuss strategies for planning a comfortable and stress-free retirement.",
-    memberCount: 0,
-    icon: DollarSign,
-    color: "text-amber-600 bg-amber-100",
-  },
-  {
-    name: "WealthBuilders Hub",
-    description: "Discuss tips and strategies used to improve finance",
-    memberCount: 0,
-    icon: Bell,
-    color: "text-purple-600 bg-purple-100",
+    route: "/CommunityPages/EasyInvestHub",
   },
 ];
 
 const CommunityList = () => {
+  const navigate = useNavigate();
+  const handleJoinCommunity = (route: string, communityName: string) => {
+    console.log(`Navigating to: ${route} for community: ${communityName}`);
+    navigate(route);
+    window.scrollTo(0, 0);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
       <div className="p-4 border-b border-gray-100">
@@ -68,21 +63,18 @@ const CommunityList = () => {
                 
                 <p className="text-sm text-gray-600 mb-2">{community.description}</p>
                 
-                <Button variant="outline" size="sm" className="text-finance-primary border-finance-primary w-full">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-finance-primary border-finance-primary w-full"
+                  onClick={() => handleJoinCommunity(community.route, community.name)}
+                >
                   Join Community
                 </Button>
               </div>
             </div>
           </div>
         ))}
-      </div>
-      
-      <div className="p-4 bg-gray-50 border-t border-blue-100 hover:bg-blue-100">
-        <Link to="/create-community">
-          <Button variant="outline" size="sm" className="w-full">
-            Browse All Communities
-          </Button>
-        </Link>
       </div>
     </div>
   );

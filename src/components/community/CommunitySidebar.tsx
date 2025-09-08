@@ -15,8 +15,8 @@ const CommunitySidebar = () => {
   return (
     <div className="space-y-4 mt-4">
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-        <div className="bg-finance-primary h-10 relative"></div>
-        <div className="p-4 pt-0">
+        <div className="bg-finance-primary h-2 relative"></div>
+        <div className="p-4 pt-5">
           <div className="flex items-end -mt-6 mb-4">
             <div className="bg-white p-2 rounded-lg shadow-sm">
               <TrendingUp className="h-10 w-10 text-finance-primary" />

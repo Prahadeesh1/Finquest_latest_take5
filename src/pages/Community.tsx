@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CommunityPost from "@/components/community/CommunityPost";
@@ -14,13 +14,69 @@ import {
   Search,
   SlidersHorizontal,
   Users,
-  MessageCircle,
-  Loader
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PostService, RealtimeListeners, DatabaseUtils, type Post } from "../services/realtimeDB";
-import { useAuth } from "../contexts/Auth";
-import { toast } from "sonner";
+
+// Sample data for community posts to be displayed
+const communityPosts = [
+  {
+    id: 1,
+    title: "How do I start investing with only $500?",
+    author: "newbie_investor",
+    authorAvatar: "/placeholder.svg",
+    community: "BeginnersInvesting",
+    timePosted: "2h ago",
+    content: "I have $500 saved up and want to start investing. What's the best approach for a complete beginner? Should I go with ETFs, individual stocks, or something else? Any advice would be appreciated!",
+    upvotes: 24,
+    commentCount: 12,
+  },
+  {
+    id: 2,
+    title: "Just reached my first $10k in investments!",
+    author: "growing_wealth",
+    authorAvatar: "/placeholder.svg",
+    community: "PersonalFinance",
+    timePosted: "5h ago",
+    content: "After consistently saving and investing for the past year, I've finally reached $10,000 in my investment portfolio! It's not much compared to some of you, but it feels like a huge milestone for me. Just wanted to share my small victory!",
+    upvotes: 156,
+    commentCount: 42,
+    isBookmarked: true,
+  },
+  {
+    id: 3,
+    title: "The importance of emergency funds before investing",
+    author: "finance_educator",
+    authorAvatar: "/placeholder.svg",
+    community: "FinanceFlowTogether",
+    timePosted: "8h ago",
+    content: "I see a lot of newcomers rushing to invest without having an emergency fund. Here's why that's risky: An emergency fund should cover 3-6 months of expenses and be easily accessible. Without it, you might be forced to sell investments at a loss during emergencies. Always build your safety net first!",
+    upvotes: 89,
+    commentCount: 23,
+  },
+  {
+    id: 4,
+    title: "Market analysis: Tech stocks outlook for Q2 2025",
+    author: "market_watcher",
+    authorAvatar: "/placeholder.svg",
+    community: "StockMarket",
+    timePosted: "12h ago",
+    content: "With recent shifts in the tech sector, I've analyzed potential trends for Q2 2025. Major tech companies are leaning heavily into AI integration, which might drive growth, but regulatory concerns in Europe could impact global operations. What are your thoughts on how this might affect the sector?",
+    upvotes: 67,
+    commentCount: 31,
+  },
+  {
+    id: 5,
+    title: "How I paid off $30k in student loans in 18 months",
+    author: "debt_free_now",
+    authorAvatar: "/placeholder.svg",
+    community: "PersonalFinance",
+    timePosted: "1d ago",
+    content: "I wanted to share my journey of becoming debt-free! I managed to pay off $30,000 in student loans in just 18 months by following a strict budget, taking on side gigs, and minimizing expenses. Happy to share more details about my strategy if anyone's interested.",
+    upvotes: 213,
+    commentCount: 87,
+  },
+];
 
 // Filter options displayed on the community page
 const filterOptions = [
@@ -31,167 +87,10 @@ const filterOptions = [
 ];
 
 const Community = () => {
-  const { currentUser } = useAuth();
-  const [activeFilter, setActiveFilter] = useState("New");
+  //State to manage the currently active filter for posts
+  const [activeFilter, setActiveFilter] = useState("Hot");
+  //State to manage the search query entered by user
   const [searchQuery, setSearchQuery] = useState("");
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userBookmarks, setUserBookmarks] = useState<string[]>([]);
-  const [communityStats, setCommunityStats] = useState({
-    activeMembers: 1247,
-    discussionsToday: 89,
-    questionsAnswered: 456
-  });
-
-  // Load posts and set up real-time listeners
-  useEffect(() => {
-    let unsubscribePosts: (() => void) | null = null;
-
-    const initializeData = async () => {
-      try {
-        setLoading(true);
-        
-        // Load initial posts
-        const initialPosts = await PostService.getAllPosts(50);
-        setPosts(initialPosts);
-        
-        // Set up real-time listener for posts
-        unsubscribePosts = RealtimeListeners.listenToPosts((updatedPosts) => {
-          setPosts(updatedPosts);
-        });
-
-        // Load user bookmarks if logged in
-        if (currentUser) {
-          const bookmarks = await DatabaseUtils.getUserBookmarks(currentUser.uid);
-          setUserBookmarks(bookmarks);
-        }
-
-      } catch (error) {
-        console.error('Error loading community data:', error);
-        toast.error('Failed to load community posts');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeData();
-
-    // Cleanup listener on unmount
-    return () => {
-      if (unsubscribePosts) {
-        unsubscribePosts();
-      }
-    };
-  }, [currentUser]);
-
-  // Filter and search posts
-  useEffect(() => {
-    let filtered = [...posts];
-
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(post => 
-        post.title.toLowerCase().includes(query) ||
-        post.content.toLowerCase().includes(query) ||
-        post.author.toLowerCase().includes(query) ||
-        post.community.toLowerCase().includes(query) ||
-        post.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply sorting based on active filter
-    switch (activeFilter) {
-      case "Hot":
-        // Sort by engagement score (upvotes + comments, weighted by recency)
-        filtered.sort((a, b) => {
-          const aScore = (a.upvotes * 2 + a.commentCount) / Math.max(1, Math.floor((Date.now() - new Date(a.createdAt).getTime()) / (1000 * 60 * 60)));
-          const bScore = (b.upvotes * 2 + b.commentCount) / Math.max(1, Math.floor((Date.now() - new Date(b.createdAt).getTime()) / (1000 * 60 * 60)));
-          return bScore - aScore;
-        });
-        break;
-      case "New":
-        // Sort by creation time (newest first)
-        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-      case "Top":
-        // Sort by upvotes
-        filtered.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
-        break;
-      case "Trending":
-        // Sort by recent engagement (posts with recent activity)
-        filtered.sort((a, b) => {
-          const aRecency = Date.now() - new Date(a.createdAt).getTime();
-          const bRecency = Date.now() - new Date(b.createdAt).getTime();
-          const aScore = (a.upvotes + a.commentCount * 2) / Math.max(1, aRecency / (1000 * 60 * 60 * 24));
-          const bScore = (b.upvotes + b.commentCount * 2) / Math.max(1, bRecency / (1000 * 60 * 60 * 24));
-          return bScore - aScore;
-        });
-        break;
-      default:
-        break;
-    }
-
-    setFilteredPosts(filtered);
-  }, [posts, searchQuery, activeFilter]);
-
-  // Update community stats periodically
-  useEffect(() => {
-    const updateStats = () => {
-      const today = new Date();
-      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      const todayPosts = posts.filter(post => 
-        new Date(post.createdAt) >= todayStart
-      );
-      
-      const totalComments = posts.reduce((sum, post) => sum + post.commentCount, 0);
-      
-      setCommunityStats({
-        activeMembers: 1247 + Math.floor(Math.random() * 20), // Simulate slight changes
-        discussionsToday: todayPosts.length,
-        questionsAnswered: totalComments
-      });
-    };
-
-    updateStats();
-    const interval = setInterval(updateStats, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [posts]);
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-
-    try {
-      setLoading(true);
-      const searchResults = await DatabaseUtils.searchPosts(searchQuery);
-      setPosts(searchResults);
-    } catch (error) {
-      console.error('Search error:', error);
-      toast.error('Search failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
-    const postTime = new Date(dateString);
-    const diffInMs = now.getTime() - postTime.getTime();
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) {
-      const diffInMins = Math.floor(diffInMs / (1000 * 60));
-      return `${diffInMins}m ago`;
-    } else if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}d ago`;
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -222,22 +121,16 @@ const Community = () => {
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {communityStats.activeMembers.toLocaleString()}
-              </div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">1,247</div>
               <div className="text-gray-600">Active Members</div>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                {communityStats.discussionsToday}
-              </div>
+              <div className="text-3xl font-bold text-green-600 mb-2">89</div>
               <div className="text-gray-600">Discussions Today</div>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-2">
-                {communityStats.questionsAnswered.toLocaleString()}
-              </div>
-              <div className="text-gray-600">Total Comments</div>
+              <div className="text-3xl font-bold text-purple-600 mb-2">456</div>
+              <div className="text-gray-600">Questions Answered</div>
             </div>
           </div>
 
@@ -288,17 +181,7 @@ const Community = () => {
                       placeholder="Search discussions, topics, or ask a question..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     />
-                    {searchQuery && (
-                      <Button
-                        size="sm"
-                        className="absolute inset-y-0 right-2 my-2"
-                        onClick={handleSearch}
-                      >
-                        Search
-                      </Button>
-                    )}
                   </div>
                   
                   {/* Filter Buttons */}
@@ -323,14 +206,6 @@ const Community = () => {
                       </Button>
                     ))}
                   </div>
-
-                  {/* Results count */}
-                  {searchQuery && (
-                    <div className="text-sm text-gray-600">
-                      Found {filteredPosts.length} result{filteredPosts.length !== 1 ? 's' : ''} 
-                      {searchQuery && ` for "${searchQuery}"`}
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -354,85 +229,40 @@ const Community = () => {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {searchQuery ? 'Search Results' : 'Community Discussions'}
+                    Recent Discussions
                   </h2>
                   <span className="text-sm text-gray-500">
-                    {filteredPosts.length} post{filteredPosts.length !== 1 ? 's' : ''}
+                    {communityPosts.length} posts
                   </span>
                 </div>
                 
-                {loading ? (
-                  <div className="flex justify-center items-center py-12">
-                    <div className="text-center">
-                      <Loader className="h-8 w-8 animate-spin text-finance-primary mx-auto mb-4" />
-                      <p className="text-gray-600">Loading community posts...</p>
-                    </div>
+                {communityPosts.map((post, index) => (
+                  <div key={post.id} className="transform transition-all duration-200 hover:scale-[1.02]">
+                    <CommunityPost
+                      title={post.title}
+                      author={post.author}
+                      authorAvatar={post.authorAvatar}
+                      community={post.community}
+                      timePosted={post.timePosted}
+                      content={post.content}
+                      upvotes={post.upvotes}
+                      commentCount={post.commentCount}
+                      isBookmarked={post.isBookmarked}
+                    />
                   </div>
-                ) : filteredPosts.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-                    <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {searchQuery ? 'No posts found' : 'No posts yet'}
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      {searchQuery 
-                        ? `Try adjusting your search terms or browse all posts`
-                        : `Be the first to start a discussion in the community!`
-                      }
-                    </p>
-                    {searchQuery && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSearchQuery('');
-                          window.location.reload();
-                        }}
-                      >
-                        View All Posts
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  filteredPosts.map((post, index) => (
-                    <div key={post.id} className="transform transition-all duration-200 hover:scale-[1.02]">
-                      <CommunityPost
-                        id={post.id!}
-                        title={post.title}
-                        author={post.author}
-                        authorId={post.authorId}
-                        community={post.community}
-                        timePosted={post.createdAt}
-                        content={post.content}
-                        upvotes={post.upvotes}
-                        downvotes={post.downvotes}
-                        commentCount={post.commentCount}
-                        isBookmarked={userBookmarks.includes(post.id!)}
-                      />
-                    </div>
-                  ))
-                )}
+                ))}
               </div>
               
               {/* Load More Button */}
-              {!loading && filteredPosts.length > 0 && !searchQuery && (
-                <div className="mt-10 text-center">
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="bg-white border-2 border-gray-200 hover:bg-gray-50 px-8 py-3 rounded-full font-medium"
-                    onClick={async () => {
-                      try {
-                        const morePosts = await PostService.getAllPosts(posts.length + 20);
-                        setPosts(morePosts);
-                      } catch (error) {
-                        toast.error('Failed to load more posts');
-                      }
-                    }}
-                  >
-                    Load More Discussions
-                  </Button>
-                </div>
-              )}
+              <div className="mt-10 text-center">
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="bg-white border-2 border-gray-200 hover:bg-gray-50 px-8 py-3 rounded-full font-medium"
+                >
+                  Load More Discussions
+                </Button>
+              </div>
             </div>
           </div>
         </div>

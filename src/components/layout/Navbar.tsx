@@ -25,6 +25,10 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const handleCardClick = () => {
+  window.scrollTo(0, 0);
+  };
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -57,6 +61,7 @@ const Navbar = () => {
               <Link
                 to="/learn"
                 className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+                onClick={handleCardClick}
               >
                 <BookOpen className="h-4 w-4" />
                 <span>Learn</span>
@@ -71,6 +76,7 @@ const Navbar = () => {
               <Link
                 to="/community"
                 className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+                onClick={handleCardClick}
               >
                 <Users className="h-4 w-4" />
                 <span>Community</span>
@@ -85,6 +91,7 @@ const Navbar = () => {
               <Link
                 to="/events"
                 className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+                onClick={handleCardClick}
               >
                 <Calendar className="h-4 w-4" />
                 <span>Events</span>
@@ -99,6 +106,7 @@ const Navbar = () => {
               <Link
                 to="/riskwise"
                 className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+                onClick={handleCardClick}
               >
                 <Users className="h-4 w-4" />
                 <span>RiskWise</span>
@@ -168,7 +176,7 @@ const Navbar = () => {
             ) : (
               // Not logged in state
               <>
-                <Link to="/login">
+                <Link to="/login" onClick={handleCardClick}>
                   <Button
                     variant="outline"
                     size="sm"
@@ -178,7 +186,7 @@ const Navbar = () => {
                     Log in
                   </Button>
                 </Link>
-                <Link to="/register">
+                <Link to="/register" onClick={handleCardClick}>
                   <Button
                     size="sm"
                     className="bg-finance-primary hover:bg-finance-primary/90"
@@ -190,6 +198,7 @@ const Navbar = () => {
                   <Link
                     to="/profile"
                     className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+                    onClick={handleCardClick}
                   >
                     <User className="h-4 w-4 text-black" />
                     <span>Profile</span>

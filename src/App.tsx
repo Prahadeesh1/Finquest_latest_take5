@@ -24,6 +24,13 @@ import ForgotPassword from "./pages/ForgotPassword";
 import { AuthProvider } from "./contexts/Auth";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+import StockMarketCommunity from "@/components/CommunityPages/stockmarketpage";
+import BudgetingCommunity from "./components/CommunityPages/Budgeting101";
+import EasyInvestCommunity from "@/components/CommunityPages/EasyInvestHub";
+
+import PostDetailPage from "./components/community/CommunityPostPage";
+
+
 // Create the client outside of the component with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -137,6 +144,12 @@ function App() {
                   <UserProfile />
                 </ProtectedRoute>
               } />
+
+              <Route path="/CommunityPages/stockmarketpage" element={<StockMarketCommunity/>} />
+              <Route path="/CommunityPages/Budgeting101" element={<BudgetingCommunity/>} />
+              <Route path="/CommunityPages/EasyInvestHub" element={<EasyInvestCommunity/>} />
+
+              <Route path="/post/:postId" element={<PostDetailPage />} />
               
               {/* Catch-all route for 404 */}
               <Route path="*" element={<NotFound />} />
