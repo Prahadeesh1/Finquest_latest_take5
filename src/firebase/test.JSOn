@@ -3,176 +3,154 @@
     "stockmarket": {
       "name": "StockMarket",
       "description": "Discussion about stock markets, trading strategies, and investment trends.",
-      "memberCount": 0,
-      "createdAt": "2025-01-15T08:00:00.000Z",
-      "createdBy": "system",
-      "isPublic": true,
-      "tags": ["stocks", "trading", "investing"],
-      "moderators": ["system"],
+      "memberCount": 15200,
+      "onlineCount": 3100,
+      "icon": "TrendingUp",
+      "color": "text-green-primary bg-green-primary/10",
+      "createdAt": "2025-01-01T00:00:00Z",
       "rules": [
-        "Be respectful to all members",
-        "No spam or promotional content",
-        "Stay on topic - focus on stock market discussions",
-        "Provide sources for market claims"
+        "Feel free to ask questions but be relevant",
+        "Provide sources for market claims",
+        "Be respectful in discussions",
+        "Stay focused on stock market topics"
       ]
     },
     "budgeting-101": {
       "name": "Budgeting 101",
       "description": "Tips, advice, and discussions about managing personal finances and budgeting.",
-      "memberCount": 0,
-      "createdAt": "2025-01-15T08:00:00.000Z",
-      "createdBy": "system",
-      "isPublic": true,
-      "tags": ["budgeting", "personal-finance", "savings"],
-      "moderators": ["system"],
+      "memberCount": 8700,
+      "onlineCount": 1900,
+      "icon": "Wallet",
+      "color": "text-blue-primary bg-blue-primary/10",
+      "createdAt": "2025-01-01T00:00:00Z",
       "rules": [
-        "Be respectful and supportive",
-        "Share practical budgeting tips",
-        "No financial advice - share experiences only",
-        "Keep discussions beginner-friendly"
+        "Be supportive and non-judgmental",
+        "Celebrate small wins and progress",
+        "Ask questions freely but do not spam",
+        "Share practical tips and experiences"
       ]
     },
     "easy-invest-hub": {
       "name": "Easy Invest Hub",
       "description": "A supportive community for those who are new to investing.",
-      "memberCount": 0,
-      "createdAt": "2025-01-15T08:00:00.000Z",
-      "createdBy": "system",
-      "isPublic": true,
-      "tags": ["investing", "beginners", "education"],
-      "moderators": ["system"],
+      "memberCount": 12400,
+      "onlineCount": 2800,
+      "icon": "BookOpen",
+      "color": "text-purple-primary bg-purple-primary/10",
+      "createdAt": "2025-01-01T00:00:00Z",
       "rules": [
-        "Encourage questions from beginners",
-        "Provide educational resources",
-        "No get-rich-quick schemes",
-        "Be patient and helpful"
-      ]
-    },
-    "golden-horizon": {
-      "name": "The Golden Horizon",
-      "description": "Discuss strategies for planning a comfortable and stress-free retirement.",
-      "memberCount": 0,
-      "createdAt": "2025-01-15T08:00:00.000Z",
-      "createdBy": "system",
-      "isPublic": true,
-      "tags": ["retirement", "planning", "long-term"],
-      "moderators": ["system"],
-      "rules": [
-        "Focus on retirement planning strategies",
-        "Share experiences constructively",
-        "Consider different age groups",
-        "Respect diverse financial situations"
-      ]
-    },
-    "wealthbuilders-hub": {
-      "name": "WealthBuilders Hub",
-      "description": "Discuss tips and strategies used to improve finance",
-      "memberCount": 0,
-      "createdAt": "2025-01-15T08:00:00.000Z",
-      "createdBy": "system",
-      "isPublic": true,
-      "tags": ["wealth-building", "strategies", "finance"],
-      "moderators": ["system"],
-      "rules": [
-        "Share proven wealth-building strategies",
-        "Discuss both successes and failures",
-        "Focus on long-term approaches",
-        "No unrealistic promises"
+        "No question is too basic",
+        "Please stay on topic",
+        "Share your learning journey",
+        "Focus on education, not specific advice"
       ]
     },
     "financeflow-together": {
       "name": "FinanceFlow Together",
       "description": "A community for financial education, discussions, and collaboration on all aspects of personal finance and investing.",
       "memberCount": 42800,
-      "createdAt": "2025-03-31T08:00:00.000Z",
-      "createdBy": "system",
-      "isPublic": true,
-      "tags": ["education", "collaboration", "general-finance"],
-      "moderators": ["sathivada-chandan", "umapathy-prahadeesh", "shreyaa-sathappan"],
+      "onlineCount": 2400,
+      "icon": "TrendingUp",
+      "color": "text-finance-primary bg-finance-primary/10",
+      "createdAt": "2025-01-01T00:00:00Z",
       "rules": [
-        "Educational focus - learn and teach",
-        "Collaborate and support each other",
-        "All experience levels welcome",
-        "Follow community guidelines"
-      ],
-      "onlineMembers": 2400
+        "Educational resource for financial literacy",
+        "Share experiences and ask questions",
+        "Learn together as a group",
+        "Helpful resources for all levels"
+      ]
     }
   },
   "posts": {
     "post_1": {
       "id": "post_1",
-      "title": "How do I start investing with only $500?",
-      "content": "I have $500 saved up and want to start investing. What's the best approach for a complete beginner? Should I go with ETFs, individual stocks, or something else? Any advice would be appreciated!",
-      "author": "newbie_investor",
-      "authorId": "user_001",
-      "community": "easy-invest-hub",
-      "createdAt": "2025-09-07T06:00:00.000Z",
-      "upvotes": 24,
-      "downvotes": 2,
-      "commentCount": 12,
+      "title": "NVDA earnings upcoming predictions - Q1 2026",
+      "content": "NVIDIA seems to have been consistently performing well and it appears that the market will rise by 2% at the start of 2026.",
+      "author": "market_analyst_pro",
+      "authorId": "user_123",
+      "community": "stockmarket",
+      "type": "text",
+      "upvotes": 789,
+      "downvotes": 23,
+      "commentCount": 103,
+      "tags": ["nvidia", "earnings", "predictions", "ai"],
+      "createdAt": "2025-09-08T07:00:00Z",
+      "updatedAt": "2025-09-08T07:00:00Z",
       "isBookmarked": false,
-      "tags": ["beginner", "investing", "ETFs"],
-      "type": "text"
+      "isPinned": true,
+      "category": "expert-insights"
     },
     "post_2": {
       "id": "post_2",
-      "title": "Just reached my first $10k in investments!",
-      "content": "After consistently saving and investing for the past year, I've finally reached $10,000 in my investment portfolio! It's not much compared to some of you, but it feels like a huge milestone for me. Just wanted to share my small victory!",
-      "author": "growing_wealth",
-      "authorId": "user_002",
-      "community": "wealthbuilders-hub",
-      "createdAt": "2025-09-07T03:00:00.000Z",
-      "upvotes": 156,
-      "downvotes": 3,
-      "commentCount": 42,
-      "isBookmarked": true,
-      "tags": ["milestone", "success-story", "investing"],
-      "type": "text"
+      "title": "Youngsters struggle in budgeting in 2025",
+      "content": "As the years progress it seems like more and more youngsters are getting worse at their monthly spending habits",
+      "author": "BudgetingMaster",
+      "authorId": "user_456",
+      "community": "budgeting-101",
+      "type": "text",
+      "upvotes": 456,
+      "downvotes": 12,
+      "commentCount": 67,
+      "tags": ["budgeting", "youngsters", "spending", "habits"],
+      "createdAt": "2025-09-08T06:00:00Z",
+      "updatedAt": "2025-09-08T06:00:00Z",
+      "isBookmarked": false,
+      "isPinned": true,
+      "category": "expert-insights"
     },
     "post_3": {
       "id": "post_3",
-      "title": "The importance of emergency funds before investing",
-      "content": "I see a lot of newcomers rushing to invest without having an emergency fund. Here's why that's risky: An emergency fund should cover 3-6 months of expenses and be easily accessible. Without it, you might be forced to sell investments at a loss during emergencies. Always build your safety net first!",
-      "author": "finance_educator",
-      "authorId": "user_003",
-      "community": "financeflow-together",
-      "createdAt": "2025-09-06T22:00:00.000Z",
-      "upvotes": 89,
-      "downvotes": 5,
-      "commentCount": 23,
+      "title": "Gold prices are skyrocketing",
+      "content": "2025 has seen a skyrocket hike in terms of gold prices and investments",
+      "author": "InvestGuru",
+      "authorId": "user_789",
+      "community": "easy-invest-hub",
+      "type": "text",
+      "upvotes": 321,
+      "downvotes": 8,
+      "commentCount": 89,
+      "tags": ["gold", "prices", "investment", "2025"],
+      "createdAt": "2025-09-08T05:00:00Z",
+      "updatedAt": "2025-09-08T05:00:00Z",
       "isBookmarked": false,
-      "tags": ["emergency-fund", "education", "risk-management"],
-      "type": "text"
+      "isPinned": true,
+      "category": "expert-insights"
     },
     "post_4": {
       "id": "post_4",
-      "title": "Market analysis: Tech stocks outlook for Q2 2025",
-      "content": "With recent shifts in the tech sector, I've analyzed potential trends for Q2 2025. Major tech companies are leaning heavily into AI integration, which might drive growth, but regulatory concerns in Europe could impact global operations. What are your thoughts on how this might affect the sector?",
-      "author": "market_watcher",
-      "authorId": "user_004",
-      "community": "stockmarket",
-      "createdAt": "2025-09-06T18:00:00.000Z",
-      "upvotes": 67,
-      "downvotes": 8,
-      "commentCount": 31,
+      "title": "The 50/30/20 rule changed my financial life",
+      "content": "I've been following the 50/30/20 budgeting rule for 8 months now and it's been a game changer. 50% for needs, 30% for wants, 20% for savings and debt. Here's how I track everything and stay consistent...",
+      "author": "budget_success_story",
+      "authorId": "user_101",
+      "community": "budgeting-101",
+      "type": "text",
+      "upvotes": 124,
+      "downvotes": 3,
+      "commentCount": 47,
+      "tags": ["budgeting", "50-30-20", "success", "tracking"],
+      "createdAt": "2025-09-08T04:00:00Z",
+      "updatedAt": "2025-09-08T04:00:00Z",
       "isBookmarked": false,
-      "tags": ["market-analysis", "tech-stocks", "Q2-2025"],
-      "type": "text"
+      "isPinned": false,
+      "category": "community-discussion"
     },
     "post_5": {
       "id": "post_5",
-      "title": "How I paid off $30k in student loans in 18 months",
-      "content": "I wanted to share my journey of becoming debt-free! I managed to pay off $30,000 in student loans in just 18 months by following a strict budget, taking on side gigs, and minimizing expenses. Happy to share more details about my strategy if anyone's interested.",
-      "author": "debt_free_now",
-      "authorId": "user_005",
-      "community": "budgeting-101",
-      "createdAt": "2025-09-06T08:00:00.000Z",
-      "upvotes": 213,
-      "downvotes": 7,
-      "commentCount": 87,
+      "title": "Complete beginner - where do I even start?",
+      "content": "I'm 25, have about $2,000 saved, and want to start investing but I'm completely overwhelmed. Should I use a robo-advisor? Pick individual stocks? Start with index funds? Any guidance for someone who knows absolutely nothing?",
+      "author": "investment_newbie",
+      "authorId": "user_102",
+      "community": "easy-invest-hub",
+      "type": "text",
+      "upvotes": 67,
+      "downvotes": 1,
+      "commentCount": 34,
+      "tags": ["beginner", "investing", "advice", "robo-advisor"],
+      "createdAt": "2025-09-08T03:00:00Z",
+      "updatedAt": "2025-09-08T03:00:00Z",
       "isBookmarked": false,
-      "tags": ["debt-free", "student-loans", "success-story"],
-      "type": "text"
+      "isPinned": false,
+      "category": "community-discussion"
     }
   },
   "comments": {
@@ -180,105 +158,116 @@
       "comment_1": {
         "id": "comment_1",
         "postId": "post_1",
-        "author": "experienced_trader",
-        "authorId": "user_006",
-        "content": "Start with index funds or ETFs! They're diversified and perfect for beginners. VTI or VOO are great choices.",
-        "createdAt": "2025-09-07T06:30:00.000Z",
-        "upvotes": 8,
-        "downvotes": 0,
+        "author": "investment_guru",
+        "authorId": "user_201",
+        "content": "Great analysis! I've been tracking this stock for months and your points about the earnings are spot on. The guidance might be conservative but that usually means they'll beat expectations next quarter.",
+        "upvotes": 24,
+        "downvotes": 1,
+        "createdAt": "2025-09-08T07:30:00Z",
         "replies": {
           "reply_1": {
             "id": "reply_1",
             "commentId": "comment_1",
-            "author": "newbie_investor",
-            "authorId": "user_001",
-            "content": "Thanks! I'll look into those options.",
-            "createdAt": "2025-09-07T07:00:00.000Z",
-            "upvotes": 2,
-            "downvotes": 0
+            "author": "market_watcher",
+            "authorId": "user_202",
+            "content": "I agree, but we should also consider the overall market sentiment. Tech stocks have been volatile lately.",
+            "upvotes": 8,
+            "downvotes": 0,
+            "createdAt": "2025-09-08T08:00:00Z"
           }
         }
       },
       "comment_2": {
         "id": "comment_2",
         "postId": "post_1",
-        "author": "budget_guru",
-        "authorId": "user_007",
-        "content": "Make sure you have an emergency fund first! Don't invest money you might need soon.",
-        "createdAt": "2025-09-07T06:45:00.000Z",
+        "author": "beginner_trader",
+        "authorId": "user_203",
+        "content": "Can someone explain what 'guidance' means in this context? Still learning the terminology.",
         "upvotes": 12,
-        "downvotes": 1,
-        "replies": {}
+        "downvotes": 0,
+        "createdAt": "2025-09-08T07:45:00Z",
+        "replies": {
+          "reply_2": {
+            "id": "reply_2",
+            "commentId": "comment_2",
+            "author": "helpful_veteran",
+            "authorId": "user_204",
+            "content": "Guidance refers to the company's forecasted performance for future quarters. It's their prediction of revenue, earnings, etc. Companies often give conservative guidance to avoid disappointing investors.",
+            "upvotes": 18,
+            "downvotes": 0,
+            "createdAt": "2025-09-08T08:15:00Z"
+          }
+        }
       }
     }
   },
-  "userCommunities": {
-    "user_001": {
-      "easy-invest-hub": {
-        "joinedAt": "2025-09-01T08:00:00.000Z",
-        "role": "member",
-        "postCount": 3,
-        "commentCount": 15
-      },
-      "budgeting-101": {
-        "joinedAt": "2025-09-05T08:00:00.000Z",
-        "role": "member",
-        "postCount": 0,
-        "commentCount": 5
-      }
-    }
-  },
-  "userBookmarks": {
-    "user_002": {
-      "post_2": {
-        "bookmarkedAt": "2025-09-07T03:30:00.000Z"
-      }
-    }
-  },
-  "userVotes": {
-    "user_001": {
-      "post_1": "upvote",
-      "post_3": "upvote",
-      "comment_1": "upvote"
+  "users": {
+    "user_123": {
+      "firstName": "Market",
+      "lastName": "Analyst",
+      "email": "analyst@example.com",
+      "displayName": "market_analyst_pro",
+      "experienceLevel": "expert",
+      "avatar": "/placeholder.svg",
+      "description": "Professional market analyst with 10+ years experience",
+      "joinedAt": "2025-01-01T00:00:00Z",
+      "following": ["user_456", "user_789"],
+      "followers": ["user_101", "user_102"],
+      "postsCount": 45,
+      "commentsCount": 234,
+      "karma": 1256,
+      "communities": ["stockmarket", "financeflow-together"]
     },
-    "user_002": {
-      "post_1": "upvote",
-      "post_2": "upvote",
-      "post_4": "downvote"
+    "user_456": {
+      "firstName": "Budget",
+      "lastName": "Master",
+      "email": "budget@example.com",
+      "displayName": "BudgetingMaster",
+      "experienceLevel": "intermediate",
+      "avatar": "/placeholder.svg",
+      "description": "Helping people master their budgets and financial goals",
+      "joinedAt": "2025-01-15T00:00:00Z",
+      "following": ["user_123"],
+      "followers": ["user_101"],
+      "postsCount": 28,
+      "commentsCount": 156,
+      "karma": 789,
+      "communities": ["budgeting-101", "financeflow-together"]
     }
   },
-  "notifications": {
-    "user_001": {
-      "notif_1": {
-        "id": "notif_1",
-        "type": "comment",
-        "message": "experienced_trader commented on your post",
+  "user-activity": {
+    "user_123": {
+      "activity_1": {
+        "type": "post_created",
         "postId": "post_1",
-        "fromUser": "experienced_trader",
-        "createdAt": "2025-09-07T06:30:00.000Z",
-        "isRead": false
+        "timestamp": "2025-09-08T07:00:00Z"
+      },
+      "activity_2": {
+        "type": "comment_created",
+        "commentId": "comment_1",
+        "postId": "post_1",
+        "timestamp": "2025-09-08T07:30:00Z"
       }
     }
   },
-  "analytics": {
-    "dailyStats": {
-      "2025-09-07": {
-        "totalPosts": 5,
-        "totalComments": 87,
-        "activeUsers": 234,
-        "newRegistrations": 12
+  "bookmarks": {
+    "user_101": {
+      "post_2": true,
+      "post_4": true
+    }
+  },
+  "votes": {
+    "posts": {
+      "post_1": {
+        "user_101": "upvote",
+        "user_102": "upvote",
+        "user_103": "downvote"
       }
     },
-    "communityStats": {
-      "stockmarket": {
-        "totalPosts": 145,
-        "totalMembers": 892,
-        "growthRate": "5.2%"
-      },
-      "budgeting-101": {
-        "totalPosts": 203,
-        "totalMembers": 1247,
-        "growthRate": "8.1%"
+    "comments": {
+      "comment_1": {
+        "user_101": "upvote",
+        "user_102": "upvote"
       }
     }
   }

@@ -6,182 +6,109 @@ import {
   get, 
   update, 
   remove, 
-  onValue, 
-  off, 
-  serverTimestamp,
-  query,
-  orderByChild,
+  query, 
+  orderByChild, 
   limitToLast,
+  orderByKey,
   startAt,
-  endAt
+  endAt,
+  onValue,
+  off,
+  DataSnapshot
 } from 'firebase/database';
-import { rtdb } from '../firebase/config';
-
-// Types
-export interface Community {
-  id?: string;
-  name: string;
-  description: string;
-  memberCount: number;
-  createdAt: string;
-  createdBy: string;
-  isPublic: boolean;
-  tags: string[];
-  moderators: string[];
-  rules: string[];
-  onlineMembers?: number;
-}
+import { rtdb } from '../firebase/config'; // Make sure this imports your Realtime Database instance
 
 export interface Post {
-  id?: string;
+  id: string;
   title: string;
   content: string;
   author: string;
   authorId: string;
   community: string;
-  createdAt: string;
+  type: 'text' | 'image' | 'link';
   upvotes: number;
   downvotes: number;
   commentCount: number;
-  isBookmarked?: boolean;
   tags: string[];
-  type: 'text' | 'image' | 'link';
+  createdAt: string;
+  updatedAt: string;
+  isBookmarked?: boolean;
+  isPinned?: boolean;
+  category?: 'expert-insights' | 'community-discussion';
   imageUrl?: string;
   linkUrl?: string;
 }
 
 export interface Comment {
-  id?: string;
+  id: string;
   postId: string;
   author: string;
   authorId: string;
   content: string;
-  createdAt: string;
   upvotes: number;
   downvotes: number;
-  replies?: { [key: string]: Comment };
+  createdAt: string;
+  replies?: { [key: string]: Reply };
 }
 
-export interface UserVote {
-  [postOrCommentId: string]: 'upvote' | 'downvote';
+export interface Reply {
+  id: string;
+  commentId: string;
+  author: string;
+  authorId: string;
+  content: string;
+  upvotes: number;
+  downvotes: number;
+  createdAt: string;
 }
 
-// Community Services
-export class CommunityService {
-  
-  // Get all communities
-  static async getCommunities(): Promise<Community[]> {
-    try {
-      const communitiesRef = ref(rtdb, 'communities');
-      const snapshot = await get(communitiesRef);
-      
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        return Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching communities:', error);
-      throw error;
-    }
-  }
-
-  // Get single community
-  static async getCommunity(communityId: string): Promise<Community | null> {
-    try {
-      const communityRef = ref(rtdb, `communities/${communityId}`);
-      const snapshot = await get(communityRef);
-      
-      if (snapshot.exists()) {
-        return {
-          id: communityId,
-          ...snapshot.val()
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching community:', error);
-      throw error;
-    }
-  }
-
-  // Join community
-  static async joinCommunity(userId: string, communityId: string): Promise<void> {
-    try {
-      const userCommunityRef = ref(rtdb, `userCommunities/${userId}/${communityId}`);
-      const communityRef = ref(rtdb, `communities/${communityId}/memberCount`);
-      
-      // Get current member count
-      const memberSnapshot = await get(communityRef);
-      const currentCount = memberSnapshot.exists() ? memberSnapshot.val() : 0;
-      
-      // Add user to community and increment member count
-      await set(userCommunityRef, {
-        joinedAt: new Date().toISOString(),
-        role: 'member',
-        postCount: 0,
-        commentCount: 0
-      });
-      
-      await set(communityRef, currentCount + 1);
-      
-    } catch (error) {
-      console.error('Error joining community:', error);
-      throw error;
-    }
-  }
-
-  // Leave community
-  static async leaveCommunity(userId: string, communityId: string): Promise<void> {
-    try {
-      const userCommunityRef = ref(rtdb, `userCommunities/${userId}/${communityId}`);
-      const communityRef = ref(rtdb, `communities/${communityId}/memberCount`);
-      
-      // Get current member count
-      const memberSnapshot = await get(communityRef);
-      const currentCount = memberSnapshot.exists() ? memberSnapshot.val() : 1;
-      
-      // Remove user from community and decrement member count
-      await remove(userCommunityRef);
-      await set(communityRef, Math.max(0, currentCount - 1));
-      
-    } catch (error) {
-      console.error('Error leaving community:', error);
-      throw error;
-    }
-  }
+export interface Community {
+  name: string;
+  description: string;
+  memberCount: number;
+  onlineCount: number;
+  icon: string;
+  color: string;
+  createdAt: string;
+  rules: string[];
 }
 
-// Post Services
 export class PostService {
-  
-  // Create new post
-  static async createPost(post: Omit<Post, 'id' | 'createdAt' | 'upvotes' | 'downvotes' | 'commentCount'>): Promise<string> {
+  // Create a new post
+  static async createPost(postData: Omit<Post, 'id' | 'upvotes' | 'downvotes' | 'commentCount' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
       const postsRef = ref(rtdb, 'posts');
       const newPostRef = push(postsRef);
       const postId = newPostRef.key!;
       
-      const newPost: Post = {
-        ...post,
+      const now = new Date().toISOString();
+      const post: Post = {
         id: postId,
-        createdAt: new Date().toISOString(),
+        ...postData,
         upvotes: 0,
         downvotes: 0,
-        commentCount: 0
+        commentCount: 0,
+        createdAt: now,
+        updatedAt: now,
+        isPinned: false,
+        category: 'community-discussion'
       };
-      
-      await set(newPostRef, newPost);
-      
-      // Update user's post count in community
-      const userCommunityRef = ref(rtdb, `userCommunities/${post.authorId}/${post.community}/postCount`);
-      const snapshot = await get(userCommunityRef);
-      const currentCount = snapshot.exists() ? snapshot.val() : 0;
-      await set(userCommunityRef, currentCount + 1);
-      
+
+      await set(newPostRef, post);
+
+      // Update user's posts count
+      const userRef = ref(rtdb, `users/${postData.authorId}/postsCount`);
+      const userSnapshot = await get(userRef);
+      const currentCount = userSnapshot.val() || 0;
+      await set(userRef, currentCount + 1);
+
+      // Add to user activity
+      await this.addUserActivity(postData.authorId, {
+        type: 'post_created',
+        postId: postId,
+        timestamp: now
+      });
+
       return postId;
     } catch (error) {
       console.error('Error creating post:', error);
@@ -189,159 +116,199 @@ export class PostService {
     }
   }
 
-  // Get posts for a community
-  static async getPostsByCommunity(communityId: string, limit: number = 20): Promise<Post[]> {
+  // Get posts by community
+  static async getPostsByCommunity(communityId: string, limit: number = 10): Promise<Post[]> {
     try {
       const postsRef = ref(rtdb, 'posts');
       const communityQuery = query(
-        postsRef,
-        orderByChild('community'),
-        startAt(communityId),
-        endAt(communityId),
+        postsRef, 
+        orderByChild('community'), 
         limitToLast(limit)
       );
       
       const snapshot = await get(communityQuery);
+      const posts: Post[] = [];
       
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        return Object.keys(data)
-          .map(key => data[key])
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      }
-      return [];
+      snapshot.forEach((childSnapshot) => {
+        const post = childSnapshot.val();
+        if (post.community === communityId) {
+          posts.push(post);
+        }
+      });
+
+      // Sort by creation date (newest first) and separate pinned posts
+      posts.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
+      return posts;
     } catch (error) {
-      console.error('Error fetching posts:', error);
+      console.error('Error fetching community posts:', error);
       throw error;
     }
   }
 
-  // Get all posts (for main feed)
+  // Get all posts (for main community page)
   static async getAllPosts(limit: number = 20): Promise<Post[]> {
     try {
       const postsRef = ref(rtdb, 'posts');
-      const postsQuery = query(postsRef, limitToLast(limit));
+      const snapshot = await get(postsRef);
       
-      const snapshot = await get(postsQuery);
+      if (!snapshot.exists()) return [];
+
+      const posts: Post[] = [];
       
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        return Object.keys(data)
-          .map(key => data[key])
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      }
-      return [];
+      snapshot.forEach((childSnapshot) => {
+        const post = childSnapshot.val();
+        if (post) {
+          posts.push(post);
+        }
+      });
+
+      // Sort by creation date (newest first)
+      posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      // Apply limit after sorting
+      return posts.slice(0, limit);
     } catch (error) {
       console.error('Error fetching all posts:', error);
       throw error;
     }
   }
 
-  // Vote on post
-  static async voteOnPost(userId: string, postId: string, voteType: 'upvote' | 'downvote'): Promise<void> {
+  // Get expert/pinned posts by community
+  static async getExpertPostsByCommunity(communityId: string): Promise<Post[]> {
     try {
-      const userVoteRef = ref(rtdb, `userVotes/${userId}/${postId}`);
-      const postUpvotesRef = ref(rtdb, `posts/${postId}/upvotes`);
-      const postDownvotesRef = ref(rtdb, `posts/${postId}/downvotes`);
+      const posts = await this.getPostsByCommunity(communityId, 50);
+      return posts.filter(post => post.isPinned || post.category === 'expert-insights');
+    } catch (error) {
+      console.error('Error fetching expert posts:', error);
+      throw error;
+    }
+  }
+
+  // Get single post by ID
+  static async getPostById(postId: string): Promise<Post | null> {
+    try {
+      const postRef = ref(rtdb, `posts/${postId}`);
+      const snapshot = await get(postRef);
+      return snapshot.exists() ? snapshot.val() : null;
+    } catch (error) {
+      console.error('Error fetching post:', error);
+      throw error;
+    }
+  }
+
+  // Vote on a post
+  static async voteOnPost(postId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
+    try {
+      const voteRef = ref(rtdb, `votes/posts/${postId}/${userId}`);
+      const postRef = ref(rtdb, `posts/${postId}`);
       
-      // Get current vote and post votes
-      const [currentVoteSnapshot, upvotesSnapshot, downvotesSnapshot] = await Promise.all([
-        get(userVoteRef),
-        get(postUpvotesRef),
-        get(postDownvotesRef)
+      // Get current vote and post data
+      const [voteSnapshot, postSnapshot] = await Promise.all([
+        get(voteRef),
+        get(postRef)
       ]);
       
-      const currentVote = currentVoteSnapshot.exists() ? currentVoteSnapshot.val() : null;
-      let upvotes = upvotesSnapshot.exists() ? upvotesSnapshot.val() : 0;
-      let downvotes = downvotesSnapshot.exists() ? downvotesSnapshot.val() : 0;
+      const currentVote = voteSnapshot.val();
+      const post = postSnapshot.val();
       
-      // Handle vote logic
-      if (currentVote === voteType) {
-        // Remove vote
-        await remove(userVoteRef);
-        if (voteType === 'upvote') upvotes--;
-        else downvotes--;
-      } else {
-        // Add/change vote
-        await set(userVoteRef, voteType);
-        
-        if (currentVote) {
-          // Change vote
-          if (voteType === 'upvote') {
-            upvotes++;
-            downvotes--;
-          } else {
-            downvotes++;
-            upvotes--;
-          }
-        } else {
-          // New vote
-          if (voteType === 'upvote') upvotes++;
-          else downvotes++;
-        }
+      if (!post) return;
+
+      let upvoteChange = 0;
+      let downvoteChange = 0;
+
+      // Calculate vote changes
+      if (currentVote === 'upvote') {
+        upvoteChange = -1;
+      } else if (currentVote === 'downvote') {
+        downvoteChange = -1;
       }
-      
-      // Update post vote counts
-      await Promise.all([
-        set(postUpvotesRef, Math.max(0, upvotes)),
-        set(postDownvotesRef, Math.max(0, downvotes))
-      ]);
-      
+
+      if (voteType === 'upvote' && currentVote !== 'upvote') {
+        upvoteChange += 1;
+      } else if (voteType === 'downvote' && currentVote !== 'downvote') {
+        downvoteChange += 1;
+      }
+
+      // Update post votes
+      const updates: any = {};
+      if (upvoteChange !== 0) {
+        updates[`posts/${postId}/upvotes`] = post.upvotes + upvoteChange;
+      }
+      if (downvoteChange !== 0) {
+        updates[`posts/${postId}/downvotes`] = post.downvotes + downvoteChange;
+      }
+
+      // Update vote record
+      if (voteType === 'remove') {
+        updates[`votes/posts/${postId}/${userId}`] = null;
+      } else {
+        updates[`votes/posts/${postId}/${userId}`] = voteType;
+      }
+
+      await update(ref(rtdb), updates);
     } catch (error) {
       console.error('Error voting on post:', error);
       throw error;
     }
   }
 
-  // Bookmark post
-  static async toggleBookmark(userId: string, postId: string): Promise<void> {
+  // Get comments for a post
+  static async getPostComments(postId: string): Promise<Comment[]> {
     try {
-      const bookmarkRef = ref(rtdb, `userBookmarks/${userId}/${postId}`);
-      const snapshot = await get(bookmarkRef);
+      const commentsRef = ref(rtdb, `comments/${postId}`);
+      const snapshot = await get(commentsRef);
       
-      if (snapshot.exists()) {
-        // Remove bookmark
-        await remove(bookmarkRef);
-      } else {
-        // Add bookmark
-        await set(bookmarkRef, {
-          bookmarkedAt: new Date().toISOString()
-        });
-      }
+      if (!snapshot.exists()) return [];
+
+      const comments: Comment[] = [];
+      snapshot.forEach((childSnapshot) => {
+        comments.push(childSnapshot.val());
+      });
+
+      // Sort by creation date (oldest first)
+      comments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+      return comments;
     } catch (error) {
-      console.error('Error toggling bookmark:', error);
+      console.error('Error fetching comments:', error);
       throw error;
     }
   }
-}
 
-// Comment Services
-export class CommentService {
-  
   // Add comment to post
-  static async addComment(comment: Omit<Comment, 'id' | 'createdAt' | 'upvotes' | 'downvotes'>): Promise<string> {
+  static async addComment(postId: string, commentData: Omit<Comment, 'id' | 'upvotes' | 'downvotes' | 'createdAt'>): Promise<string> {
     try {
-      const commentsRef = ref(rtdb, `comments/${comment.postId}`);
+      const commentsRef = ref(rtdb, `comments/${postId}`);
       const newCommentRef = push(commentsRef);
       const commentId = newCommentRef.key!;
-      
-      const newComment: Comment = {
-        ...comment,
+
+      const comment: Comment = {
         id: commentId,
-        createdAt: new Date().toISOString(),
+        ...commentData,
         upvotes: 0,
         downvotes: 0,
-        replies: {}
+        createdAt: new Date().toISOString()
       };
-      
-      await set(newCommentRef, newComment);
-      
+
+      await set(newCommentRef, comment);
+
       // Update post comment count
-      const postCommentCountRef = ref(rtdb, `posts/${comment.postId}/commentCount`);
-      const snapshot = await get(postCommentCountRef);
-      const currentCount = snapshot.exists() ? snapshot.val() : 0;
-      await set(postCommentCountRef, currentCount + 1);
-      
+      const postRef = ref(rtdb, `posts/${postId}/commentCount`);
+      const postSnapshot = await get(postRef);
+      const currentCount = postSnapshot.val() || 0;
+      await set(postRef, currentCount + 1);
+
+      // Update user's comments count
+      const userRef = ref(rtdb, `users/${commentData.authorId}/commentsCount`);
+      const userSnapshot = await get(userRef);
+      const currentUserCount = userSnapshot.val() || 0;
+      await set(userRef, currentUserCount + 1);
+
       return commentId;
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -349,152 +316,265 @@ export class CommentService {
     }
   }
 
-  // Get comments for a post
-  static async getCommentsByPost(postId: string): Promise<Comment[]> {
+  // Add reply to comment
+  static async addReply(postId: string, commentId: string, replyData: Omit<Reply, 'id' | 'upvotes' | 'downvotes' | 'createdAt'>): Promise<string> {
     try {
-      const commentsRef = ref(rtdb, `comments/${postId}`);
-      const snapshot = await get(commentsRef);
-      
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        return Object.keys(data).map(key => ({
-          ...data[key],
-          id: key
-        }));
-      }
-      return [];
+      const repliesRef = ref(rtdb, `comments/${postId}/${commentId}/replies`);
+      const newReplyRef = push(repliesRef);
+      const replyId = newReplyRef.key!;
+
+      const reply: Reply = {
+        id: replyId,
+        ...replyData,
+        upvotes: 0,
+        downvotes: 0,
+        createdAt: new Date().toISOString()
+      };
+
+      await set(newReplyRef, reply);
+      return replyId;
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error adding reply:', error);
       throw error;
     }
   }
-}
 
-// Real-time listeners
-export class RealtimeListeners {
-  
-  // Listen to posts changes
-  static listenToPosts(callback: (posts: Post[]) => void): () => void {
-    const postsRef = ref(rtdb, 'posts');
-    const unsubscribe = onValue(postsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const posts = Object.keys(data)
-          .map(key => data[key])
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        callback(posts);
-      } else {
-        callback([]);
-      }
-    });
-    
-    return () => off(postsRef, 'value', unsubscribe);
-  }
-
-  // Listen to community changes
-  static listenToCommunities(callback: (communities: Community[]) => void): () => void {
-    const communitiesRef = ref(rtdb, 'communities');
-    const unsubscribe = onValue(communitiesRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const communities = Object.keys(data).map(key => ({
-          id: key,
-          ...data[key]
-        }));
-        callback(communities);
-      } else {
-        callback([]);
-      }
-    });
-    
-    return () => off(communitiesRef, 'value', unsubscribe);
-  }
-
-  // Listen to comments for a specific post
-  static listenToPostComments(postId: string, callback: (comments: Comment[]) => void): () => void {
-    const commentsRef = ref(rtdb, `comments/${postId}`);
-    const unsubscribe = onValue(commentsRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const comments = Object.keys(data).map(key => ({
-          ...data[key],
-          id: key
-        }));
-        callback(comments);
-      } else {
-        callback([]);
-      }
-    });
-    
-    return () => off(commentsRef, 'value', unsubscribe);
-  }
-}
-
-// Utility functions
-export class DatabaseUtils {
-  
-  // Get user's vote status for posts
-  static async getUserVotes(userId: string): Promise<UserVote> {
+  // Get community data
+  static async getCommunity(communityId: string): Promise<Community | null> {
     try {
-      const userVotesRef = ref(rtdb, `userVotes/${userId}`);
-      const snapshot = await get(userVotesRef);
-      
+      const communityRef = ref(rtdb, `communities/${communityId}`);
+      const snapshot = await get(communityRef);
+      return snapshot.exists() ? snapshot.val() : null;
+    } catch (error) {
+      console.error('Error fetching community:', error);
+      throw error;
+    }
+  }
+
+  // Get all communities
+  static async getAllCommunities(): Promise<{ [key: string]: Community }> {
+    try {
+      const communitiesRef = ref(rtdb, 'communities');
+      const snapshot = await get(communitiesRef);
       return snapshot.exists() ? snapshot.val() : {};
     } catch (error) {
-      console.error('Error fetching user votes:', error);
-      return {};
+      console.error('Error fetching communities:', error);
+      throw error;
     }
   }
 
-  // Get user's bookmarks
+  // Bookmark/unbookmark post
+  static async toggleBookmark(userId: string, postId: string): Promise<boolean> {
+    try {
+      const bookmarkRef = ref(rtdb, `bookmarks/${userId}/${postId}`);
+      const snapshot = await get(bookmarkRef);
+      
+      const isCurrentlyBookmarked = snapshot.exists();
+      
+      if (isCurrentlyBookmarked) {
+        await remove(bookmarkRef);
+        return false;
+      } else {
+        await set(bookmarkRef, true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      throw error;
+    }
+  }
+
+  // Get user's bookmarked posts
   static async getUserBookmarks(userId: string): Promise<string[]> {
     try {
-      const bookmarksRef = ref(rtdb, `userBookmarks/${userId}`);
+      const bookmarksRef = ref(rtdb, `bookmarks/${userId}`);
       const snapshot = await get(bookmarksRef);
       
-      return snapshot.exists() ? Object.keys(snapshot.val()) : [];
+      if (!snapshot.exists()) return [];
+
+      const bookmarks: string[] = [];
+      snapshot.forEach((childSnapshot) => {
+        bookmarks.push(childSnapshot.key!);
+      });
+
+      return bookmarks;
     } catch (error) {
-      console.error('Error fetching user bookmarks:', error);
-      return [];
+      console.error('Error fetching bookmarks:', error);
+      throw error;
     }
   }
 
-  // Get user's communities
-  static async getUserCommunities(userId: string): Promise<string[]> {
+  // Vote on comment
+  static async voteOnComment(postId: string, commentId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
-      const userCommunitiesRef = ref(rtdb, `userCommunities/${userId}`);
-      const snapshot = await get(userCommunitiesRef);
+      const voteRef = ref(rtdb, `votes/comments/${commentId}/${userId}`);
+      const commentRef = ref(rtdb, `comments/${postId}/${commentId}`);
       
-      return snapshot.exists() ? Object.keys(snapshot.val()) : [];
+      // Get current vote and comment data
+      const [voteSnapshot, commentSnapshot] = await Promise.all([
+        get(voteRef),
+        get(commentRef)
+      ]);
+      
+      const currentVote = voteSnapshot.val();
+      const comment = commentSnapshot.val();
+      
+      if (!comment) return;
+
+      let upvoteChange = 0;
+      let downvoteChange = 0;
+
+      // Calculate vote changes
+      if (currentVote === 'upvote') {
+        upvoteChange = -1;
+      } else if (currentVote === 'downvote') {
+        downvoteChange = -1;
+      }
+
+      if (voteType === 'upvote' && currentVote !== 'upvote') {
+        upvoteChange += 1;
+      } else if (voteType === 'downvote' && currentVote !== 'downvote') {
+        downvoteChange += 1;
+      }
+
+      // Update comment votes
+      const updates: any = {};
+      if (upvoteChange !== 0) {
+        updates[`comments/${postId}/${commentId}/upvotes`] = comment.upvotes + upvoteChange;
+      }
+      if (downvoteChange !== 0) {
+        updates[`comments/${postId}/${commentId}/downvotes`] = comment.downvotes + downvoteChange;
+      }
+
+      // Update vote record
+      if (voteType === 'remove') {
+        updates[`votes/comments/${commentId}/${userId}`] = null;
+      } else {
+        updates[`votes/comments/${commentId}/${userId}`] = voteType;
+      }
+
+      await update(ref(rtdb), updates);
     } catch (error) {
-      console.error('Error fetching user communities:', error);
-      return [];
+      console.error('Error voting on comment:', error);
+      throw error;
     }
   }
 
-  // Search posts
-  static async searchPosts(searchTerm: string): Promise<Post[]> {
+  // Vote on reply
+  static async voteOnReply(postId: string, commentId: string, replyId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
-      // Note: Firebase Realtime Database doesn't have full-text search
-      // This is a simple implementation - consider using Algolia or Elasticsearch for production
-      const posts = await PostService.getAllPosts(100);
+      const voteRef = ref(rtdb, `votes/replies/${replyId}/${userId}`);
+      const replyRef = ref(rtdb, `comments/${postId}/${commentId}/replies/${replyId}`);
       
-      return posts.filter(post => 
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
+      // Get current vote and reply data
+      const [voteSnapshot, replySnapshot] = await Promise.all([
+        get(voteRef),
+        get(replyRef)
+      ]);
+      
+      const currentVote = voteSnapshot.val();
+      const reply = replySnapshot.val();
+      
+      if (!reply) return;
+
+      let upvoteChange = 0;
+      let downvoteChange = 0;
+
+      // Calculate vote changes
+      if (currentVote === 'upvote') {
+        upvoteChange = -1;
+      } else if (currentVote === 'downvote') {
+        downvoteChange = -1;
+      }
+
+      if (voteType === 'upvote' && currentVote !== 'upvote') {
+        upvoteChange += 1;
+      } else if (voteType === 'downvote' && currentVote !== 'downvote') {
+        downvoteChange += 1;
+      }
+
+      // Update reply votes
+      const updates: any = {};
+      if (upvoteChange !== 0) {
+        updates[`comments/${postId}/${commentId}/replies/${replyId}/upvotes`] = reply.upvotes + upvoteChange;
+      }
+      if (downvoteChange !== 0) {
+        updates[`comments/${postId}/${commentId}/replies/${replyId}/downvotes`] = reply.downvotes + downvoteChange;
+      }
+
+      // Update vote record
+      if (voteType === 'remove') {
+        updates[`votes/replies/${replyId}/${userId}`] = null;
+      } else {
+        updates[`votes/replies/${replyId}/${userId}`] = voteType;
+      }
+
+      await update(ref(rtdb), updates);
     } catch (error) {
-      console.error('Error searching posts:', error);
-      return [];
+      console.error('Error voting on reply:', error);
+      throw error;
     }
+  }
+
+  // Get user's vote on post
+  static async getUserVoteOnPost(postId: string, userId: string): Promise<'upvote' | 'downvote' | null> {
+    try {
+      const voteRef = ref(rtdb, `votes/posts/${postId}/${userId}`);
+      const snapshot = await get(voteRef);
+      return snapshot.exists() ? snapshot.val() : null;
+    } catch (error) {
+      console.error('Error fetching user vote:', error);
+      return null;
+    }
+  }
+
+  // Get user's vote on comment
+  static async getUserVoteOnComment(commentId: string, userId: string): Promise<'upvote' | 'downvote' | null> {
+    try {
+      const voteRef = ref(rtdb, `votes/comments/${commentId}/${userId}`);
+      const snapshot = await get(voteRef);
+      return snapshot.exists() ? snapshot.val() : null;
+    } catch (error) {
+      console.error('Error fetching user comment vote:', error);
+      return null;
+    }
+  }
+
+  // Add user activity
+  static async addUserActivity(userId: string, activity: { type: string; postId?: string; commentId?: string; timestamp: string }): Promise<void> {
+    try {
+      const activityRef = ref(rtdb, `user-activity/${userId}`);
+      const newActivityRef = push(activityRef);
+      await set(newActivityRef, activity);
+    } catch (error) {
+      console.error('Error adding user activity:', error);
+      throw error;
+    }
+  }
+
+  // Real-time listeners
+  static subscribeToPost(postId: string, callback: (post: Post | null) => void): () => void {
+    const postRef = ref(rtdb, `posts/${postId}`);
+    onValue(postRef, (snapshot) => {
+      callback(snapshot.exists() ? snapshot.val() : null);
+    });
+    
+    return () => off(postRef);
+  }
+
+  static subscribeToComments(postId: string, callback: (comments: Comment[]) => void): () => void {
+    const commentsRef = ref(rtdb, `comments/${postId}`);
+    onValue(commentsRef, (snapshot) => {
+      const comments: Comment[] = [];
+      if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+          comments.push(childSnapshot.val());
+        });
+      }
+      comments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      callback(comments);
+    });
+    
+    return () => off(commentsRef);
   }
 }
-
-export default {
-  CommunityService,
-  PostService,
-  CommentService,
-  RealtimeListeners,
-  DatabaseUtils
-};

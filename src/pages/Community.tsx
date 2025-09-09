@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CommunityPost from "@/components/community/CommunityPost";
 import CommunityList from "@/components/community/CommunityList";
 import CreatePostBox from "@/components/community/CreatePostBox";
 import CommunitySidebar from "@/components/community/CommunitySidebar";
+import { PostService, Post } from "@/services/realtimeDB";
+import { useAuth } from "@/contexts/Auth";
 import { 
   TrendingUp, 
   Flame, 
@@ -12,71 +14,12 @@ import {
   Star, 
   BarChart,
   Search,
-  SlidersHorizontal,
   Users,
-  MessageCircle
+  MessageCircle,
+  Loader
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-// Sample data for community posts to be displayed
-const communityPosts = [
-  {
-    id: 1,
-    title: "How do I start investing with only $500?",
-    author: "newbie_investor",
-    authorAvatar: "/placeholder.svg",
-    community: "BeginnersInvesting",
-    timePosted: "2h ago",
-    content: "I have $500 saved up and want to start investing. What's the best approach for a complete beginner? Should I go with ETFs, individual stocks, or something else? Any advice would be appreciated!",
-    upvotes: 24,
-    commentCount: 12,
-  },
-  {
-    id: 2,
-    title: "Just reached my first $10k in investments!",
-    author: "growing_wealth",
-    authorAvatar: "/placeholder.svg",
-    community: "PersonalFinance",
-    timePosted: "5h ago",
-    content: "After consistently saving and investing for the past year, I've finally reached $10,000 in my investment portfolio! It's not much compared to some of you, but it feels like a huge milestone for me. Just wanted to share my small victory!",
-    upvotes: 156,
-    commentCount: 42,
-    isBookmarked: true,
-  },
-  {
-    id: 3,
-    title: "The importance of emergency funds before investing",
-    author: "finance_educator",
-    authorAvatar: "/placeholder.svg",
-    community: "FinanceFlowTogether",
-    timePosted: "8h ago",
-    content: "I see a lot of newcomers rushing to invest without having an emergency fund. Here's why that's risky: An emergency fund should cover 3-6 months of expenses and be easily accessible. Without it, you might be forced to sell investments at a loss during emergencies. Always build your safety net first!",
-    upvotes: 89,
-    commentCount: 23,
-  },
-  {
-    id: 4,
-    title: "Market analysis: Tech stocks outlook for Q2 2025",
-    author: "market_watcher",
-    authorAvatar: "/placeholder.svg",
-    community: "StockMarket",
-    timePosted: "12h ago",
-    content: "With recent shifts in the tech sector, I've analyzed potential trends for Q2 2025. Major tech companies are leaning heavily into AI integration, which might drive growth, but regulatory concerns in Europe could impact global operations. What are your thoughts on how this might affect the sector?",
-    upvotes: 67,
-    commentCount: 31,
-  },
-  {
-    id: 5,
-    title: "How I paid off $30k in student loans in 18 months",
-    author: "debt_free_now",
-    authorAvatar: "/placeholder.svg",
-    community: "PersonalFinance",
-    timePosted: "1d ago",
-    content: "I wanted to share my journey of becoming debt-free! I managed to pay off $30,000 in student loans in just 18 months by following a strict budget, taking on side gigs, and minimizing expenses. Happy to share more details about my strategy if anyone's interested.",
-    upvotes: 213,
-    commentCount: 87,
-  },
-];
+import { toast } from "sonner";
 
 // Filter options displayed on the community page
 const filterOptions = [
@@ -87,10 +30,141 @@ const filterOptions = [
 ];
 
 const Community = () => {
-  //State to manage the currently active filter for posts
+  const { currentUser } = useAuth();
   const [activeFilter, setActiveFilter] = useState("Hot");
-  //State to manage the search query entered by user
   const [searchQuery, setSearchQuery] = useState("");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [currentLimit, setCurrentLimit] = useState(20);
+  const [stats, setStats] = useState({
+    totalMembers: 0,
+    discussionsToday: 0,
+    questionsAnswered: 0
+  });
+
+  // Load all posts from all communities
+  const loadPosts = async (limit: number = 20, append: boolean = false) => {
+    try {
+      if (!append) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const allPosts = await PostService.getAllPosts(limit);
+      
+      if (append) {
+        setPosts(prev => {
+          const existingIds = new Set(prev.map(p => p.id));
+          const newPosts = allPosts.filter(p => !existingIds.has(p.id));
+          return [...prev, ...newPosts];
+        });
+        setHasMore(allPosts.length === limit);
+      } else {
+        setPosts(allPosts);
+        setHasMore(allPosts.length === limit);
+      }
+
+      // Calculate real statistics
+      calculateStats(allPosts);
+
+    } catch (error) {
+      console.error('Error loading posts:', error);
+      toast.error('Failed to load posts');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Calculate community statistics
+  const calculateStats = (allPosts: Post[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const discussionsToday = allPosts.filter(post => {
+      const postDate = new Date(post.createdAt);
+      postDate.setHours(0, 0, 0, 0);
+      return postDate.getTime() === today.getTime();
+    }).length;
+
+    const questionsAnswered = allPosts.reduce((sum, post) => sum + post.commentCount, 0);
+    const uniqueAuthors = new Set(allPosts.map(post => post.authorId));
+
+    setStats({
+      totalMembers: uniqueAuthors.size,
+      discussionsToday,
+      questionsAnswered
+    });
+  };
+
+  // Handle voting on posts
+  const handleVote = async (postId: string, voteType: 'upvote' | 'downvote') => {
+    if (!currentUser) {
+      toast.error('Please login to vote');
+      return;
+    }
+
+    try {
+      await PostService.voteOnPost(postId, currentUser.uid, voteType);
+      // Refresh posts to show updated vote counts
+      await loadPosts(currentLimit);
+      toast.success(`Post ${voteType}d successfully!`);
+    } catch (error) {
+      toast.error(`Failed to ${voteType} post`);
+    }
+  };
+
+  // Handle bookmarking
+  const handleBookmark = async (postId: string) => {
+    if (!currentUser) {
+      toast.error('Please login to bookmark');
+      return;
+    }
+
+    try {
+      const isBookmarked = await PostService.toggleBookmark(currentUser.uid, postId);
+      // Update local state
+      setPosts(prev => prev.map(post => 
+        post.id === postId ? { ...post, isBookmarked } : post
+      ));
+      toast.success(isBookmarked ? 'Post bookmarked!' : 'Bookmark removed!');
+    } catch (error) {
+      toast.error('Failed to update bookmark');
+    }
+  };
+
+  // Load more posts
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMore) return;
+    
+    const newLimit = currentLimit + 20;
+    setCurrentLimit(newLimit);
+    await loadPosts(newLimit, true);
+  };
+
+  // Filter and search posts
+  const filteredPosts = posts.filter(post => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      return post.title.toLowerCase().includes(query) ||
+             post.content.toLowerCase().includes(query) ||
+             post.tags.some(tag => tag.toLowerCase().includes(query)) ||
+             post.author.toLowerCase().includes(query);
+    }
+    return true;
+  });
+
+  // Handle post creation callback
+  const handlePostCreated = async () => {
+    await loadPosts(currentLimit);
+  };
+
+  useEffect(() => {
+    loadPosts();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -118,18 +192,36 @@ const Community = () => {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Quick Stats */}
+          {/* Dynamic Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">1,247</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {loading ? (
+                  <Loader className="animate-spin h-8 w-8 mx-auto" />
+                ) : (
+                  stats.totalMembers.toLocaleString()
+                )}
+              </div>
               <div className="text-gray-600">Active Members</div>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">89</div>
+              <div className="text-3xl font-bold text-green-600 mb-2">
+                {loading ? (
+                  <Loader className="animate-spin h-8 w-8 mx-auto" />
+                ) : (
+                  stats.discussionsToday
+                )}
+              </div>
               <div className="text-gray-600">Discussions Today</div>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-2">456</div>
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                {loading ? (
+                  <Loader className="animate-spin h-8 w-8 mx-auto" />
+                ) : (
+                  stats.questionsAnswered
+                )}
+              </div>
               <div className="text-gray-600">Questions Answered</div>
             </div>
           </div>
@@ -222,7 +314,7 @@ const Community = () => {
                     Got a question? Want to share your experience? Create a post and connect with the community!
                   </p>
                 </div>
-                <CreatePostBox />
+                <CreatePostBox onPostCreated={handlePostCreated} />
               </div>
               
               {/* Posts Feed */}
@@ -232,37 +324,83 @@ const Community = () => {
                     Recent Discussions
                   </h2>
                   <span className="text-sm text-gray-500">
-                    {communityPosts.length} posts
+                    {filteredPosts.length} posts
                   </span>
                 </div>
                 
-                {communityPosts.map((post, index) => (
-                  <div key={post.id} className="transform transition-all duration-200 hover:scale-[1.02]">
-                    <CommunityPost
-                      title={post.title}
-                      author={post.author}
-                      authorAvatar={post.authorAvatar}
-                      community={post.community}
-                      timePosted={post.timePosted}
-                      content={post.content}
-                      upvotes={post.upvotes}
-                      commentCount={post.commentCount}
-                      isBookmarked={post.isBookmarked}
-                    />
+                {loading ? (
+                  <div className="space-y-6">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+                        <div className="animate-pulse">
+                          <div className="flex space-x-4">
+                            <div className="w-12 h-12 bg-gray-300 rounded"></div>
+                            <div className="flex-1 space-y-2">
+                              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                              <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                              <div className="space-y-1">
+                                <div className="h-3 bg-gray-300 rounded"></div>
+                                <div className="h-3 bg-gray-300 rounded w-5/6"></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : filteredPosts.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-lg">
+                    <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-2">
+                      {searchQuery.trim() ? 'No posts match your search.' : 'No discussions yet.'}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      {searchQuery.trim() ? 'Try different search terms.' : 'Be the first to start a conversation!'}
+                    </p>
+                  </div>
+                ) : (
+                  filteredPosts.map((post, index) => (
+                    <div key={post.id} className="transform transition-all duration-200 hover:scale-[1.02]">
+                      <CommunityPost
+                        postId={post.id}
+                        title={post.title}
+                        author={post.author}
+                        authorAvatar="/placeholder.svg"
+                        community={post.community}
+                        timePosted={new Date(post.createdAt).toLocaleString()}
+                        content={post.content}
+                        upvotes={post.upvotes}
+                        commentCount={post.commentCount}
+                        isBookmarked={post.isBookmarked}
+                        onVote={handleVote}
+                        onBookmark={handleBookmark}
+                      />
+                    </div>
+                  ))
+                )}
               </div>
               
               {/* Load More Button */}
-              <div className="mt-10 text-center">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="bg-white border-2 border-gray-200 hover:bg-gray-50 px-8 py-3 rounded-full font-medium"
-                >
-                  Load More Discussions
-                </Button>
-              </div>
+              {hasMore && !loading && filteredPosts.length > 0 && (
+                <div className="mt-10 text-center">
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="bg-white border-2 border-gray-200 hover:bg-gray-50 px-8 py-3 rounded-full font-medium"
+                    onClick={loadMorePosts}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <div className="flex items-center space-x-2">
+                        <Loader className="animate-spin h-4 w-4" />
+                        <span>Loading...</span>
+                      </div>
+                    ) : (
+                      'Load More Discussions'
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

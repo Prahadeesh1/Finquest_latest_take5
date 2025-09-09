@@ -4,19 +4,22 @@ import { Edit, Image as ImageIcon, Link2, PenSquare, Loader } from "lucide-react
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { useDropzone } from "react-dropzone";
 import { PostService } from "@/services/realtimeDB";
 import { useAuth } from "@/contexts/Auth";
 
-const CreatePostBox = () => {
+interface CreatePostBoxProps {
+  communityId?: string;
+  onPostCreated?: () => void;
+}
+
+const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: CreatePostBoxProps) => {
   const { currentUser, userData } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [postContent, setPostContent] = useState("");
   const [postTitle, setPostTitle] = useState("");
-  const [selectedCommunity, setSelectedCommunity] = useState("financeflow-together");
+  const [selectedCommunity, setSelectedCommunity] = useState(communityId);
   const [postType, setPostType] = useState<'text' | 'image' | 'link'>('text');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [linkUrl, setLinkUrl] = useState("");
 
   // Available communities for posting
@@ -24,9 +27,7 @@ const CreatePostBox = () => {
     { id: "financeflow-together", name: "FinanceFlow Together" },
     { id: "stockmarket", name: "StockMarket" },
     { id: "budgeting-101", name: "Budgeting 101" },
-    { id: "easy-invest-hub", name: "Easy Invest Hub" },
-    { id: "golden-horizon", name: "The Golden Horizon" },
-    { id: "wealthbuilders-hub", name: "WealthBuilders Hub" }
+    { id: "easy-invest-hub", name: "Easy Invest Hub" }
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,7 +43,7 @@ const CreatePostBox = () => {
       return;
     }
 
-    if (postContent.trim() === "" && !uploadedFile && linkUrl.trim() === "") {
+    if (postContent.trim() === "" && linkUrl.trim() === "") {
       toast.error("Post content cannot be empty");
       return;
     }
@@ -66,8 +67,7 @@ const CreatePostBox = () => {
         community: selectedCommunity,
         tags: tags,
         type: postType,
-        ...(postType === 'link' && { linkUrl: linkUrl.trim() }),
-        ...(uploadedFile && { imageUrl: URL.createObjectURL(uploadedFile) }) // In production, upload to storage first
+        ...(postType === 'link' && { linkUrl: linkUrl.trim() })
       };
 
       const postId = await PostService.createPost(postData);
@@ -77,10 +77,14 @@ const CreatePostBox = () => {
       // Reset form
       setPostContent("");
       setPostTitle("");
-      setUploadedFile(null);
       setLinkUrl("");
       setPostType('text');
       setIsExpanded(false);
+      
+      // Call callback if provided
+      if (onPostCreated) {
+        onPostCreated();
+      }
       
     } catch (error) {
       console.error('Error creating post:', error);
@@ -96,25 +100,10 @@ const CreatePostBox = () => {
     return matches ? matches.map(tag => tag.slice(1).toLowerCase()) : [];
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      setUploadedFile(acceptedFiles[0]);
-      setPostType('image');
-    },
-    accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
-    },
-    multiple: false,
-    disabled: isSubmitting
-  });
-
   const handlePostTypeChange = (type: 'text' | 'image' | 'link') => {
     setPostType(type);
     if (type === 'text') {
-      setUploadedFile(null);
       setLinkUrl("");
-    } else if (type === 'link') {
-      setUploadedFile(null);
     }
     setIsExpanded(true);
   };
@@ -175,6 +164,7 @@ const CreatePostBox = () => {
               className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 space-x-2 flex-1 mr-2"
               onClick={() => handlePostTypeChange('image')}
               title="Share an image"
+              disabled={true} // Disabled for now as image upload needs storage setup
             >
               <ImageIcon className="h-4 w-4" />
               <span>Image</span>
@@ -260,39 +250,6 @@ const CreatePostBox = () => {
               />
             )}
 
-            {/* Image Upload for image posts */}
-            {postType === 'image' && (
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-md p-6 text-center text-sm cursor-pointer transition-colors mb-4 ${
-                  isDragActive
-                    ? "border-finance-primary bg-finance-primary/10"
-                    : "border-gray-300 dark:border-gray-600 hover:border-finance-primary"
-                } ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}
-              >
-                <input {...getInputProps()} />
-                {uploadedFile ? (
-                  <div className="space-y-2">
-                    <ImageIcon className="h-8 w-8 text-finance-primary mx-auto" />
-                    <p className="text-finance-primary font-medium">{uploadedFile.name}</p>
-                    <p className="text-xs text-gray-500">
-                      {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <ImageIcon className="h-8 w-8 text-gray-400 mx-auto" />
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Drag & drop an image here, or click to select
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      PNG, JPG, GIF up to 10MB
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Character count */}
             <div className="text-right text-xs text-gray-400 mb-4">
               Title: {postTitle.length}/200 | Content: {postContent.length}/2000
@@ -307,7 +264,6 @@ const CreatePostBox = () => {
                   setIsExpanded(false);
                   setPostTitle("");
                   setPostContent("");
-                  setUploadedFile(null);
                   setLinkUrl("");
                   setPostType('text');
                 }}
@@ -319,7 +275,7 @@ const CreatePostBox = () => {
               <Button
                 type="submit"
                 className="bg-finance-primary hover:bg-finance-primary/90 text-white min-w-[100px]"
-                disabled={isSubmitting || (!postTitle.trim() || (!postContent.trim() && !uploadedFile && !linkUrl.trim()))}
+                disabled={isSubmitting || (!postTitle.trim() || (!postContent.trim() && !linkUrl.trim()))}
               >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">

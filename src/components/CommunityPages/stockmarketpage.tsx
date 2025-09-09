@@ -3,6 +3,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CommunityPost from "@/components/community/CommunityPost";
 import CreatePostBox from "@/components/community/CreatePostBox";
+import { useCommunityData } from "@/hooks/useCommunityData";
 import { 
   TrendingUp, 
   Flame, 
@@ -16,84 +17,11 @@ import {
   Target,
   LineChart,
   Info,
-  BookMarked
+  BookMarked,
+  Loader
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-
-// Sample data for StockMarket community posts
-const ImportantStockMarketPosts = [
-  {
-    id: 1,
-    title: "NVDA earnings upcoming predictions - Q1 2026",
-    author: "market_analyst_pro",
-    authorAvatar: "/placeholder.svg",
-    community: "StockMarket",
-    timePosted: "1h ago",
-    content: "NVIDIA seems to have been consistently been performing well and it appears that the market will rise by 2% at the start of 2026.",
-    upvotes: 789,
-    commentCount: 103,
-  },
-
-]
-const stockMarketPosts = [
-  {
-    id: 1,
-    title: "NVDA earnings report analysis - Q1 2025",
-    author: "market_analyst_pro",
-    authorAvatar: "/placeholder.svg",
-    community: "StockMarket",
-    timePosted: "1h ago",
-    content: "NVIDIA just released their Q1 2025 earnings and the numbers are impressive. Revenue up 18% YoY, largely driven by their AI chip segment. However, guidance for Q2 seems conservative. What are your thoughts on the stock movement tomorrow?",
-    upvotes: 89,
-    commentCount: 34,
-  },
-  {
-    id: 2,
-    title: "Is it time to rotate from tech to value stocks?",
-    author: "portfolio_strategist",
-    authorAvatar: "/placeholder.svg",
-    community: "StockMarket",
-    timePosted: "3h ago",
-    content: "With interest rates potentially stabilizing and tech valuations still high, I'm considering rotating 20% of my portfolio from tech to value stocks. Banking and energy sectors look undervalued. Anyone else thinking similar strategies?",
-    upvotes: 156,
-    commentCount: 67,
-    isBookmarked: true,
-  },
-  {
-    id: 3,
-    title: "Weekly market recap: Key movers and shakers",
-    author: "trading_desk",
-    authorAvatar: "/placeholder.svg",
-    community: "StockMarket",
-    timePosted: "6h ago",
-    content: "This week saw major movements in several sectors. Healthcare stocks surged after FDA approvals, while retail took a hit from earnings misses. Energy sector showed resilience despite oil price volatility. Here's my detailed breakdown...",
-    upvotes: 203,
-    commentCount: 45,
-  },
-  {
-    id: 4,
-    title: "Question: How to analyze a stock's P/E ratio effectively?",
-    author: "learning_trader",
-    authorAvatar: "/placeholder.svg",
-    community: "StockMarket",
-    timePosted: "8h ago",
-    content: "I'm trying to understand P/E ratios better. I know it's price divided by earnings per share, but how do I know if a P/E of 25 is good or bad for a particular stock? Should I compare it to industry averages or historical data?",
-    upvotes: 142,
-    commentCount: 89,
-  },
-  {
-    id: 5,
-    title: "My biggest trading mistake and what I learned",
-    author: "experienced_trader",
-    authorAvatar: "/placeholder.svg",
-    community: "StockMarket",
-    timePosted: "12h ago",
-    content: "Last year I lost $15K by panic selling during a market dip. The stocks I sold recovered within two months and went on to hit new highs. Here's what I learned about emotional trading and risk management...",
-    upvotes: 267,
-    commentCount: 98,
-  },
-];
+import { toast } from "sonner";
 
 // Filter options for the community
 const filterOptions = [
@@ -106,6 +34,93 @@ const filterOptions = [
 const StockMarketCommunity = () => {
   const [activeFilter, setActiveFilter] = useState("Hot");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Use the custom hook to manage community data
+  const { 
+    posts, 
+    expertPosts, 
+    community, 
+    stats,
+    loading,
+    loadingMore,
+    hasMore,
+    error, 
+    voteOnPost, 
+    toggleBookmark,
+    loadMorePosts 
+  } = useCommunityData("stockmarket");
+
+  // Handle voting on posts
+  const handleVote = async (postId: string, voteType: 'upvote' | 'downvote') => {
+    try {
+      await voteOnPost(postId, voteType);
+      toast.success(`Post ${voteType}d successfully!`);
+    } catch (error) {
+      toast.error(`Failed to ${voteType} post`);
+    }
+  };
+
+  // Handle bookmarking
+  const handleBookmark = async (postId: string) => {
+    try {
+      const isBookmarked = await toggleBookmark(postId);
+      toast.success(isBookmarked ? 'Post bookmarked!' : 'Bookmark removed!');
+    } catch (error) {
+      toast.error('Failed to update bookmark');
+    }
+  };
+
+  // Filter and search posts
+  const filteredPosts = posts.filter(post => {
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      return post.title.toLowerCase().includes(query) ||
+             post.content.toLowerCase().includes(query) ||
+             post.tags.some(tag => tag.toLowerCase().includes(query));
+    }
+    return true;
+  });
+
+  // Handle load more
+  const handleLoadMore = async () => {
+    try {
+      await loadMorePosts();
+    } catch (error) {
+      toast.error('Failed to load more posts');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-emerald-50">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <Loader className="animate-spin h-8 w-8 text-green-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading community data...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-emerald-50">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-emerald-50">
@@ -122,23 +137,22 @@ const StockMarketCommunity = () => {
                 </div>
               </div>
               <h1 className="text-4xl font-bold text-white mb-4">
-                StockMarket Community
+                {community?.name || "StockMarket Community"}
               </h1>
               <p className="text-xl text-green-100 max-w-3xl mx-auto leading-relaxed mb-8">
-                Connect with traders, investors, and analysts. Share insights, discuss market trends, 
-                and learn from experienced professionals in the stock market.
+                {community?.description || "Connect with traders, investors, and analysts. Share insights, discuss market trends, and learn from experienced professionals in the stock market."}
               </p>
               <div className="flex justify-center space-x-6 text-green-100">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">15.2K</div>
+                  <div className="text-2xl font-bold">{community?.memberCount?.toLocaleString() || "0"}</div>
                   <div className="text-sm">Members</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">3.1K</div>
+                  <div className="text-2xl font-bold">{community?.onlineCount?.toLocaleString() || "0"}</div>
                   <div className="text-sm">Online</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">247</div>
+                  <div className="text-2xl font-bold">{stats.postsToday}</div>
                   <div className="text-sm">Posts Today</div>
                 </div>
               </div>
@@ -159,22 +173,48 @@ const StockMarketCommunity = () => {
                       <div className="bg-white p-2 rounded-lg shadow-sm">
                         <TrendingUp className="h-10 w-10 text-green-500" />
                       </div>
-                      <h2 className="ml-2 text-xl font-bold">StockMarket</h2>
+                      <h2 className="ml-2 text-xl font-bold">{community?.name}</h2>
                     </div>
                     
                     <p className="text-sm text-gray-600 mb-4">
-                      Discussion about stock markets, trading strategies, and investment trends.
+                      {community?.description}
                     </p>
                     
                     <div className="flex items-center justify-between text-sm mb-4">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 text-gray-500 mr-1" />
-                        <span>15.2k members</span>
+                        <span>{community?.memberCount?.toLocaleString() || 0} members</span>
                       </div>
                       <div className="flex items-center">
                         <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
-                        <span>3.1k online</span>
+                        <span>{community?.onlineCount?.toLocaleString() || 0} online</span>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Real-time Stats */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                  <h3 className="font-semibold mb-4 flex items-center">
+                    <BarChart className="h-5 w-5 text-green-500 mr-2" />
+                    Community Stats
+                  </h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span>Total Posts</span>
+                      <span className="font-medium">{stats.totalPosts}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Posts Today</span>
+                      <span className="font-medium text-green-600">{stats.postsToday}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total Comments</span>
+                      <span className="font-medium">{stats.totalComments}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Active Users</span>
+                      <span className="font-medium">{stats.activeUsers}</span>
                     </div>
                   </div>
                 </div>
@@ -186,27 +226,22 @@ const StockMarketCommunity = () => {
                   </div>
                   <div className="p-4">
                     <ul className="space-y-3 text-sm">
-                      <li className="flex items-start">
-                        <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Feel free to ask questions but be relevant</span>
-                      </li>
-                      <li className="flex items-start">
-                        <BookMarked className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Provide sources for market claims</span>
-                      </li>
-                      <li className="flex items-start">
-                        <MessageCircle className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Be respectful in discussions</span>
-                      </li>
-                      <li className="flex items-start">
-                        <Target className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-                        <span>Stay focused on stock market topics</span>
-                      </li>
+                      {community?.rules?.map((rule, index) => (
+                        <li key={index} className="flex items-start">
+                          <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+                          <span>{rule}</span>
+                        </li>
+                      )) || (
+                        <li className="flex items-start">
+                          <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+                          <span>Loading community rules...</span>
+                        </li>
+                      )}
                     </ul>
                   </div>
                 </div>
 
-                {/* Market Stats */}
+                {/* Market Stats - Keep static for now */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
                   <h3 className="font-semibold mb-4 flex items-center">
                     <LineChart className="h-5 w-5 text-green-500 mr-2" />
@@ -281,7 +316,7 @@ const StockMarketCommunity = () => {
                 </div>
               </div>
 
-              {/* Create Post - Now White */}
+              {/* Create Post */}
               <div className="mb-8">
                 <div className="bg-white rounded-xl p-6 mb-6 border border-gray-200 shadow-sm">
                   <div className="flex items-center space-x-3 mb-4">
@@ -294,44 +329,50 @@ const StockMarketCommunity = () => {
                     Discuss stocks, share analysis, or ask questions about trading strategies.
                   </p>
                 </div>
-                <CreatePostBox />
+                <CreatePostBox communityId="stockmarket" />
               </div>
 
               {/* Posts Feed */}
               <div className="space-y-8">
-                {/* Expert Insights Section - Now with Green Gradient */}
-                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 shadow-lg">
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-black">
-                        Expert Insights & Key Analysis
-                      </h2>
-                      <span className="text-sm text-green-100 bg-white/20 px-3 py-1 rounded-full">
-                        {ImportantStockMarketPosts.length} insights
-                      </span>
-                    </div>
-                    <p className="text-green-100 text-sm">
-                      Curated market observations and expert predictions from seasoned professionals
-                    </p>
-                    
-                    <div className="space-y-4">
-                      {ImportantStockMarketPosts.map((post) => (
-                        <div key={`important-${post.id}`} className="transform transition-all duration-200 hover:scale-[1.01]">
-                          <CommunityPost
-                            title={post.title}
-                            author={post.author}
-                            authorAvatar={post.authorAvatar}
-                            community={post.community}
-                            timePosted={post.timePosted}
-                            content={post.content}
-                            upvotes={post.upvotes}
-                            commentCount={post.commentCount}
-                          />
-                        </div>
-                      ))}
+                {/* Expert Insights Section */}
+                {expertPosts.length > 0 && (
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl p-6 shadow-lg">
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-2xl font-bold text-white">
+                          Expert Insights & Key Analysis
+                        </h2>
+                        <span className="text-sm text-green-100 bg-white/20 px-3 py-1 rounded-full">
+                          {expertPosts.length} insights
+                        </span>
+                      </div>
+                      <p className="text-green-100 text-sm">
+                        Curated market observations and expert predictions from seasoned professionals
+                      </p>
+                      
+                      <div className="space-y-4">
+                        {expertPosts.map((post) => (
+                          <div key={`expert-${post.id}`} className="transform transition-all duration-200 hover:scale-[1.01]">
+                            <CommunityPost
+                              postId={post.id}
+                              title={post.title}
+                              author={post.author}
+                              authorAvatar="/placeholder.svg"
+                              community={post.community}
+                              timePosted={new Date(post.createdAt).toLocaleString()}
+                              content={post.content}
+                              upvotes={post.upvotes}
+                              commentCount={post.commentCount}
+                              isBookmarked={post.isBookmarked}
+                              onVote={handleVote}
+                              onBookmark={handleBookmark}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Community Discussions Section */}
                 <div className="space-y-6">
@@ -340,37 +381,64 @@ const StockMarketCommunity = () => {
                       Community Discussions
                     </h2>
                     <span className="text-sm text-gray-500">
-                      {stockMarketPosts.length} posts
+                      {filteredPosts.length} posts
                     </span>
                   </div>
                   
-                  {stockMarketPosts.map((post) => (
-                    <div key={`market-${post.id}`} className="transform transition-all duration-200 hover:scale-[1.01]">
-                      <CommunityPost
-                        title={post.title}
-                        author={post.author}
-                        authorAvatar={post.authorAvatar}
-                        community={post.community}
-                        timePosted={post.timePosted}
-                        content={post.content}
-                        upvotes={post.upvotes}
-                        commentCount={post.commentCount}
-                        isBookmarked={post.isBookmarked}
-                      />
+                  {filteredPosts.length === 0 ? (
+                    <div className="text-center py-12 bg-white rounded-lg">
+                      <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-500 mb-2">
+                        {searchQuery.trim() ? 'No posts match your search.' : 'No posts yet in this community.'}
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        {searchQuery.trim() ? 'Try adjusting your search terms.' : 'Be the first to start a discussion!'}
+                      </p>
                     </div>
-                  ))}
+                  ) : (
+                    filteredPosts.map((post) => (
+                      <div key={`community-${post.id}`} className="transform transition-all duration-200 hover:scale-[1.01]">
+                        <CommunityPost
+                          postId={post.id}
+                          title={post.title}
+                          author={post.author}
+                          authorAvatar="/placeholder.svg"
+                          community={post.community}
+                          timePosted={new Date(post.createdAt).toLocaleString()}
+                          content={post.content}
+                          upvotes={post.upvotes}
+                          commentCount={post.commentCount}
+                          isBookmarked={post.isBookmarked}
+                          onVote={handleVote}
+                          onBookmark={handleBookmark}
+                        />
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
               
-              <div className="mt-10 text-center">
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  className="bg-white border-2 border-gray-200 hover:bg-gray-50 px-8 py-3 rounded-full font-medium"
-                >
-                  Load More Posts
-                </Button>
-              </div>
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="mt-10 text-center">
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="bg-white border-2 border-gray-200 hover:bg-gray-50 px-8 py-3 rounded-full font-medium"
+                    onClick={handleLoadMore}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? (
+                      <div className="flex items-center space-x-2">
+                        <Loader className="animate-spin h-4 w-4" />
+                        <span>Loading...</span>
+                      </div>
+                    ) : (
+                      'Load More Posts'
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

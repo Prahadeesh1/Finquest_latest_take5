@@ -4,6 +4,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';  // ✅ Firestore for user profiles
 import { getDatabase } from 'firebase/database';    // ✅ Realtime DB for forum
 import { getAnalytics } from 'firebase/analytics';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCIpQEksUxxObvO67lTNeCV1IhdpL3jAT4",
@@ -22,5 +23,6 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);   // ✅ use this in AuthContext for user data
 export const rtdb = getDatabase(app);  // ✅ use this in your forum feature
 export const analytics = getAnalytics(app);
+export const storage = getStorage(app);
 
 export default app;
