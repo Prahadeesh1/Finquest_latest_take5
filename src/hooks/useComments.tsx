@@ -10,12 +10,21 @@ export const useComments = (postId: string) => {
   const [error, setError] = useState<string | null>(null);
   const [userVotes, setUserVotes] = useState<Record<string, 'upvote' | 'downvote'>>({});
 
-  // Load comments and user votes
+  // Load comments and user votes with proper sorting
   const loadComments = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const commentsData = await PostService.getPostComments(postId);
+      
+      // Sort comments by upvotes (descending) then by creation time (ascending for chronological order)
+      commentsData.sort((a, b) => {
+        if (b.upvotes !== a.upvotes) {
+          return b.upvotes - a.upvotes; // Higher upvotes first
+        }
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(); // Older first if same upvotes
+      });
+      
       setComments(commentsData);
 
       // Load user votes for comments if user is logged in

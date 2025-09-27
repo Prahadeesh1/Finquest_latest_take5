@@ -144,15 +144,15 @@ const StockMarketCommunity = () => {
               </p>
               <div className="flex justify-center space-x-6 text-green-100">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{community?.memberCount?.toLocaleString() || "0"}</div>
+                  <div className="text-2xl font-bold">{stats.memberCount || 0}</div>
                   <div className="text-sm">Members</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{community?.onlineCount?.toLocaleString() || "0"}</div>
+                  <div className="text-2xl font-bold">{stats.onlineCount || 0}</div>
                   <div className="text-sm">Online</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{stats.postsToday}</div>
+                  <div className="text-2xl font-bold">{stats.postsToday || 0}</div>
                   <div className="text-sm">Posts Today</div>
                 </div>
               </div>
@@ -267,10 +267,6 @@ const StockMarketCommunity = () => {
                   </div>
                 </div>
                 
-                {/* Exit Community Button */}
-                <button className="w-full py-3 px-4 bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-medium rounded-lg shadow-sm border border-green-500 transition-all duration-200 hover:shadow-md transform hover:scale-[1.02]">
-                  Exit Community
-                </button>
               </div>
             </div>
 

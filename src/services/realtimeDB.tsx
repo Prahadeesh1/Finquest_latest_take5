@@ -120,18 +120,15 @@ export class PostService {
   static async getPostsByCommunity(communityId: string, limit: number = 10): Promise<Post[]> {
     try {
       const postsRef = ref(rtdb, 'posts');
-      const communityQuery = query(
-        postsRef, 
-        orderByChild('community'), 
-        limitToLast(limit)
-      );
+      const snapshot = await get(postsRef);
       
-      const snapshot = await get(communityQuery);
+      if (!snapshot.exists()) return [];
+
       const posts: Post[] = [];
       
       snapshot.forEach((childSnapshot) => {
         const post = childSnapshot.val();
-        if (post.community === communityId) {
+        if (post && post.community === communityId) {
           posts.push(post);
         }
       });
@@ -143,7 +140,8 @@ export class PostService {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
-      return posts;
+      // Apply limit after sorting
+      return posts.slice(0, limit);
     } catch (error) {
       console.error('Error fetching community posts:', error);
       throw error;
@@ -339,71 +337,6 @@ export class PostService {
     }
   }
 
-  // Get community data
-  static async getCommunity(communityId: string): Promise<Community | null> {
-    try {
-      const communityRef = ref(rtdb, `communities/${communityId}`);
-      const snapshot = await get(communityRef);
-      return snapshot.exists() ? snapshot.val() : null;
-    } catch (error) {
-      console.error('Error fetching community:', error);
-      throw error;
-    }
-  }
-
-  // Get all communities
-  static async getAllCommunities(): Promise<{ [key: string]: Community }> {
-    try {
-      const communitiesRef = ref(rtdb, 'communities');
-      const snapshot = await get(communitiesRef);
-      return snapshot.exists() ? snapshot.val() : {};
-    } catch (error) {
-      console.error('Error fetching communities:', error);
-      throw error;
-    }
-  }
-
-  // Bookmark/unbookmark post
-  static async toggleBookmark(userId: string, postId: string): Promise<boolean> {
-    try {
-      const bookmarkRef = ref(rtdb, `bookmarks/${userId}/${postId}`);
-      const snapshot = await get(bookmarkRef);
-      
-      const isCurrentlyBookmarked = snapshot.exists();
-      
-      if (isCurrentlyBookmarked) {
-        await remove(bookmarkRef);
-        return false;
-      } else {
-        await set(bookmarkRef, true);
-        return true;
-      }
-    } catch (error) {
-      console.error('Error toggling bookmark:', error);
-      throw error;
-    }
-  }
-
-  // Get user's bookmarked posts
-  static async getUserBookmarks(userId: string): Promise<string[]> {
-    try {
-      const bookmarksRef = ref(rtdb, `bookmarks/${userId}`);
-      const snapshot = await get(bookmarksRef);
-      
-      if (!snapshot.exists()) return [];
-
-      const bookmarks: string[] = [];
-      snapshot.forEach((childSnapshot) => {
-        bookmarks.push(childSnapshot.key!);
-      });
-
-      return bookmarks;
-    } catch (error) {
-      console.error('Error fetching bookmarks:', error);
-      throw error;
-    }
-  }
-
   // Vote on comment
   static async voteOnComment(postId: string, commentId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
@@ -537,6 +470,157 @@ export class PostService {
     } catch (error) {
       console.error('Error fetching user comment vote:', error);
       return null;
+    }
+  }
+
+  // Get community data
+  static async getCommunity(communityId: string): Promise<Community | null> {
+    try {
+      const communityRef = ref(rtdb, `communities/${communityId}`);
+      const snapshot = await get(communityRef);
+      return snapshot.exists() ? snapshot.val() : null;
+    } catch (error) {
+      console.error('Error fetching community:', error);
+      throw error;
+    }
+  }
+
+  // Get all communities
+  static async getAllCommunities(): Promise<{ [key: string]: Community }> {
+    try {
+      const communitiesRef = ref(rtdb, 'communities');
+      const snapshot = await get(communitiesRef);
+      return snapshot.exists() ? snapshot.val() : {};
+    } catch (error) {
+      console.error('Error fetching communities:', error);
+      throw error;
+    }
+  }
+
+  // Bookmark/unbookmark post
+  static async toggleBookmark(userId: string, postId: string): Promise<boolean> {
+    try {
+      const bookmarkRef = ref(rtdb, `bookmarks/${userId}/${postId}`);
+      const snapshot = await get(bookmarkRef);
+      
+      const isCurrentlyBookmarked = snapshot.exists();
+      
+      if (isCurrentlyBookmarked) {
+        await remove(bookmarkRef);
+        return false;
+      } else {
+        await set(bookmarkRef, true);
+        return true;
+      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      throw error;
+    }
+  }
+
+  // Get user's bookmarked posts
+  static async getUserBookmarks(userId: string): Promise<string[]> {
+    try {
+      const bookmarksRef = ref(rtdb, `bookmarks/${userId}`);
+      const snapshot = await get(bookmarksRef);
+      
+      if (!snapshot.exists()) return [];
+
+      const bookmarks: string[] = [];
+      snapshot.forEach((childSnapshot) => {
+        bookmarks.push(childSnapshot.key!);
+      });
+
+      return bookmarks;
+    } catch (error) {
+      console.error('Error fetching bookmarks:', error);
+      throw error;
+    }
+  }
+
+  // Search posts
+  static async searchPosts(query: string, communityId?: string): Promise<Post[]> {
+    try {
+      const posts = communityId 
+        ? await this.getPostsByCommunity(communityId, 100)
+        : await this.getAllPosts(100);
+      
+      const lowercaseQuery = query.toLowerCase();
+      
+      return posts.filter(post => 
+        post.title.toLowerCase().includes(lowercaseQuery) ||
+        post.content.toLowerCase().includes(lowercaseQuery) ||
+        post.tags.some(tag => tag.toLowerCase().includes(lowercaseQuery))
+      );
+    } catch (error) {
+      console.error('Error searching posts:', error);
+      throw error;
+    }
+  }
+
+  // Join/Leave community (simplified - just track in user data)
+  static async joinCommunity(userId: string, communityId: string): Promise<void> {
+    try {
+      // For now, just update user's joined communities
+      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities`);
+      const snapshot = await get(userCommunitiesRef);
+      const communities = snapshot.exists() ? snapshot.val() : [];
+      
+      if (!communities.includes(communityId)) {
+        communities.push(communityId);
+        await set(userCommunitiesRef, communities);
+      }
+    } catch (error) {
+      console.error('Error joining community:', error);
+      throw error;
+    }
+  }
+
+  static async leaveCommunity(userId: string, communityId: string): Promise<void> {
+    try {
+      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities`);
+      const snapshot = await get(userCommunitiesRef);
+      const communities = snapshot.exists() ? snapshot.val() : [];
+      
+      const updatedCommunities = communities.filter((id: string) => id !== communityId);
+      await set(userCommunitiesRef, updatedCommunities);
+    } catch (error) {
+      console.error('Error leaving community:', error);
+      throw error;
+    }
+  }
+
+  // Update online status (simplified)
+  static async updateOnlineStatus(userId: string, communityId: string, isOnline: boolean): Promise<void> {
+    try {
+      // For now, just log this - we can implement proper online tracking later
+      console.log(`User ${userId} is ${isOnline ? 'online' : 'offline'} in ${communityId}`);
+    } catch (error) {
+      console.error('Error updating online status:', error);
+    }
+  }
+
+  // Get community member count (simplified - use static count from community data)
+  static async getCommunityMemberCount(communityId: string): Promise<number> {
+    try {
+      const community = await this.getCommunity(communityId);
+      return community?.memberCount || 0;
+    } catch (error) {
+      console.error('Error getting member count:', error);
+      return 0;
+    }
+  }
+
+  // Check if user is member of community
+  static async isUserMember(userId: string, communityId: string): Promise<boolean> {
+    try {
+      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities`);
+      const snapshot = await get(userCommunitiesRef);
+      const communities = snapshot.exists() ? snapshot.val() : [];
+      return communities.includes(communityId);
+    } catch (error) {
+      console.error('Error checking membership:', error);
+      return false;
     }
   }
 

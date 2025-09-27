@@ -283,10 +283,6 @@ const BudgetingCommunity = () => {
                   </div>
                 </div>
                 
-                {/* Exit Community Button */}
-                <button className="w-full py-3 px-4 bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-medium rounded-lg shadow-sm border border-blue-500 transition-all duration-200 hover:shadow-md transform hover:scale-[1.02]">
-                  Exit Community
-                </button>
               </div>
             </div>
 

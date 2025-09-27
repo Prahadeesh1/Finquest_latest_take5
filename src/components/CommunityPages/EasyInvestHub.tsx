@@ -283,10 +283,6 @@ const EasyInvestCommunity = () => {
                   </div>
                 </div>
                 
-                {/* Exit Community Button */}
-                <button className="w-full py-3 px-4 bg-gradient-to-r from-purple-400 to-purple-600 hover:from-pink-500 hover:to-pink-700 text-white font-medium rounded-lg shadow-sm border border-purple-500 transition-all duration-200 hover:shadow-md transform hover:scale-[1.02]">
-                  Exit Community
-                </button>
               </div>
             </div>
 

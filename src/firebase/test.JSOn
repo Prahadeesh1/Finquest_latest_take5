@@ -15,6 +15,34 @@
         "Stay focused on stock market topics"
       ]
     },
+  "community-members": {
+    "stockmarket": {
+      "user_123": {
+        "userId": "user_123",
+        "joinedAt": "2025-09-08T07:00:00Z",
+        "isOnline": true
+      },
+      "user_456": {
+        "userId": "user_456", 
+        "joinedAt": "2025-09-07T14:30:00Z",
+        "isOnline": false
+      }
+    },
+    "budgeting-101": {
+      "user_101": {
+        "userId": "user_101",
+        "joinedAt": "2025-09-06T09:15:00Z", 
+        "isOnline": true
+      }
+    },
+    "easy-invest-hub": {
+      "user_102": {
+        "userId": "user_102",
+        "joinedAt": "2025-09-05T16:45:00Z",
+        "isOnline": true
+      }
+    }
+  },
     "budgeting-101": {
       "name": "Budgeting 101",
       "description": "Tips, advice, and discussions about managing personal finances and budgeting.",
