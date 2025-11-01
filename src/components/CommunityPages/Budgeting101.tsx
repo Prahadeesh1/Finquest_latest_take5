@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CommunityPost from "@/components/community/CommunityPost";
 import CreatePostBox from "@/components/community/CreatePostBox";
 import { useCommunityData } from "@/hooks/useCommunityData";
+import { useAuth } from "@/contexts/Auth";
 import { 
   Wallet, 
   Flame, 
@@ -19,7 +20,9 @@ import {
   Info,
   BookMarked,
   CheckCircle,
-  Loader
+  Loader,
+  LogOut,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -33,8 +36,10 @@ const filterOptions = [
 ];
 
 const BudgetingCommunity = () => {
+  const { currentUser } = useAuth();
   const [activeFilter, setActiveFilter] = useState("Hot");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isLeavingCommunity, setIsLeavingCommunity] = useState(false);
   
   // Use the custom hook to manage community data
   const { 
@@ -45,17 +50,63 @@ const BudgetingCommunity = () => {
     loading,
     loadingMore,
     hasMore,
-    error, 
+    error,
+    isMember,
     voteOnPost, 
     toggleBookmark,
-    loadMorePosts 
+    loadMorePosts,
+    joinCommunity,
+    leaveCommunity,
+    refreshData
   } = useCommunityData("budgeting-101");
+
+  // Auto-refresh data every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!loading) {
+        refreshData();
+      }
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+  }, [loading, refreshData]);
+
+  // Handle joining community
+  const handleJoinCommunity = async () => {
+    if (!currentUser) {
+      toast.error('Please login to join');
+      return;
+    }
+
+    try {
+      await joinCommunity();
+      toast.success('Joined Budgeting 101 community!');
+    } catch (error) {
+      toast.error('Failed to join community');
+    }
+  };
+
+  // Handle leaving community
+  const handleLeaveCommunity = async () => {
+    if (!currentUser) {
+      return;
+    }
+
+    setIsLeavingCommunity(true);
+    try {
+      await leaveCommunity();
+      toast.success('Left Budgeting 101 community');
+    } catch (error) {
+      toast.error('Failed to leave community');
+    } finally {
+      setIsLeavingCommunity(false);
+    }
+  };
 
   // Handle voting on posts
   const handleVote = async (postId: string, voteType: 'upvote' | 'downvote') => {
     try {
       await voteOnPost(postId, voteType);
-      toast.success(`Post ${voteType}d successfully!`);
     } catch (error) {
       toast.error(`Failed to ${voteType} post`);
     }
@@ -143,17 +194,54 @@ const BudgetingCommunity = () => {
               <p className="text-xl text-blue-100 max-w-3xl mx-auto leading-relaxed mb-8">
                 {community?.description || "Master the art of budgeting with fellow learners. Share tips, get advice, and celebrate your financial wins in a supportive environment."}
               </p>
+              
+              {/* Membership Button */}
+              {currentUser && (
+                <div className="mb-6">
+                  {isMember ? (
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm"
+                      onClick={handleLeaveCommunity}
+                      disabled={isLeavingCommunity}
+                    >
+                      {isLeavingCommunity ? (
+                        <div className="flex items-center space-x-2">
+                          <Loader className="h-5 w-5 animate-spin" />
+                          <span>Leaving...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <LogOut className="h-5 w-5 mr-2" />
+                          Leave Community
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="lg"
+                      className="bg-white text-blue-600 hover:bg-blue-50"
+                      onClick={handleJoinCommunity}
+                    >
+                      <UserCheck className="h-5 w-5 mr-2" />
+                      Join Community
+                    </Button>
+                  )}
+                </div>
+              )}
+
               <div className="flex justify-center space-x-6 text-blue-100">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{community?.memberCount?.toLocaleString() || "0"}</div>
+                  <div className="text-2xl font-bold">{stats.memberCount?.toLocaleString() || "0"}</div>
                   <div className="text-sm">Members</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{community?.onlineCount?.toLocaleString() || "0"}</div>
+                  <div className="text-2xl font-bold">{stats.onlineCount?.toLocaleString() || "0"}</div>
                   <div className="text-sm">Online</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{stats.postsToday}</div>
+                  <div className="text-2xl font-bold">{stats.postsToday || 0}</div>
                   <div className="text-sm">Posts Today</div>
                 </div>
               </div>
@@ -184,13 +272,24 @@ const BudgetingCommunity = () => {
                     <div className="flex items-center justify-between text-sm mb-4">
                       <div className="flex items-center">
                         <Users className="h-4 w-4 text-gray-500 mr-1" />
-                        <span>{community?.memberCount?.toLocaleString() || 0} members</span>
+                        <span>{stats.memberCount?.toLocaleString() || 0} members</span>
                       </div>
                       <div className="flex items-center">
-                        <div className="h-2 w-2 bg-green-500 rounded-full mr-1"></div>
-                        <span>{community?.onlineCount?.toLocaleString() || 0} online</span>
+                        <div className="h-2 w-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+                        <span>{stats.onlineCount?.toLocaleString() || 0} online</span>
                       </div>
                     </div>
+
+                    {/* Membership status indicator */}
+                    {currentUser && (
+                      <div className={`text-xs px-3 py-2 rounded-full text-center ${
+                        isMember 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {isMember ? '✓ You are a member' : 'Not a member'}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -203,19 +302,19 @@ const BudgetingCommunity = () => {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span>Total Posts</span>
-                      <span className="font-medium">{stats.totalPosts}</span>
+                      <span className="font-medium">{stats.totalPosts || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Posts Today</span>
-                      <span className="font-medium text-blue-600">{stats.postsToday}</span>
+                      <span className="font-medium text-blue-600">{stats.postsToday || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Total Comments</span>
-                      <span className="font-medium">{stats.totalComments}</span>
+                      <span className="font-medium">{stats.totalComments || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Active Users</span>
-                      <span className="font-medium">{stats.activeUsers}</span>
+                      <span className="font-medium">{stats.activeUsers || 0}</span>
                     </div>
                   </div>
                 </div>

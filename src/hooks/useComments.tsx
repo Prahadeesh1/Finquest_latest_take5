@@ -1,5 +1,5 @@
 // src/hooks/useComments.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PostService, Comment, Reply } from '@/services/realtimeDB';
 import { useAuth } from '@/contexts/Auth';
 
@@ -9,46 +9,35 @@ export const useComments = (postId: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userVotes, setUserVotes] = useState<Record<string, 'upvote' | 'downvote'>>({});
+  
+  // Prevent race conditions
+  const isMountedRef = useRef(true);
+  const loadingRef = useRef(false);
 
-  // Load comments and user votes with proper sorting
-  const loadComments = useCallback(async () => {
+  // Load user votes separately
+  const loadUserVotes = useCallback(async (commentIds: string[]) => {
+    if (!currentUser || commentIds.length === 0) return;
+    
     try {
-      setLoading(true);
-      setError(null);
-      const commentsData = await PostService.getPostComments(postId);
+      const votePromises = commentIds.map(commentId => 
+        PostService.getUserVoteOnComment(commentId, currentUser.uid)
+      );
+      const votes = await Promise.all(votePromises);
       
-      // Sort comments by upvotes (descending) then by creation time (ascending for chronological order)
-      commentsData.sort((a, b) => {
-        if (b.upvotes !== a.upvotes) {
-          return b.upvotes - a.upvotes; // Higher upvotes first
+      const voteMap: Record<string, 'upvote' | 'downvote'> = {};
+      commentIds.forEach((commentId, index) => {
+        if (votes[index]) {
+          voteMap[commentId] = votes[index]!;
         }
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(); // Older first if same upvotes
       });
       
-      setComments(commentsData);
-
-      // Load user votes for comments if user is logged in
-      if (currentUser && commentsData.length > 0) {
-        const votePromises = commentsData.map(comment => 
-          PostService.getUserVoteOnComment(comment.id, currentUser.uid)
-        );
-        const votes = await Promise.all(votePromises);
-        
-        const voteMap: Record<string, 'upvote' | 'downvote'> = {};
-        commentsData.forEach((comment, index) => {
-          if (votes[index]) {
-            voteMap[comment.id] = votes[index]!;
-          }
-        });
+      if (isMountedRef.current) {
         setUserVotes(voteMap);
       }
     } catch (err) {
-      console.error('Error loading comments:', err);
-      setError('Failed to load comments');
-    } finally {
-      setLoading(false);
+      console.error('Error loading user votes:', err);
     }
-  }, [postId, currentUser]);
+  }, [currentUser]);
 
   // Add new comment
   const addComment = useCallback(async (content: string) => {
@@ -56,21 +45,18 @@ export const useComments = (postId: string) => {
     if (!content.trim()) throw new Error('Comment cannot be empty');
 
     try {
-      const commentId = await PostService.addComment(postId, {
+      await PostService.addComment(postId, {
         postId,
         author: currentUser.displayName || userData.firstName + ' ' + userData.lastName,
         authorId: currentUser.uid,
         content: content.trim()
       });
-
-      // Refresh comments
-      await loadComments();
-      return commentId;
+      // Real-time listener will update comments
     } catch (err) {
       console.error('Error adding comment:', err);
       throw err;
     }
-  }, [currentUser, userData, postId, loadComments]);
+  }, [currentUser, userData, postId]);
 
   // Add reply to comment
   const addReply = useCallback(async (commentId: string, content: string) => {
@@ -78,50 +64,55 @@ export const useComments = (postId: string) => {
     if (!content.trim()) throw new Error('Reply cannot be empty');
 
     try {
-      const replyId = await PostService.addReply(postId, commentId, {
+      await PostService.addReply(postId, commentId, {
         commentId,
         author: currentUser.displayName || userData.firstName + ' ' + userData.lastName,
         authorId: currentUser.uid,
         content: content.trim()
       });
-
-      // Refresh comments to show new reply
-      await loadComments();
-      return replyId;
+      // Real-time listener will update comments
     } catch (err) {
       console.error('Error adding reply:', err);
       throw err;
     }
-  }, [currentUser, userData, postId, loadComments]);
+  }, [currentUser, userData, postId]);
 
-  // Vote on comment
+  // Vote on comment with optimistic updates
   const voteOnComment = useCallback(async (commentId: string, voteType: 'upvote' | 'downvote') => {
     if (!currentUser) throw new Error('Must be logged in to vote');
 
+    const currentVote = userVotes[commentId];
+    const newVoteType = currentVote === voteType ? 'remove' : voteType;
+    
+    // Optimistic update
+    setUserVotes(prev => {
+      const newVotes = { ...prev };
+      if (newVoteType === 'remove') {
+        delete newVotes[commentId];
+      } else {
+        newVotes[commentId] = newVoteType;
+      }
+      return newVotes;
+    });
+
     try {
-      const currentVote = userVotes[commentId];
-      const newVoteType = currentVote === voteType ? 'remove' : voteType;
-      
       await PostService.voteOnComment(postId, commentId, currentUser.uid, newVoteType);
-      
-      // Update local vote state
+      // Real-time listener will update vote counts
+    } catch (err) {
+      // Revert on error
       setUserVotes(prev => {
         const newVotes = { ...prev };
-        if (newVoteType === 'remove') {
-          delete newVotes[commentId];
+        if (currentVote) {
+          newVotes[commentId] = currentVote;
         } else {
-          newVotes[commentId] = newVoteType;
+          delete newVotes[commentId];
         }
         return newVotes;
       });
-
-      // Refresh comments to show updated vote counts
-      await loadComments();
-    } catch (err) {
       console.error('Error voting on comment:', err);
       throw err;
     }
-  }, [currentUser, postId, userVotes, loadComments]);
+  }, [currentUser, postId, userVotes]);
 
   // Vote on reply
   const voteOnReply = useCallback(async (commentId: string, replyId: string, voteType: 'upvote' | 'downvote') => {
@@ -129,27 +120,42 @@ export const useComments = (postId: string) => {
 
     try {
       await PostService.voteOnReply(postId, commentId, replyId, currentUser.uid, voteType);
-      // Refresh comments to show updated vote counts
-      await loadComments();
+      // Real-time listener will update
     } catch (err) {
       console.error('Error voting on reply:', err);
       throw err;
     }
-  }, [currentUser, postId, loadComments]);
-
-  useEffect(() => {
-    loadComments();
-  }, [loadComments]);
+  }, [currentUser, postId]);
 
   // Set up real-time listener for comments
   useEffect(() => {
+    isMountedRef.current = true;
+    setLoading(true);
+
     const unsubscribe = PostService.subscribeToComments(postId, (updatedComments) => {
+      if (!isMountedRef.current) return;
+      
+      // Sort comments
+      updatedComments.sort((a, b) => {
+        if (b.upvotes !== a.upvotes) {
+          return b.upvotes - a.upvotes;
+        }
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      });
+      
       setComments(updatedComments);
       setLoading(false);
+      
+      // Load user votes for new comments
+      const commentIds = updatedComments.map(c => c.id);
+      loadUserVotes(commentIds);
     });
 
-    return unsubscribe;
-  }, [postId]);
+    return () => {
+      isMountedRef.current = false;
+      unsubscribe();
+    };
+  }, [postId, loadUserVotes]);
 
   return {
     comments,
@@ -160,6 +166,6 @@ export const useComments = (postId: string) => {
     addReply,
     voteOnComment,
     voteOnReply,
-    refreshComments: loadComments
+    refreshComments: () => {} // No longer needed with real-time
   };
 };

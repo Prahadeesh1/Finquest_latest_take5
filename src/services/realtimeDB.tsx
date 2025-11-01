@@ -14,9 +14,10 @@ import {
   endAt,
   onValue,
   off,
-  DataSnapshot
+  DataSnapshot,
+  runTransaction
 } from 'firebase/database';
-import { rtdb } from '../firebase/config'; // Make sure this imports your Realtime Database instance
+import { rtdb } from '../firebase/config';
 
 export interface Post {
   id: string;
@@ -71,6 +72,7 @@ export interface Community {
   color: string;
   createdAt: string;
   rules: string[];
+  members?: string[];
 }
 
 export class PostService {
@@ -133,14 +135,12 @@ export class PostService {
         }
       });
 
-      // Sort by creation date (newest first) and separate pinned posts
       posts.sort((a, b) => {
         if (a.isPinned && !b.isPinned) return -1;
         if (!a.isPinned && b.isPinned) return 1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
 
-      // Apply limit after sorting
       return posts.slice(0, limit);
     } catch (error) {
       console.error('Error fetching community posts:', error);
@@ -148,7 +148,7 @@ export class PostService {
     }
   }
 
-  // Get all posts (for main community page)
+  // Get all posts
   static async getAllPosts(limit: number = 20): Promise<Post[]> {
     try {
       const postsRef = ref(rtdb, 'posts');
@@ -165,10 +165,7 @@ export class PostService {
         }
       });
 
-      // Sort by creation date (newest first)
       posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      // Apply limit after sorting
       return posts.slice(0, limit);
     } catch (error) {
       console.error('Error fetching all posts:', error);
@@ -176,7 +173,7 @@ export class PostService {
     }
   }
 
-  // Get expert/pinned posts by community
+  // Get expert posts by community
   static async getExpertPostsByCommunity(communityId: string): Promise<Post[]> {
     try {
       const posts = await this.getPostsByCommunity(communityId, 50);
@@ -199,56 +196,56 @@ export class PostService {
     }
   }
 
-  // Vote on a post
+  // Vote on a post - FIXED WITH TRANSACTIONS
   static async voteOnPost(postId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
       const voteRef = ref(rtdb, `votes/posts/${postId}/${userId}`);
       const postRef = ref(rtdb, `posts/${postId}`);
       
-      // Get current vote and post data
-      const [voteSnapshot, postSnapshot] = await Promise.all([
-        get(voteRef),
-        get(postRef)
-      ]);
-      
+      // Get current vote status
+      const voteSnapshot = await get(voteRef);
       const currentVote = voteSnapshot.val();
-      const post = postSnapshot.val();
       
-      if (!post) return;
-
-      let upvoteChange = 0;
-      let downvoteChange = 0;
-
-      // Calculate vote changes
-      if (currentVote === 'upvote') {
-        upvoteChange = -1;
-      } else if (currentVote === 'downvote') {
-        downvoteChange = -1;
-      }
-
-      if (voteType === 'upvote' && currentVote !== 'upvote') {
-        upvoteChange += 1;
-      } else if (voteType === 'downvote' && currentVote !== 'downvote') {
-        downvoteChange += 1;
-      }
-
-      // Update post votes
-      const updates: any = {};
-      if (upvoteChange !== 0) {
-        updates[`posts/${postId}/upvotes`] = post.upvotes + upvoteChange;
-      }
-      if (downvoteChange !== 0) {
-        updates[`posts/${postId}/downvotes`] = post.downvotes + downvoteChange;
-      }
-
+      // If trying to apply same vote, treat as remove
+      const actualVoteType = currentVote === voteType ? 'remove' : voteType;
+      
+      // Use transaction to safely update vote counts
+      await runTransaction(postRef, (post) => {
+        if (!post) return post;
+        
+        // Calculate changes
+        let upvoteChange = 0;
+        let downvoteChange = 0;
+        
+        // Remove previous vote effect
+        if (currentVote === 'upvote') {
+          upvoteChange = -1;
+        } else if (currentVote === 'downvote') {
+          downvoteChange = -1;
+        }
+        
+        // Apply new vote effect
+        if (actualVoteType === 'upvote') {
+          upvoteChange += 1;
+        } else if (actualVoteType === 'downvote') {
+          downvoteChange += 1;
+        }
+        
+        // Update counts
+        post.upvotes = Math.max(0, (post.upvotes || 0) + upvoteChange);
+        post.downvotes = Math.max(0, (post.downvotes || 0) + downvoteChange);
+        post.updatedAt = new Date().toISOString();
+        
+        return post;
+      });
+      
       // Update vote record
-      if (voteType === 'remove') {
-        updates[`votes/posts/${postId}/${userId}`] = null;
+      if (actualVoteType === 'remove') {
+        await remove(voteRef);
       } else {
-        updates[`votes/posts/${postId}/${userId}`] = voteType;
+        await set(voteRef, actualVoteType);
       }
-
-      await update(ref(rtdb), updates);
+      
     } catch (error) {
       console.error('Error voting on post:', error);
       throw error;
@@ -268,9 +265,7 @@ export class PostService {
         comments.push(childSnapshot.val());
       });
 
-      // Sort by creation date (oldest first)
       comments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-
       return comments;
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -295,13 +290,16 @@ export class PostService {
 
       await set(newCommentRef, comment);
 
-      // Update post comment count
-      const postRef = ref(rtdb, `posts/${postId}/commentCount`);
-      const postSnapshot = await get(postRef);
-      const currentCount = postSnapshot.val() || 0;
-      await set(postRef, currentCount + 1);
+      // Update post comment count with transaction
+      const postRef = ref(rtdb, `posts/${postId}`);
+      await runTransaction(postRef, (post) => {
+        if (post) {
+          post.commentCount = (post.commentCount || 0) + 1;
+        }
+        return post;
+      });
 
-      // Update user's comments count
+      // Update user comment count
       const userRef = ref(rtdb, `users/${commentData.authorId}/commentsCount`);
       const userSnapshot = await get(userRef);
       const currentUserCount = userSnapshot.val() || 0;
@@ -330,6 +328,16 @@ export class PostService {
       };
 
       await set(newReplyRef, reply);
+      
+      // Update post comment count (replies count as comments too)
+      const postRef = ref(rtdb, `posts/${postId}`);
+      await runTransaction(postRef, (post) => {
+        if (post) {
+          post.commentCount = (post.commentCount || 0) + 1;
+        }
+        return post;
+      });
+      
       return replyId;
     } catch (error) {
       console.error('Error adding reply:', error);
@@ -337,112 +345,110 @@ export class PostService {
     }
   }
 
-  // Vote on comment
+  // Vote on comment - FIXED WITH TRANSACTIONS
   static async voteOnComment(postId: string, commentId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
       const voteRef = ref(rtdb, `votes/comments/${commentId}/${userId}`);
       const commentRef = ref(rtdb, `comments/${postId}/${commentId}`);
       
-      // Get current vote and comment data
-      const [voteSnapshot, commentSnapshot] = await Promise.all([
-        get(voteRef),
-        get(commentRef)
-      ]);
-      
+      // Get current vote status
+      const voteSnapshot = await get(voteRef);
       const currentVote = voteSnapshot.val();
-      const comment = commentSnapshot.val();
       
-      if (!comment) return;
-
-      let upvoteChange = 0;
-      let downvoteChange = 0;
-
-      // Calculate vote changes
-      if (currentVote === 'upvote') {
-        upvoteChange = -1;
-      } else if (currentVote === 'downvote') {
-        downvoteChange = -1;
-      }
-
-      if (voteType === 'upvote' && currentVote !== 'upvote') {
-        upvoteChange += 1;
-      } else if (voteType === 'downvote' && currentVote !== 'downvote') {
-        downvoteChange += 1;
-      }
-
-      // Update comment votes
-      const updates: any = {};
-      if (upvoteChange !== 0) {
-        updates[`comments/${postId}/${commentId}/upvotes`] = comment.upvotes + upvoteChange;
-      }
-      if (downvoteChange !== 0) {
-        updates[`comments/${postId}/${commentId}/downvotes`] = comment.downvotes + downvoteChange;
-      }
-
+      // If trying to apply same vote, treat as remove
+      const actualVoteType = currentVote === voteType ? 'remove' : voteType;
+      
+      // Use transaction to safely update vote counts
+      await runTransaction(commentRef, (comment) => {
+        if (!comment) return comment;
+        
+        // Calculate changes
+        let upvoteChange = 0;
+        let downvoteChange = 0;
+        
+        // Remove previous vote effect
+        if (currentVote === 'upvote') {
+          upvoteChange = -1;
+        } else if (currentVote === 'downvote') {
+          downvoteChange = -1;
+        }
+        
+        // Apply new vote effect
+        if (actualVoteType === 'upvote') {
+          upvoteChange += 1;
+        } else if (actualVoteType === 'downvote') {
+          downvoteChange += 1;
+        }
+        
+        // Update counts
+        comment.upvotes = Math.max(0, (comment.upvotes || 0) + upvoteChange);
+        comment.downvotes = Math.max(0, (comment.downvotes || 0) + downvoteChange);
+        
+        return comment;
+      });
+      
       // Update vote record
-      if (voteType === 'remove') {
-        updates[`votes/comments/${commentId}/${userId}`] = null;
+      if (actualVoteType === 'remove') {
+        await remove(voteRef);
       } else {
-        updates[`votes/comments/${commentId}/${userId}`] = voteType;
+        await set(voteRef, actualVoteType);
       }
-
-      await update(ref(rtdb), updates);
+      
     } catch (error) {
       console.error('Error voting on comment:', error);
       throw error;
     }
   }
 
-  // Vote on reply
+  // Vote on reply - FIXED WITH TRANSACTIONS
   static async voteOnReply(postId: string, commentId: string, replyId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
       const voteRef = ref(rtdb, `votes/replies/${replyId}/${userId}`);
       const replyRef = ref(rtdb, `comments/${postId}/${commentId}/replies/${replyId}`);
       
-      // Get current vote and reply data
-      const [voteSnapshot, replySnapshot] = await Promise.all([
-        get(voteRef),
-        get(replyRef)
-      ]);
-      
+      // Get current vote status
+      const voteSnapshot = await get(voteRef);
       const currentVote = voteSnapshot.val();
-      const reply = replySnapshot.val();
       
-      if (!reply) return;
-
-      let upvoteChange = 0;
-      let downvoteChange = 0;
-
-      // Calculate vote changes
-      if (currentVote === 'upvote') {
-        upvoteChange = -1;
-      } else if (currentVote === 'downvote') {
-        downvoteChange = -1;
-      }
-
-      if (voteType === 'upvote' && currentVote !== 'upvote') {
-        upvoteChange += 1;
-      } else if (voteType === 'downvote' && currentVote !== 'downvote') {
-        downvoteChange += 1;
-      }
-
-      // Update reply votes
-      const updates: any = {};
-      if (upvoteChange !== 0) {
-        updates[`comments/${postId}/${commentId}/replies/${replyId}/upvotes`] = reply.upvotes + upvoteChange;
-      }
-      if (downvoteChange !== 0) {
-        updates[`comments/${postId}/${commentId}/replies/${replyId}/downvotes`] = reply.downvotes + downvoteChange;
-      }
-
+      // If trying to apply same vote, treat as remove
+      const actualVoteType = currentVote === voteType ? 'remove' : voteType;
+      
+      // Use transaction to safely update vote counts
+      await runTransaction(replyRef, (reply) => {
+        if (!reply) return reply;
+        
+        // Calculate changes
+        let upvoteChange = 0;
+        let downvoteChange = 0;
+        
+        // Remove previous vote effect
+        if (currentVote === 'upvote') {
+          upvoteChange = -1;
+        } else if (currentVote === 'downvote') {
+          downvoteChange = -1;
+        }
+        
+        // Apply new vote effect
+        if (actualVoteType === 'upvote') {
+          upvoteChange += 1;
+        } else if (actualVoteType === 'downvote') {
+          downvoteChange += 1;
+        }
+        
+        // Update counts
+        reply.upvotes = Math.max(0, (reply.upvotes || 0) + upvoteChange);
+        reply.downvotes = Math.max(0, (reply.downvotes || 0) + downvoteChange);
+        
+        return reply;
+      });
+      
       // Update vote record
-      if (voteType === 'remove') {
-        updates[`votes/replies/${replyId}/${userId}`] = null;
+      if (actualVoteType === 'remove') {
+        await remove(voteRef);
       } else {
-        updates[`votes/replies/${replyId}/${userId}`] = voteType;
+        await set(voteRef, actualVoteType);
       }
-
-      await update(ref(rtdb), updates);
+      
     } catch (error) {
       console.error('Error voting on reply:', error);
       throw error;
@@ -558,69 +564,155 @@ export class PostService {
     }
   }
 
-  // Join/Leave community (simplified - just track in user data)
+  // Join community
   static async joinCommunity(userId: string, communityId: string): Promise<void> {
     try {
-      // For now, just update user's joined communities
-      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities`);
-      const snapshot = await get(userCommunitiesRef);
-      const communities = snapshot.exists() ? snapshot.val() : [];
-      
-      if (!communities.includes(communityId)) {
-        communities.push(communityId);
-        await set(userCommunitiesRef, communities);
+      const communityMembersRef = ref(rtdb, `communities/${communityId}/members/${userId}`);
+      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities/${communityId}`);
+      const memberCountRef = ref(rtdb, `communities/${communityId}/memberCount`);
+
+      // Check if already a member
+      const memberSnapshot = await get(communityMembersRef);
+      if (memberSnapshot.exists()) {
+        console.log('User already a member');
+        return;
       }
+
+      // Use transaction to safely increment member count
+      await runTransaction(memberCountRef, (currentCount) => {
+        return (currentCount || 0) + 1;
+      });
+
+      // Add user to community members
+      await set(communityMembersRef, {
+        joinedAt: new Date().toISOString(),
+        userId: userId
+      });
+
+      // Add community to user's communities
+      await set(userCommunitiesRef, {
+        joinedAt: new Date().toISOString(),
+        communityId: communityId
+      });
+
+      console.log(`User ${userId} joined community ${communityId}`);
     } catch (error) {
       console.error('Error joining community:', error);
       throw error;
     }
   }
 
+  // Leave community
   static async leaveCommunity(userId: string, communityId: string): Promise<void> {
     try {
-      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities`);
-      const snapshot = await get(userCommunitiesRef);
-      const communities = snapshot.exists() ? snapshot.val() : [];
-      
-      const updatedCommunities = communities.filter((id: string) => id !== communityId);
-      await set(userCommunitiesRef, updatedCommunities);
+      const communityMembersRef = ref(rtdb, `communities/${communityId}/members/${userId}`);
+      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities/${communityId}`);
+      const memberCountRef = ref(rtdb, `communities/${communityId}/memberCount`);
+
+      // Check if user is a member
+      const memberSnapshot = await get(communityMembersRef);
+      if (!memberSnapshot.exists()) {
+        console.log('User is not a member');
+        return;
+      }
+
+      // Use transaction to safely decrement member count
+      await runTransaction(memberCountRef, (currentCount) => {
+        return Math.max(0, (currentCount || 0) - 1);
+      });
+
+      // Remove user from community members
+      await remove(communityMembersRef);
+
+      // Remove community from user's communities
+      await remove(userCommunitiesRef);
+
+      console.log(`User ${userId} left community ${communityId}`);
     } catch (error) {
       console.error('Error leaving community:', error);
       throw error;
     }
   }
 
-  // Update online status (simplified)
-  static async updateOnlineStatus(userId: string, communityId: string, isOnline: boolean): Promise<void> {
+  // Check if user is member
+  static async isUserMember(userId: string, communityId: string): Promise<boolean> {
     try {
-      // For now, just log this - we can implement proper online tracking later
-      console.log(`User ${userId} is ${isOnline ? 'online' : 'offline'} in ${communityId}`);
+      const memberRef = ref(rtdb, `communities/${communityId}/members/${userId}`);
+      const snapshot = await get(memberRef);
+      return snapshot.exists();
     } catch (error) {
-      console.error('Error updating online status:', error);
+      console.error('Error checking membership:', error);
+      return false;
     }
   }
 
-  // Get community member count (simplified - use static count from community data)
+  // Get community member count
   static async getCommunityMemberCount(communityId: string): Promise<number> {
     try {
-      const community = await this.getCommunity(communityId);
-      return community?.memberCount || 0;
+      const memberCountRef = ref(rtdb, `communities/${communityId}/memberCount`);
+      const snapshot = await get(memberCountRef);
+      return snapshot.exists() ? snapshot.val() : 0;
     } catch (error) {
       console.error('Error getting member count:', error);
       return 0;
     }
   }
 
-  // Check if user is member of community
-  static async isUserMember(userId: string, communityId: string): Promise<boolean> {
+  // Get all members of a community
+  static async getCommunityMembers(communityId: string): Promise<string[]> {
     try {
-      const userCommunitiesRef = ref(rtdb, `users/${userId}/communities`);
-      const snapshot = await get(userCommunitiesRef);
-      const communities = snapshot.exists() ? snapshot.val() : [];
-      return communities.includes(communityId);
+      const membersRef = ref(rtdb, `communities/${communityId}/members`);
+      const snapshot = await get(membersRef);
+      
+      if (!snapshot.exists()) return [];
+
+      const members: string[] = [];
+      snapshot.forEach((childSnapshot) => {
+        members.push(childSnapshot.key!);
+      });
+
+      return members;
     } catch (error) {
-      console.error('Error checking membership:', error);
-      return false;
+      console.error('Error getting community members:', error);
+      return [];
+    }
+  }
+
+  // Update online status
+  static async updateOnlineStatus(userId: string, communityId: string, isOnline: boolean): Promise<void> {
+    try {
+      const onlineRef = ref(rtdb, `communities/${communityId}/online/${userId}`);
+      
+      if (isOnline) {
+        await set(onlineRef, {
+          lastSeen: new Date().toISOString(),
+          isOnline: true
+        });
+      } else {
+        await remove(onlineRef);
+      }
+    } catch (error) {
+      console.error('Error updating online status:', error);
+    }
+  }
+
+  // Get online count
+  static async getOnlineCount(communityId: string): Promise<number> {
+    try {
+      const onlineRef = ref(rtdb, `communities/${communityId}/online`);
+      const snapshot = await get(onlineRef);
+      
+      if (!snapshot.exists()) return 0;
+
+      let count = 0;
+      snapshot.forEach(() => {
+        count++;
+      });
+
+      return count;
+    } catch (error) {
+      console.error('Error getting online count:', error);
+      return 0;
     }
   }
 

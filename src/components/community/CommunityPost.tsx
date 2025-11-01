@@ -49,6 +49,7 @@ const CommunityPost = ({
   const [bookmarked, setBookmarked] = useState(isBookmarked);
   const [currentUpvotes, setCurrentUpvotes] = useState(upvotes);
   const [currentDownvotes, setCurrentDownvotes] = useState(downvotes);
+  const [isVoting, setIsVoting] = useState(false);
 
   // Load user's vote status when component mounts
   useEffect(() => {
@@ -97,49 +98,53 @@ const CommunityPost = ({
       return;
     }
 
-    if (!postId) return;
+    if (!postId || isVoting) return;
+
+    // Prevent double-clicking
+    setIsVoting(true);
 
     try {
-      const newVoteType = userVote === voteType ? 'remove' : voteType;
-      
-      // Optimistic update
+      // Determine new vote type (clicking same button = remove vote)
       const previousVote = userVote;
-      setUserVote(newVoteType === 'remove' ? null : newVoteType);
+      const newVoteType = previousVote === voteType ? 'remove' : voteType;
       
-      // Update vote counts optimistically
+      // Calculate vote changes
       let upvoteChange = 0;
       let downvoteChange = 0;
 
+      // Remove previous vote
       if (previousVote === 'upvote') {
         upvoteChange = -1;
       } else if (previousVote === 'downvote') {
         downvoteChange = -1;
       }
 
+      // Add new vote
       if (newVoteType === 'upvote') {
         upvoteChange += 1;
       } else if (newVoteType === 'downvote') {
         downvoteChange += 1;
       }
 
-      setCurrentUpvotes(prev => prev + upvoteChange);
-      setCurrentDownvotes(prev => prev + downvoteChange);
+      // Optimistic update
+      setUserVote(newVoteType === 'remove' ? null : newVoteType);
+      setCurrentUpvotes(prev => Math.max(0, prev + upvoteChange));
+      setCurrentDownvotes(prev => Math.max(0, prev + downvoteChange));
 
-      // Call the service
+      // Send to backend
       await PostService.voteOnPost(postId, currentUser.uid, newVoteType);
 
-      // Call parent callback if provided
-      if (onVote) {
-        onVote(postId, voteType);
-      }
-
-      toast.success(`Post ${voteType}d successfully!`);
+      // NO toast notification - silent voting for better UX
+      
     } catch (error) {
-      // Revert optimistic update on error
+      console.error('Error voting:', error);
+      // Revert on error
       setUserVote(userVote);
       setCurrentUpvotes(upvotes);
       setCurrentDownvotes(downvotes);
-      toast.error(`Failed to ${voteType} post`);
+      toast.error('Failed to vote');
+    } finally {
+      setIsVoting(false);
     }
   };
 
@@ -152,21 +157,15 @@ const CommunityPost = ({
     if (!postId) return;
 
     try {
-      // Optimistic update
       const newBookmarkStatus = !bookmarked;
       setBookmarked(newBookmarkStatus);
 
       const actualBookmarkStatus = await PostService.toggleBookmark(currentUser.uid, postId);
       setBookmarked(actualBookmarkStatus);
 
-      // Call parent callback if provided
-      if (onBookmark) {
-        onBookmark(postId);
-      }
-
-      toast.success(actualBookmarkStatus ? 'Post bookmarked!' : 'Bookmark removed!');
+      // Silent bookmark - no toast
+      
     } catch (error) {
-      // Revert optimistic update on error
       setBookmarked(bookmarked);
       toast.error('Failed to update bookmark');
     }
@@ -181,13 +180,14 @@ const CommunityPost = ({
           url: window.location.origin + `/post/${postId}`
         });
       } else {
-        // Fallback: copy to clipboard
         await navigator.clipboard.writeText(window.location.origin + `/post/${postId}`);
-        toast.success('Link copied to clipboard!');
+        toast.success('Link copied!');
       }
     } catch (error) {
-      console.error('Error sharing:', error);
-      toast.error('Failed to share post');
+      // User cancelled share - don't show error
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
+      }
     }
   };
 
@@ -206,7 +206,7 @@ const CommunityPost = ({
                   : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
               }`}
               onClick={() => handleVote('upvote')}
-              disabled={!currentUser}
+              disabled={!currentUser || isVoting}
             >
               <ThumbsUp className="h-5 w-5" />
             </Button>
@@ -220,7 +220,7 @@ const CommunityPost = ({
                   : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
               }`}
               onClick={() => handleVote('downvote')}
-              disabled={!currentUser}
+              disabled={!currentUser || isVoting}
             >
               <ThumbsDown className="h-5 w-5" />
             </Button>

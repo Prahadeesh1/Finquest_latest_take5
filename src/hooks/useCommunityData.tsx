@@ -1,5 +1,5 @@
 // src/hooks/useCommunityData.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PostService, Post, Comment, Community } from '@/services/realtimeDB';
 import { useAuth } from '@/contexts/Auth';
 import { toast } from 'sonner';
@@ -24,7 +24,10 @@ export const useCommunityData = (communityId: string) => {
   const [hasMore, setHasMore] = useState(true);
   const [currentLimit, setCurrentLimit] = useState(20);
 
-  // Calculate community statistics with proper comment counting
+  const isMountedRef = useRef(true);
+  const loadingRef = useRef(false);
+
+  // Calculate community statistics
   const calculateStats = useCallback(async (allPosts: Post[]) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -35,29 +38,29 @@ export const useCommunityData = (communityId: string) => {
       return postDate.getTime() === today.getTime();
     }).length;
 
-    // Get real comment counts for all posts
+    // Get real comment counts
     let totalComments = 0;
     for (const post of allPosts) {
       try {
         const comments = await PostService.getPostComments(post.id);
         totalComments += comments.length;
         
-        // Count replies too
         for (const comment of comments) {
           if (comment.replies) {
             totalComments += Object.keys(comment.replies).length;
           }
         }
       } catch (error) {
-        // Fall back to post's comment count if fetching fails
-        totalComments += post.commentCount;
+        totalComments += post.commentCount || 0;
       }
     }
 
     const uniqueAuthors = new Set(allPosts.map(post => post.authorId));
     
-    // Get real member count
-    const memberCount = await PostService.getCommunityMemberCount(communityId);
+    const [memberCount, onlineCount] = await Promise.all([
+      PostService.getCommunityMemberCount(communityId),
+      PostService.getOnlineCount(communityId)
+    ]);
 
     return {
       totalPosts: allPosts.length,
@@ -65,11 +68,11 @@ export const useCommunityData = (communityId: string) => {
       totalComments,
       activeUsers: uniqueAuthors.size,
       memberCount,
-      onlineCount: Math.floor(memberCount * 0.1) + Math.floor(Math.random() * 5) // Simulate online users
+      onlineCount
     };
   }, [communityId]);
 
-  // CREATE POST FUNCTION - MISSING FUNCTION #1
+  // CREATE POST FUNCTION
   const createPost = useCallback(async (postData: {
     title: string;
     content: string;
@@ -85,23 +88,23 @@ export const useCommunityData = (communityId: string) => {
     try {
       const postId = await PostService.createPost({
         ...postData,
-        type: postData.type || 'text', // Provide default value for required field
-        tags: postData.tags || [], // Provide default value if needed
+        type: postData.type || 'text',
+        tags: postData.tags || [],
         community: communityId,
         authorId: currentUser.uid,
         author: currentUser.displayName || 'Anonymous'
       });
       
-      // Refresh posts after creating
+      // Reload data after creating post
       await loadCommunityData(currentLimit);
       return postId;
     } catch (error) {
       console.error('Error creating post:', error);
       throw error;
     }
-  }, [currentUser, communityId]);
+  }, [currentUser, communityId, currentLimit]);
 
-  // VOTE ON POST FUNCTION - MISSING FUNCTION #2
+  // VOTE ON POST FUNCTION - No longer needed to reload all data
   const voteOnPost = useCallback(async (postId: string, voteType: 'upvote' | 'downvote') => {
     if (!currentUser) {
       throw new Error('Must be logged in to vote');
@@ -109,15 +112,14 @@ export const useCommunityData = (communityId: string) => {
 
     try {
       await PostService.voteOnPost(postId, currentUser.uid, voteType);
-      // Refresh posts to show updated vote counts
-      await loadCommunityData(currentLimit);
+      // Real-time listeners in CommunityPost will handle updates
     } catch (error) {
       console.error('Error voting on post:', error);
       throw error;
     }
-  }, [currentUser, currentLimit]);
+  }, [currentUser]);
 
-  // TOGGLE BOOKMARK FUNCTION - MISSING FUNCTION #3
+  // TOGGLE BOOKMARK FUNCTION
   const toggleBookmark = useCallback(async (postId: string) => {
     if (!currentUser) {
       throw new Error('Must be logged in to bookmark');
@@ -125,29 +127,30 @@ export const useCommunityData = (communityId: string) => {
 
     try {
       const isBookmarked = await PostService.toggleBookmark(currentUser.uid, postId);
-      // Refresh posts to show updated bookmark status
-      await loadCommunityData(currentLimit);
       return isBookmarked;
     } catch (error) {
       console.error('Error toggling bookmark:', error);
       throw error;
     }
-  }, [currentUser, currentLimit]);
+  }, [currentUser]);
 
-  // LOAD MORE POSTS FUNCTION - MISSING FUNCTION #4
+  // LOAD MORE POSTS FUNCTION
   const loadMorePosts = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMore || !hasMore || loadingRef.current) return;
 
+    loadingRef.current = true;
     setLoadingMore(true);
+    
     try {
       const newLimit = currentLimit + 20;
       setCurrentLimit(newLimit);
-      await loadCommunityData(newLimit, true); // true means append to existing posts
+      await loadCommunityData(newLimit, true);
     } catch (error) {
       console.error('Error loading more posts:', error);
       throw error;
     } finally {
       setLoadingMore(false);
+      loadingRef.current = false;
     }
   }, [loadingMore, hasMore, currentLimit]);
 
@@ -159,8 +162,10 @@ export const useCommunityData = (communityId: string) => {
       await PostService.joinCommunity(currentUser.uid, communityId);
       await PostService.updateOnlineStatus(currentUser.uid, communityId, true);
       setIsMember(true);
-      // Refresh community data
-      loadCommunityData(currentLimit);
+      
+      // Refresh member count
+      const memberCount = await PostService.getCommunityMemberCount(communityId);
+      setStats(prev => ({ ...prev, memberCount }));
     } catch (error) {
       console.error('Error joining community:', error);
       throw error;
@@ -173,18 +178,25 @@ export const useCommunityData = (communityId: string) => {
     
     try {
       await PostService.leaveCommunity(currentUser.uid, communityId);
+      await PostService.updateOnlineStatus(currentUser.uid, communityId, false);
       setIsMember(false);
-      // Refresh community data
-      loadCommunityData(currentLimit);
+      
+      // Refresh member count
+      const memberCount = await PostService.getCommunityMemberCount(communityId);
+      setStats(prev => ({ ...prev, memberCount }));
     } catch (error) {
       console.error('Error leaving community:', error);
       throw error;
     }
   }, [currentUser, communityId]);
 
-  // Load community data with proper error handling
+  // Load community data
   const loadCommunityData = useCallback(async (limit: number = 20, append: boolean = false) => {
+    if (loadingRef.current) return;
+    
     try {
+      loadingRef.current = true;
+      
       if (!append) {
         setLoading(true);
         setError(null);
@@ -197,6 +209,8 @@ export const useCommunityData = (communityId: string) => {
         PostService.getPostsByCommunity(communityId, limit),
         PostService.getExpertPostsByCommunity(communityId)
       ]);
+
+      if (!isMountedRef.current) return;
 
       setCommunity(communityData);
       
@@ -214,11 +228,11 @@ export const useCommunityData = (communityId: string) => {
       
       setExpertPosts(expertPostsData);
 
-      // Calculate real statistics
+      // Calculate statistics
       const statsData = await calculateStats(allPosts);
       setStats(statsData);
 
-      // Check if user is member (simplified)
+      // Check membership status
       if (currentUser) {
         const memberStatus = await PostService.isUserMember(currentUser.uid, communityId);
         setIsMember(memberStatus);
@@ -230,12 +244,30 @@ export const useCommunityData = (communityId: string) => {
     } finally {
       setLoading(false);
       setLoadingMore(false);
+      loadingRef.current = false;
     }
   }, [communityId, calculateStats, currentUser]);
 
-  // Remove the complex online status useEffect
+  // Set user as online when visiting community page
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    if (currentUser && isMember) {
+      PostService.updateOnlineStatus(currentUser.uid, communityId, true);
+
+      return () => {
+        PostService.updateOnlineStatus(currentUser.uid, communityId, false);
+      };
+    }
+  }, [currentUser, communityId, isMember]);
+
+  // Initial load
   useEffect(() => {
     loadCommunityData();
+
+    return () => {
+      isMountedRef.current = false;
+    };
   }, [loadCommunityData]);
 
   return {
@@ -248,10 +280,10 @@ export const useCommunityData = (communityId: string) => {
     hasMore,
     error,
     isMember,
-    createPost,        // ✅ NOW DEFINED
-    voteOnPost,        // ✅ NOW DEFINED  
-    toggleBookmark,    // ✅ NOW DEFINED
-    loadMorePosts,     // ✅ NOW DEFINED
+    createPost,
+    voteOnPost,
+    toggleBookmark,
+    loadMorePosts,
     joinCommunity,
     leaveCommunity,
     refreshData: () => loadCommunityData(currentLimit)

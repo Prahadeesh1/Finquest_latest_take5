@@ -79,27 +79,32 @@ const Community = () => {
     }
   };
 
-  // Calculate community statistics
-  const calculateStats = (allPosts: Post[]) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const discussionsToday = allPosts.filter(post => {
-      const postDate = new Date(post.createdAt);
-      postDate.setHours(0, 0, 0, 0);
-      return postDate.getTime() === today.getTime();
-    }).length;
+  // C// Replace the calculateStats function in Community.tsx with this:
 
-    const questionsAnswered = allPosts.reduce((sum, post) => sum + post.commentCount, 0);
-    const uniqueAuthors = new Set(allPosts.map(post => post.authorId));
+const calculateStats = (allPosts: Post[]) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const discussionsToday = allPosts.filter(post => {
+    const postDate = new Date(post.createdAt);
+    postDate.setHours(0, 0, 0, 0);
+    return postDate.getTime() === today.getTime();
+  }).length;
 
-    setStats({
-      totalMembers: uniqueAuthors.size,
-      discussionsToday,
-      questionsAnswered
-    });
-  };
+  // Fix for NaN issue - ensure commentCount is a valid number
+  const questionsAnswered = allPosts.reduce((sum, post) => {
+    const commentCount = typeof post.commentCount === 'number' ? post.commentCount : 0;
+    return sum + commentCount;
+  }, 0);
+  
+  const uniqueAuthors = new Set(allPosts.map(post => post.authorId));
 
+  setStats({
+    totalMembers: uniqueAuthors.size,
+    discussionsToday,
+    questionsAnswered
+  });
+};
   // Handle voting on posts
   const handleVote = async (postId: string, voteType: 'upvote' | 'downvote') => {
     if (!currentUser) {

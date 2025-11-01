@@ -47,7 +47,7 @@ const CommentItem = ({
   isReply?: boolean;
   voteOnComment: (commentId: string, voteType: 'upvote' | 'downvote') => Promise<void>;
   voteOnReply: (commentId: string, replyId: string, voteType: 'upvote' | 'downvote') => Promise<void>;
-  addReply: (commentId: string, content: string) => Promise<string>;
+  addReply: (commentId: string, content: string) => Promise<void>;
   commentUserVotes: Record<string, 'upvote' | 'downvote'>;
   currentUser: any;
 }) => {
@@ -309,7 +309,6 @@ const PostDetailPage = () => {
         setPost(updatedPost);
       }
       
-      toast.success(`Post ${voteType}d successfully!`);
     } catch (error) {
       toast.error(`Failed to ${voteType} post`);
     }
