@@ -12,14 +12,14 @@ import Learn from "./pages/Learn";
 import Community from "./pages/Community";
 import RiskWise from "./RiskWise/RiskWIseMainPage";
 import ChatWidget from "./components/chat/ChatWidget";
+import  ChatbotPage  from "./pages/ChatbotPage"; // use named export
 import ConservativePage from "./pages/ConservativePage";
 import ModeratePage from "./pages/ModeratePage";
 import AggressivePage from "./pages/AggressivePage";
 import AssessmentPage from "./pages/AssessmentPage";
 import UserProfile from "./pages/UserProfile";
-import Events from "./pages/events"; // Updated import to follow naming convention
+import Events from "./pages/events";
 
-// Create the client outside of the component
 const queryClient = new QueryClient();
 
 function App() {
@@ -37,6 +37,7 @@ function App() {
             <Route path="/learn" element={<Learn />} />
             <Route path="/community" element={<Community />} />
             <Route path="/RiskWise" element={<RiskWise />} />
+            <Route path="/chatbot" element={<ChatbotPage />} /> 
             <Route path="/conservative" element={<ConservativePage />} />
             <Route path="/moderate" element={<ModeratePage />} />
             <Route path="/aggressive" element={<AggressivePage />} />

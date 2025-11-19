@@ -20,9 +20,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-blue-400 shadow-sm sticky top-0 z-50">
+    <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
@@ -33,13 +33,13 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:space-x-6">
+          {/* Centered Navigation */}
+          <div className="hidden md:flex items-center justify-center flex-1 space-x-6">
             {/* Learn */}
             <div className="relative group">
               <Link
                 to="/learn"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
+                className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
               >
                 <BookOpen className="h-4 w-4" />
                 <span>Learn</span>
@@ -53,7 +53,7 @@ const Navbar = () => {
             <div className="relative group">
               <Link
                 to="/community"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
+                className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
               >
                 <Users className="h-4 w-4" />
                 <span>Community</span>
@@ -67,7 +67,7 @@ const Navbar = () => {
             <div className="relative group">
               <Link
                 to="/events"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
+                className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
               >
                 <Calendar className="h-4 w-4" />
                 <span>Events</span>
@@ -81,7 +81,7 @@ const Navbar = () => {
             <div className="relative group">
               <Link
                 to="/riskwise"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-blue-400 hover:bg-blue-500 transition-colors flex items-center space-x-1"
+                className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
               >
                 <Users className="h-4 w-4" />
                 <span>RiskWise</span>
@@ -90,10 +90,25 @@ const Navbar = () => {
                 Analyse and assess your financial risks easily.
               </div>
             </div>
+
+            <div className="relative group">
+              <Link
+                to="/chatbot"
+                className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+              >
+                <Users className="h-4 w-4" />
+                <span>Finbot</span>
+              </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
+                Want to clarify a doubt, ask FinBot
+              </div>
+            </div>
+
+            
           </div>
 
-          {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-2">
+          {/* Right Side - Auth Buttons and Profile */}
+          <div className="hidden md:flex items-center space-x-1 -mr-20">
             <Link to="/login">
               <Button
                 variant="outline"
@@ -112,19 +127,19 @@ const Navbar = () => {
                 Get Started
               </Button>
             </Link>
+            <div className="relative group">
+              <Link
+                to="/profile"
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-70 bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+              >
+                <User className="h-4 w-4 text-black" />
+                <span>Profile</span>
+              </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
+                View your User profile
+              </div>
+            </div>
           </div>
-          <Link
-          to="/profile"
-          className="group relative block px-4 py-3 rounded-md text-base font-medium text-gray-700 hover:text-finance-primary hover:bg-finance-primary/10 transition-colors flex items-center space-x-2"
-          onClick={toggleMenu}
-          >
-          <User className="h-5 w-5 text-black" />
-          <span>Profile</span>
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50 pointer-events-none group-hover:pointer-events-auto">
-          View your User profile
-          </div>
-          </Link>
-
 
           {/* Mobile Menu Toggle */}
           <div className="flex md:hidden items-center">

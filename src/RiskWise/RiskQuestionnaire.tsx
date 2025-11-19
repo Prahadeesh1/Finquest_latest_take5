@@ -24,220 +24,110 @@ interface Question {
 const questions: Question[] = [
   {
     id: 1,
-    text: "Imagine you've just received an unexpected $50,000. What's your first instinct",
+    text: "What is your main objective for investing?",
     answers: [
       { 
-        text: "Keep most of it in the bank — better safe than sorry", 
+        text: "Preserve my capital, even if returns are low ", 
         score: { safe: 10, moderate: 0, aggressive: 0 } 
       },
       { 
-        text: "Use a part to invest cautiously, but save the rest", 
+        text: "Earn moderate returns with limited risk ", 
         score: { safe: 4, moderate: 5, aggressive: 0 } 
       },
       { 
-        text: "Invest a good chunk into opportunities I believe in", 
+        text: "Grow my wealth over time, accepting some fluctuations ", 
         score: { safe: 2, moderate: 8, aggressive: 3 } 
       },
       { 
-        text: "Go big — once-in-a-lifetime chance to multiply it", 
+        text: "Maximize long-term growth, even with high short-term losses ", 
         score: { safe: 0, moderate: 0, aggressive: 10 } 
       },
     ]
   },
   {
     id: 2,
-    text: "When you hear about a (market crash) on the news, what emotion best describes your reaction?",
+    text: "How would you react if your portfolio dropped by 20% in value during a market downturn?",
     answers: [
       { 
-        text: "Anxiety — I worry about losing what I have", 
+        text: "I’d sell everything to prevent further losses ", 
         score: { safe: 10, moderate: 0, aggressive: 0 } 
       },
       { 
-        text: "Caution — I consider making changes if needed", 
+        text: "I’d reduce my risky investments ", 
         score: { safe: 5, moderate: 6, aggressive: 0 } 
       },
       { 
-        text: "Curiosity — I want to understand what's happening", 
+        text: "I’d stay invested and wait for recovery ", 
         score: { safe: 2, moderate: 8, aggressive: 3 } 
       },
       { 
-        text: "Excitement — discounts everywhere!", 
+        text: "I’d invest more to take advantage of lower prices ", 
         score: { safe: 0, moderate: 2, aggressive: 10 } 
       },
     ]
   },
   {
     id: 3,
-    text: "Which weekend activity sounds most appealing to you?",
+    text: "When do you expect to use the money you’re investing now? ",
     answers: [
       { 
-        text: "A quiet, familiar dinner at my favourite restaurant", 
+        text: "Within the next 3 years", 
         score: { safe: 10, moderate: 0, aggressive: 0 } 
       },
       { 
-        text: "Exploring a new cafe recommended by a friend", 
+        text: "In 3–5 years", 
         score: { safe: 5, moderate: 6, aggressive: 0 } 
       },
       { 
-        text: "Taking a spontaneous short road trip", 
+        text: "In 5–10 years", 
         score: { safe: 2, moderate: 8, aggressive: 3 } 
       },
       { 
-        text: "Booking a last-minute adventure overseas", 
+        text: "After 10 years or more", 
         score: { safe: 0, moderate: 2, aggressive: 10 } 
       },
     ]
   },
   {
     id: 4,
-    text: "If a friend pitched you an investment with (high potential but not fully proven) how would you respond?",
+    text: "What level of short-term loss are you comfortable accepting for potential long-term gains?",
     answers: [
       { 
-        text: "Politely decline — too risky for my taste", 
+        text: "Less than 5%", 
         score: { safe: 10, moderate: 2, aggressive: 0 } 
       },
       { 
-        text: "Ask a lot of questions before even considering", 
+        text: "Up to 10%", 
         score: { safe: 4, moderate: 5, aggressive: 0 } 
       },
       { 
-        text: "Consider investing a small amount just in case", 
+        text: "Up to 20%", 
         score: { safe: 2, moderate: 8, aggressive: 3 } 
       },
       { 
-        text: "Jump in early and accept whatever the outcome will be!", 
+        text: "More than 20%", 
         score: { safe: 0, moderate: 2, aggressive: 10 } 
       },
     ]
   },
   {
     id: 5,
-    text: "How would you feel about a portfolio that could lose 15% in a year, but might gain 20%?",
+    text: "How familiar and confident are you with investing concepts like stocks, bonds, and mutual funds?",
     answers: [
       { 
-        text: "Uncomfortable — I'd prefer something safer", 
+        text: "I’m new and not confident in understanding investment risks", 
         score: { safe: 10, moderate: 0, aggressive: 0 } 
       },
       { 
-        text: "Nervous, but I could accept a small portion being risky", 
+        text: "I have some experience but prefer safer options", 
         score: { safe: 4, moderate: 5, aggressive: 0 } 
       },
       { 
-        text: "Neutral — losses and gains are part of the game", 
+        text: "I understand market ups and downs and invest across assets", 
         score: { safe: 2, moderate: 8, aggressive: 3 } 
       },
       { 
-        text: "Excited — I like taking chances for better returns", 
-        score: { safe: 0, moderate: 0, aggressive: 10 } 
-      },
-    ]
-  },
-  {
-    id: 6,
-    text: " Think about a past financial decision you made — what describes it best?",
-    answers: [
-      { 
-        text: "Very cautious — I chose safety over potential reward", 
-        score: { safe: 10, moderate: 0, aggressive: 0 } 
-      },
-      { 
-        text: "Balanced — weighed pros and cons carefully", 
-        score: { safe: 4, moderate: 5, aggressive: 0 } 
-      },
-      { 
-        text: "Opportunistic — took a calculated risk", 
-        score: { safe: 2, moderate: 8, aggressive: 3 } 
-      },
-      { 
-        text: "Bold — chased big wins even if the risk was high", 
-        score: { safe: 0, moderate: 0, aggressive: 10 } 
-      },
-    ]
-  },
-  {
-    id: 7,
-    text: "If the price of a stock you like drops sharply, what’s your gut reaction?",
-    answers: [
-      { 
-        text: "Avoid it — it’s clearly dangerous", 
-        score: { safe: 10, moderate: 0, aggressive: 0 } 
-      },
-      { 
-        text: "Wait and watch — maybe it will stabilize", 
-        score: { safe: 4, moderate: 5, aggressive: 0 } 
-      },
-      { 
-        text: "Investigate — maybe it’s a good time to buy", 
-        score: { safe: 2, moderate: 8, aggressive: 3 } 
-      },
-      { 
-        text: "Buy aggressively — it's a discount!", 
-        score: { safe: 0, moderate: 0, aggressive: 10 } 
-      },
-    ]
-  },
-  {
-    id: 8,
-    text: "Which quote resonates most with you?",
-    answers: [
-      { 
-        text: "Better safe than sorry", 
-        score: { safe: 8, moderate: 0, aggressive: 0 } 
-      },
-      { 
-        text: "Don't put all your eggs in one basket", 
-        score: { safe: 4, moderate: 5, aggressive: 0 } 
-      },
-      { 
-        text: "Fortune favors the bold", 
-        score: { safe: 2, moderate: 8, aggressive: 3 } 
-      },
-      { 
-        text: "No risk, no reward", 
-        score: { safe: 0, moderate: 2, aggressive: 10 } 
-      },
-    ]
-  },
-  {
-    id: 9,
-    text: " If an investment opportunity promised small but guaranteed returns, how would you feel?",
-    answers: [
-      { 
-        text: "Very satisfied — I love certainty", 
-        score: { safe: 10, moderate: 0, aggressive: 0 } 
-      },
-      { 
-        text: "Content — it’s not exciting, but it’s stable", 
-        score: { safe: 4, moderate: 5, aggressive: 0 } 
-      },
-      { 
-        text: "Somewhat restless — I'd want a bit more growth", 
-        score: { safe: 2, moderate: 8, aggressive: 3 } 
-      },
-      { 
-        text: "Bored — I'd look for bigger opportunities elsewhere", 
-        score: { safe: 0, moderate: 0, aggressive: 10 } 
-      },
-    ]
-  },
-  {
-    id: 10,
-    text: "How do you typically make important financial decisions?",
-    answers: [
-      { 
-        text: "Slowly, after consulting multiple trusted sources", 
-        score: { safe: 10, moderate: 0, aggressive: 0 } 
-      },
-      { 
-        text: "After doing research and thinking it over carefully", 
-        score: { safe: 4, moderate: 5, aggressive: 0 } 
-      },
-      { 
-        text: "Based on a mix of research and intuition", 
-        score: { safe: 1, moderate: 8, aggressive: 3 } 
-      },
-      { 
-        text: "Quickly, trusting my instincts and seizing the moment", 
+        text: "I actively follow markets and am confident managing higher-risk assets", 
         score: { safe: 0, moderate: 0, aggressive: 10 } 
       },
     ]
