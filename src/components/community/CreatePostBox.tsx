@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Edit, Image as ImageIcon, Link2, PenSquare, Loader } from "lucide-react";
+import { Edit, Image as ImageIcon, Link2, PenSquare, Loader, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,11 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
   const [postType, setPostType] = useState<'text' | 'image' | 'link'>('text');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  
+  // ✅ NEW: Image upload state
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Available communities for posting
   const communities = [
@@ -29,6 +34,42 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
     { id: "budgeting-101", name: "Budgeting 101" },
     { id: "easy-invest-hub", name: "Easy Invest Hub" }
   ];
+
+  // ✅ NEW: Handle image selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setImageFile(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // ✅ NEW: Remove image
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +84,12 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
       return;
     }
 
-    if (postContent.trim() === "" && linkUrl.trim() === "") {
+    if (postType === 'image' && !imageFile) {
+      toast.error("Please select an image for your post");
+      return;
+    }
+
+    if (postType === 'text' && postContent.trim() === "") {
       toast.error("Post content cannot be empty");
       return;
     }
@@ -70,7 +116,8 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
         ...(postType === 'link' && { linkUrl: linkUrl.trim() })
       };
 
-      const postId = await PostService.createPost(postData);
+      // ✅ FIXED: Pass image file to createPost
+      const postId = await PostService.createPost(postData, imageFile || undefined);
       
       toast.success("Post created successfully!");
       
@@ -79,7 +126,13 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
       setPostTitle("");
       setLinkUrl("");
       setPostType('text');
+      setImageFile(null);
+      setImagePreview(null);
       setIsExpanded(false);
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       
       // Call callback if provided
       if (onPostCreated) {
@@ -104,6 +157,13 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
     setPostType(type);
     if (type === 'text') {
       setLinkUrl("");
+      setImageFile(null);
+      setImagePreview(null);
+    } else if (type === 'image') {
+      setLinkUrl("");
+    } else if (type === 'link') {
+      setImageFile(null);
+      setImagePreview(null);
     }
     setIsExpanded(true);
   };
@@ -164,7 +224,6 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 space-x-2 flex-1 mr-2"
               onClick={() => handlePostTypeChange('image')}
               title="Share an image"
-              disabled={true} // Disabled for now as image upload needs storage setup
             >
               <ImageIcon className="h-4 w-4" />
               <span>Image</span>
@@ -229,6 +288,8 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               placeholder={
                 postType === 'link' 
                   ? "Describe why this link is valuable to the community..."
+                  : postType === 'image'
+                  ? "Describe your image... Use #hashtags to categorize your post!"
                   : "Share something insightful about finance... Use #hashtags to categorize your post!"
               }
               value={postContent}
@@ -237,6 +298,49 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               disabled={isSubmitting}
               maxLength={2000}
             />
+
+            {/* ✅ NEW: Image upload section */}
+            {postType === 'image' && (
+              <div className="mb-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                  disabled={isSubmitting}
+                />
+                
+                {!imagePreview ? (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-finance-primary transition-colors cursor-pointer"
+                    disabled={isSubmitting}
+                  >
+                    <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm">Click to upload image</p>
+                    <p className="text-gray-400 text-xs mt-1">Max size: 5MB</p>
+                  </button>
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full max-h-64 object-contain rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      disabled={isSubmitting}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Link URL input for link posts */}
             {postType === 'link' && (
@@ -265,6 +369,8 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
                   setPostTitle("");
                   setPostContent("");
                   setLinkUrl("");
+                  setImageFile(null);
+                  setImagePreview(null);
                   setPostType('text');
                 }}
                 disabled={isSubmitting}
@@ -275,7 +381,7 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               <Button
                 type="submit"
                 className="bg-finance-primary hover:bg-finance-primary/90 text-white min-w-[100px]"
-                disabled={isSubmitting || (!postTitle.trim() || (!postContent.trim() && !linkUrl.trim()))}
+                disabled={isSubmitting || (!postTitle.trim() || (postType === 'text' && !postContent.trim()) || (postType === 'link' && !linkUrl.trim()) || (postType === 'image' && !imageFile))}
               >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">

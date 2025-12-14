@@ -104,8 +104,8 @@ export const useCommunityData = (communityId: string) => {
     }
   }, [currentUser, communityId, currentLimit]);
 
-  // VOTE ON POST FUNCTION - No longer needed to reload all data
-  const voteOnPost = useCallback(async (postId: string, voteType: 'upvote' | 'downvote') => {
+  // VOTE ON POST FUNCTION - Updated to use 'like' | 'dislike'
+  const voteOnPost = useCallback(async (postId: string, voteType: 'like' | 'dislike') => {
     if (!currentUser) {
       throw new Error('Must be logged in to vote');
     }

@@ -26,22 +26,22 @@ const Navbar = () => {
   };
 
   const handleCardClick = () => {
-  window.scrollTo(0, 0);
+    window.scrollTo(0, 0);
   };
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/');
+      navigate("/");
       setIsProfileDropdownOpen(false);
       setIsMenuOpen(false);
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   };
 
   return (
-    <nav className="bg-white shadow-sm sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 border-b border-gray-200 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -115,6 +115,21 @@ const Navbar = () => {
                 Analyse and assess your financial risks easily.
               </div>
             </div>
+
+            {/* FinBot */}
+            <div className="relative group">
+              <Link
+                to="/chatbot"
+                className="px-3 py-2 rounded-md text-sm font-medium text-black bg-white hover:bg-blue-200 transition-colors flex items-center space-x-1"
+                onClick={handleCardClick}
+              >
+                <Users className="h-4 w-4" />
+                <span>FinBot</span>
+              </Link>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
+                Want to clarify a doubt, ask FinBot
+              </div>
+            </div>
           </div>
 
           {/* Right Side - Auth Buttons and Profile */}
@@ -125,11 +140,15 @@ const Navbar = () => {
                 {/* Profile with dropdown */}
                 <div className="relative">
                   <button
-                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                    onClick={() =>
+                      setIsProfileDropdownOpen(!isProfileDropdownOpen)
+                    }
                     className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-blue-200 transition-colors"
                   >
                     <User className="h-4 w-4 text-black" />
-                    <span>{userData.firstName} {userData.lastName}</span>
+                    <span>
+                      {userData.firstName} {userData.lastName}
+                    </span>
                   </button>
 
                   {/* Profile Dropdown */}
@@ -166,7 +185,7 @@ const Navbar = () => {
                       </button>
                     </div>
                   )}
-                  
+
                   {/* Tooltip for profile */}
                   <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-max px-2 py-1 text-xs text-gray-700 bg-white border border-gray-200 rounded-md shadow-md opacity-0 group-hover:opacity-70 transition-opacity duration-200 z-50">
                     View your User profile
@@ -279,13 +298,28 @@ const Navbar = () => {
               </div>
             </div>
 
+            {/* Mobile FinBot */}
+            <Link
+              to="/chatbot"
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-finance-primary hover:bg-gray-50 transition-colors"
+              onClick={toggleMenu}
+            >
+              <div className="flex items-center space-x-2">
+                <Users className="h-5 w-5" />
+                <span>FinBot</span>
+              </div>
+            </Link>
+
             {/* Mobile Auth Section */}
             <div className="pt-4 flex flex-col space-y-2">
               {currentUser && userData ? (
                 // Mobile logged in state
                 <>
                   <div className="px-3 py-2 text-sm text-gray-600 border-b border-gray-100">
-                    Signed in as <strong>{userData.firstName} {userData.lastName}</strong>
+                    Signed in as{" "}
+                    <strong>
+                      {userData.firstName} {userData.lastName}
+                    </strong>
                   </div>
                   <Link
                     to="/profile"

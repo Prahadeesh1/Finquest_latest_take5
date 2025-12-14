@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CommunityPost from "@/components/community/CommunityPost";
@@ -22,7 +22,8 @@ import {
   CheckCircle,
   Loader,
   LogOut,
-  UserCheck
+  UserCheck,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -60,16 +61,101 @@ const BudgetingCommunity = () => {
     refreshData
   } = useCommunityData("budgeting-101");
 
-  // Auto-refresh data every 10 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!loading) {
-        refreshData();
-      }
-    }, 10000); // 10 seconds
+  // ✅ REMOVED: Auto-refresh timer that was irritating
+  // No more automatic polling every 10 seconds!
 
-    return () => clearInterval(interval);
-  }, [loading, refreshData]);
+  // ✅ FIXED: Properly filtered and sorted posts with memoization
+  const filteredAndSortedPosts = useMemo(() => {
+    try {
+      let filtered = [...posts];
+
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(post => 
+          post.title?.toLowerCase().includes(query) ||
+          post.content?.toLowerCase().includes(query) ||
+          post.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+          post.author?.toLowerCase().includes(query)
+        );
+      }
+
+      // Apply sort filter
+      switch (activeFilter) {
+        case "Hot":
+          filtered.sort((a, b) => {
+            const scoreA = (a.likes || 0) - (a.dislikes || 0) + (a.commentCount || 0) * 2;
+            const scoreB = (b.likes || 0) - (b.dislikes || 0) + (b.commentCount || 0) * 2;
+            const timeA = new Date(a.createdAt).getTime();
+            const timeB = new Date(b.createdAt).getTime();
+            
+            const finalScoreA = scoreA * 0.7 + (timeA / 1000000) * 0.3;
+            const finalScoreB = scoreB * 0.7 + (timeB / 1000000) * 0.3;
+            
+            return finalScoreB - finalScoreA;
+          });
+          break;
+          
+        case "New":
+          filtered.sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+          break;
+          
+        case "Success":
+          // Success = posts with positive engagement
+          filtered.sort((a, b) => {
+            const scoreA = (a.likes || 0) - (a.dislikes || 0);
+            const scoreB = (b.likes || 0) - (b.dislikes || 0);
+            return scoreB - scoreA;
+          });
+          break;
+          
+        case "Tips":
+          // Tips = posts with high comment engagement
+          filtered.sort((a, b) => {
+            return (b.commentCount || 0) - (a.commentCount || 0);
+          });
+          break;
+      }
+
+      return filtered;
+    } catch (err) {
+      console.error('Error filtering/sorting posts:', err);
+      return posts;
+    }
+  }, [posts, searchQuery, activeFilter]);
+
+  // ✅ FIXED: Handle voting on posts with correct type signature
+  const handleVote = useCallback(async (postId: string, voteType: 'like' | 'dislike') => {
+    if (!currentUser) {
+      toast.error('Please login to vote');
+      return;
+    }
+
+    try {
+      await voteOnPost(postId, voteType);
+      // ✅ NO REFRESH: Voting now uses optimistic updates in the hook
+    } catch (error) {
+      toast.error(`Failed to ${voteType} post`);
+    }
+  }, [currentUser, voteOnPost]);
+
+  // Handle bookmarking
+  const handleBookmark = useCallback(async (postId: string) => {
+    if (!currentUser) {
+      toast.error('Please login to bookmark');
+      return;
+    }
+
+    try {
+      const isBookmarked = await toggleBookmark(postId);
+      toast.success(isBookmarked ? 'Post bookmarked!' : 'Bookmark removed!');
+      // ✅ NO REFRESH: Bookmark is instant, no need to reload
+    } catch (error) {
+      toast.error('Failed to update bookmark');
+    }
+  }, [currentUser, toggleBookmark]);
 
   // Handle joining community
   const handleJoinCommunity = async () => {
@@ -81,6 +167,7 @@ const BudgetingCommunity = () => {
     try {
       await joinCommunity();
       toast.success('Joined Budgeting 101 community!');
+      // ✅ NO REFRESH: Join is instant
     } catch (error) {
       toast.error('Failed to join community');
     }
@@ -96,6 +183,7 @@ const BudgetingCommunity = () => {
     try {
       await leaveCommunity();
       toast.success('Left Budgeting 101 community');
+      // ✅ NO REFRESH: Leave is instant
     } catch (error) {
       toast.error('Failed to leave community');
     } finally {
@@ -103,44 +191,27 @@ const BudgetingCommunity = () => {
     }
   };
 
-  // Handle voting on posts
-  const handleVote = async (postId: string, voteType: 'upvote' | 'downvote') => {
-    try {
-      await voteOnPost(postId, voteType);
-    } catch (error) {
-      toast.error(`Failed to ${voteType} post`);
-    }
-  };
-
-  // Handle bookmarking
-  const handleBookmark = async (postId: string) => {
-    try {
-      const isBookmarked = await toggleBookmark(postId);
-      toast.success(isBookmarked ? 'Post bookmarked!' : 'Bookmark removed!');
-    } catch (error) {
-      toast.error('Failed to update bookmark');
-    }
-  };
-
-  // Filter and search posts
-  const filteredPosts = posts.filter(post => {
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      return post.title.toLowerCase().includes(query) ||
-             post.content.toLowerCase().includes(query) ||
-             post.tags.some(tag => tag.toLowerCase().includes(query));
-    }
-    return true;
-  });
-
   // Handle load more
   const handleLoadMore = async () => {
     try {
       await loadMorePosts();
+      // ✅ NO REFRESH: Load more appends to existing posts
     } catch (error) {
       toast.error('Failed to load more posts');
     }
   };
+
+  // ✅ ONLY REFRESH when a new post is created
+  const handlePostCreated = useCallback(() => {
+    refreshData();
+    toast.success('Post created successfully!');
+  }, [refreshData]);
+
+  // ✅ ONLY REFRESH when a post is deleted
+  const handlePostDeleted = useCallback(() => {
+    refreshData();
+    toast.success('Post deleted successfully!');
+  }, [refreshData]);
 
   if (loading) {
     return (
@@ -162,8 +233,10 @@ const BudgetingCommunity = () => {
       <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-cyan-50">
         <Navbar />
         <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
+          <div className="text-center p-8">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+            <p className="text-red-600 mb-6">{error}</p>
             <Button onClick={() => window.location.reload()}>
               Retry
             </Button>
@@ -359,10 +432,24 @@ const BudgetingCommunity = () => {
                           <span>{rule}</span>
                         </li>
                       )) || (
-                        <li className="flex items-start">
-                          <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-                          <span>Loading community guidelines...</span>
-                        </li>
+                        <>
+                          <li className="flex items-start">
+                            <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Be supportive and non-judgmental</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Celebrate small wins and progress</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Ask questions freely but do not spam</span>
+                          </li>
+                          <li className="flex items-start">
+                            <Info className="h-4 w-4 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
+                            <span>Share practical tips and experiences</span>
+                          </li>
+                        </>
                       )}
                     </ul>
                   </div>
@@ -381,7 +468,6 @@ const BudgetingCommunity = () => {
                     <div className="p-2 bg-white rounded border">Pay Yourself First</div>
                   </div>
                 </div>
-                
               </div>
             </div>
 
@@ -440,7 +526,7 @@ const BudgetingCommunity = () => {
                     Share your budgeting wins, ask for help, or discuss money-saving strategies with the community.
                   </p>
                 </div>
-                <CreatePostBox communityId="budgeting-101" />
+                <CreatePostBox communityId="budgeting-101" onPostCreated={handlePostCreated} />
               </div>
 
               {/* Posts Feed */}
@@ -468,15 +554,19 @@ const BudgetingCommunity = () => {
                               postId={post.id}
                               title={post.title}
                               author={post.author}
+                              authorId={post.authorId}
                               authorAvatar="/placeholder.svg"
                               community={post.community}
                               timePosted={new Date(post.createdAt).toLocaleString()}
                               content={post.content}
-                              upvotes={post.upvotes}
+                              likes={post.likes || 0}
+                              dislikes={post.dislikes || 0}
                               commentCount={post.commentCount}
                               isBookmarked={post.isBookmarked}
+                              imageUrl={post.imageUrl}
                               onVote={handleVote}
                               onBookmark={handleBookmark}
+                              onDelete={handlePostDeleted}
                             />
                           </div>
                         ))}
@@ -492,11 +582,11 @@ const BudgetingCommunity = () => {
                       Community Budget Discussions
                     </h2>
                     <span className="text-sm text-gray-500">
-                      {filteredPosts.length} posts
+                      {filteredAndSortedPosts.length} posts
                     </span>
                   </div>
                   
-                  {filteredPosts.length === 0 ? (
+                  {filteredAndSortedPosts.length === 0 ? (
                     <div className="text-center py-12 bg-white rounded-lg">
                       <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-500 mb-2">
@@ -507,21 +597,25 @@ const BudgetingCommunity = () => {
                       </p>
                     </div>
                   ) : (
-                    filteredPosts.map((post) => (
+                    filteredAndSortedPosts.map((post) => (
                       <div key={`budget-${post.id}`} className="transform transition-all duration-200 hover:scale-[1.01]">
                         <CommunityPost
                           postId={post.id}
                           title={post.title}
                           author={post.author}
+                          authorId={post.authorId}
                           authorAvatar="/placeholder.svg"
                           community={post.community}
                           timePosted={new Date(post.createdAt).toLocaleString()}
                           content={post.content}
-                          upvotes={post.upvotes}
+                          likes={post.likes || 0}
+                          dislikes={post.dislikes || 0}
                           commentCount={post.commentCount}
                           isBookmarked={post.isBookmarked}
+                          imageUrl={post.imageUrl}
                           onVote={handleVote}
                           onBookmark={handleBookmark}
+                          onDelete={handlePostDeleted}
                         />
                       </div>
                     ))
@@ -530,7 +624,7 @@ const BudgetingCommunity = () => {
               </div>
               
               {/* Load More Button */}
-              {hasMore && (
+              {hasMore && filteredAndSortedPosts.length > 0 && (
                 <div className="mt-10 text-center">
                   <Button 
                     variant="outline" 

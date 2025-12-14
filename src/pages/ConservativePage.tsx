@@ -1,40 +1,274 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
-import { Shield, TrendingUp, DollarSign, PieChart, Star, ArrowRight } from 'lucide-react';
+import { Shield, TrendingUp, DollarSign, ChevronDown } from 'lucide-react';
 
-//Main ConservativePage component for displaying conservative investment options
 const ConservativePage = () => {
-  return (//Main container for the entire page
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar component for site navigation */}
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [expandedMarket, setExpandedMarket] = useState(null);
+  const [activeAllocation, setActiveAllocation] = useState('basic');
+
+  const investmentOptions = [
+    {
+      id: 'govt-bonds',
+      title: 'Government Securities',
+      icon: '📜',
+      returns: '2-4%',
+      time: '2-10 years',
+      snippet: 'Safe bonds backed by government guarantees',
+      details: [
+        'Singapore Savings Bonds (SSB), T-Bills',
+        'US Treasury Bonds, TIPS',
+        'Japanese Government Bonds (JGBs)',
+        'German Bunds'
+      ],
+      highlight: 'Best for: Capital preservation focus'
+    },
+    {
+      id: 'savings-deposits',
+      title: 'Savings & Fixed Deposits',
+      icon: '🏦',
+      returns: '2-3.5%',
+      time: '6-24 months',
+      snippet: 'Insured deposits with guaranteed returns',
+      details: [
+        'Fixed Deposits (DBS, OCBC, UOB)',
+        'CPF OA',
+        'High-Yield Savings Accounts',
+        'CDs (US)'
+      ],
+      highlight: 'Best for: Emergency funds, liquidity'
+    },
+    {
+      id: 'dividend-blue',
+      title: 'Dividend Blue-Chips',
+      icon: '💼',
+      returns: '3-5%',
+      time: 'Ongoing',
+      snippet: 'Established companies with steady payouts',
+      details: [
+        'Singapore: Singtel, SATS, ComfortDelGro',
+        'USA: Johnson & Johnson, Procter & Gamble, Coca-Cola',
+        'International: Nestlé, Unilever'
+      ],
+      highlight: 'Best for: Steady income generation'
+    },
+    {
+      id: 'stable-reits',
+      title: 'Stable REITs',
+      icon: '🏢',
+      returns: '4-6%',
+      time: 'Ongoing',
+      snippet: 'Real estate with consistent dividends',
+      details: [
+        'Singapore: CapitaLand, Ascendas, Parkway Life REIT',
+        'USA: Realty Income, National Retail Properties',
+        'International: Link REIT (HK)'
+      ],
+      highlight: 'Best for: Monthly/quarterly income'
+    }
+  ];
+
+  const markets = {
+    singapore: [
+      {
+        id: 'govt-sg',
+        name: 'Government Securities',
+        emoji: '📜',
+        historical: '2-3%',
+        description: 'Singapore Savings Bonds (SSB), T-Bills, SGS Bonds - backed by Singapore government',
+        companies: 'MAS, Singapore Government',
+        why: 'Safest option, no default risk, capital preservation'
+      },
+      {
+        id: 'savings-sg',
+        name: 'Fixed Deposits',
+        emoji: '🏦',
+        historical: '2.5-3%',
+        description: 'Fixed Deposits from DBS, OCBC, UOB, and CPF OA',
+        companies: 'DBS, OCBC, UOB',
+        why: 'Insured deposits, guaranteed returns, no risk'
+      },
+      {
+        id: 'dividend-sg',
+        name: 'Dividend Blue-Chips',
+        emoji: '💼',
+        historical: '3-5%',
+        description: 'Established dividend-paying companies: Singtel, SATS, ComfortDelGro',
+        companies: 'Singtel, SATS, ComfortDelGro',
+        why: 'Stable income, lower volatility, dividend yield'
+      },
+      {
+        id: 'reit-sg',
+        name: 'Stable REITs',
+        emoji: '🏢',
+        historical: '4-6%',
+        description: 'Real estate trusts: CapitaLand, Ascendas, Parkway Life REIT',
+        companies: 'CapitaLand, Ascendas, Parkway Life REIT',
+        why: 'Monthly/quarterly income, real estate exposure'
+      }
+    ],
+    usa: [
+      {
+        id: 'govt-us',
+        name: 'Government Bonds',
+        emoji: '📜',
+        historical: '3-4%',
+        description: 'US Treasury Bonds, TIPS, Municipal Bonds - backed by US government',
+        companies: 'US Treasury, Federal Government',
+        why: 'Safest bonds globally, inflation protection (TIPS)'
+      },
+      {
+        id: 'savings-us',
+        name: 'High-Yield Savings',
+        emoji: '🏦',
+        historical: '4-5%',
+        description: 'High-Yield Savings Accounts, CDs',
+        companies: 'US Banks',
+        why: 'FDIC insured up to $250k, competitive rates'
+      },
+      {
+        id: 'dividend-us',
+        name: 'Dividend Blue-Chips',
+        emoji: '💼',
+        historical: '2-4%',
+        description: 'Stable blue-chips: Johnson & Johnson, Procter & Gamble, Coca-Cola',
+        companies: 'Johnson & Johnson, Procter & Gamble, Coca-Cola',
+        why: 'Proven track record, dividend stability, lower volatility'
+      },
+      {
+        id: 'reit-us',
+        name: 'Stable REITs',
+        emoji: '🏢',
+        historical: '4-5%',
+        description: 'Conservative REITs: Realty Income, National Retail Properties',
+        companies: 'Realty Income, National Retail Properties',
+        why: 'Monthly distributions, real estate diversification'
+      }
+    ],
+    international: [
+      {
+        id: 'govt-intl',
+        name: 'Government Bonds',
+        emoji: '📜',
+        historical: '2-4%',
+        description: 'Japanese Government Bonds (JGBs), German Bunds',
+        companies: 'Japanese & German Governments',
+        why: 'Safe developed market exposure, currency diversification'
+      },
+      {
+        id: 'savings-intl',
+        name: 'International Bonds',
+        emoji: '🏦',
+        historical: '2-3%',
+        description: 'UK Gilts, Australian Bonds',
+        companies: 'UK & Australian Governments',
+        why: 'Developed market safety, yield in local currencies'
+      },
+      {
+        id: 'dividend-intl',
+        name: 'Dividend Blue-Chips',
+        emoji: '💼',
+        historical: '3-4%',
+        description: 'Stable global companies: Nestlé, Unilever',
+        companies: 'Nestlé, Unilever',
+        why: 'Multinational stability, international diversification'
+      },
+      {
+        id: 'reit-intl',
+        name: 'Stable REITs',
+        emoji: '🏢',
+        historical: '4-5%',
+        description: 'Conservative REIT: Link REIT (Hong Kong)',
+        companies: 'Link REIT',
+        why: 'Asian real estate exposure, stable dividends'
+      }
+    ]
+  };
+
+  const allocations = {
+    basic: {
+      name: 'Conservative Starter',
+      description: 'For first-time investors',
+      items: [
+        { name: 'Government Securities & Deposits', pct: 50, color: 'from-blue-600 to-blue-400' },
+        { name: 'Dividend Blue-Chips', pct: 30, color: 'from-indigo-500 to-indigo-400' },
+        { name: 'Stable REITs', pct: 20, color: 'from-cyan-500 to-cyan-400' }
+      ]
+    },
+    global: {
+      name: 'Conservative Global',
+      description: 'For experienced investors',
+      items: [
+        { name: 'Government Securities & Deposits', pct: 40, color: 'from-blue-600 to-blue-400' },
+        { name: 'Dividend Blue-Chips (SG & US)', pct: 30, color: 'from-indigo-500 to-indigo-400' },
+        { name: 'Intl Bonds & Blue-Chips', pct: 15, color: 'from-purple-500 to-purple-400' },
+        { name: 'Stable REITs', pct: 15, color: 'from-cyan-500 to-cyan-400' }
+      ]
+    }
+  };
+
+  const MarketCard = ({ market }) => (
+    <div 
+      className="cursor-pointer"
+      onClick={() => setExpandedMarket(expandedMarket === market.id ? null : market.id)}
+    >
+      <Card className="h-full transition-all duration-300 hover:shadow-lg border-2 border-transparent hover:border-blue-400 overflow-hidden">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <span className="text-5xl block mb-3">{market.emoji}</span>
+              <h3 className="text-lg font-bold text-gray-900">{market.name}</h3>
+            </div>
+            <ChevronDown 
+              className={`w-5 h-5 text-gray-400 transition-transform ${
+                expandedMarket === market.id ? 'rotate-180' : ''
+              }`}
+            />
+          </div>
+
+          <div className="mb-4 pb-4 border-b border-gray-200">
+            <p className="text-xs text-gray-500 uppercase">Historical Return</p>
+            <p className="text-xl font-bold text-blue-600">{market.historical}</p>
+          </div>
+
+          <p className="text-sm text-gray-700 line-clamp-2">{market.description}</p>
+
+          <div className={`overflow-hidden transition-all duration-300 ${
+            expandedMarket === market.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}>
+            <div className="pt-4 border-t border-gray-200 space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Overview</p>
+                <p className="text-sm text-gray-700">{market.description}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Examples</p>
+                <p className="text-sm text-gray-700">{market.companies}</p>
+              </div>
+              <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Why Choose</p>
+                <p className="text-sm font-semibold text-blue-900">{market.why}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
-      {/* Introduces the Conservative Profile and its characteristics */}
+      {/* HERO SECTION */}
       <section className="relative pt-20 pb-32 overflow-hidden">
-        {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800"></div>
         
-        {/* Animated background elements */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white rounded-full mix-blend-overlay animate-pulse"></div>
           <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-white rounded-full mix-blend-overlay animate-pulse delay-1000"></div>
           <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-white rounded-full mix-blend-overlay animate-pulse delay-500"></div>
-        </div>
-        
-        {/* Floating elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 animate-float">
-            <Shield className="w-8 h-8 text-white/20" />
-          </div>
-          <div className="absolute top-40 right-20 animate-float delay-1000">
-            <TrendingUp className="w-10 h-10 text-white/20" />
-          </div>
-          <div className="absolute bottom-40 left-20 animate-float delay-500">
-            <DollarSign className="w-12 h-12 text-white/20" />
-          </div>
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
@@ -53,7 +287,7 @@ const ConservativePage = () => {
               </h1>
               
               <p className="text-xl text-blue-100 mb-8 leading-relaxed max-w-xl">
-                Prioritize capital preservation and steady income with our carefully curated conservative investment strategies designed for risk-averse investors.
+                Prioritize capital preservation and steady income with our carefully curated conservative investment strategies.
               </p>
               
               <div className="flex flex-wrap gap-4">
@@ -61,28 +295,19 @@ const ConservativePage = () => {
                   <TrendingUp className="w-5 h-5 mr-2" />
                   Explore Options
                 </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-white/30 text-blue-500 hover:bg-white/10 backdrop-blur-sm"
-                >
-                  Compare Strategies
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
               </div>
             </div>
             
-            {/* Enhanced Key Characteristics card */}
             <div className="w-full lg:w-5/12 mt-12 lg:mt-0">
               <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
                 <CardContent className="p-8">
                   <h3 className="text-2xl font-bold mb-2 flex items-center text-white">
-                    <Star className="w-6 h-6 text-yellow-300 mr-3" />
+                    <Shield className="w-6 h-6 text-yellow-300 mr-3" />
                     Key Characteristics
                   </h3>
-                  <p className="text-blue-100 mb-6 text-lg">Lower risk, stable returns</p>
+                  <p className="text-blue-100 mb-6 text-lg">Low Risk, Low Returns (1-5%)</p>
                   
-                  <ul className="space-y-4">
+                  <ul className="space-y-3">
                     {[
                       'Capital preservation focused',
                       'Regular income generation',
@@ -90,8 +315,8 @@ const ConservativePage = () => {
                       'May not keep pace with inflation',
                       'Typically shorter time horizons'
                     ].map((item, index) => (
-                      <li key={index} className="flex items-center text-white">
-                        <div className="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-300 to-orange-300 mr-4 animate-pulse"></div>
+                      <li key={index} className="flex items-center text-white text-sm">
+                        <div className="w-2 h-2 rounded-full bg-yellow-300 mr-3"></div>
                         <span className="text-blue-50">{item}</span>
                       </li>
                     ))}
@@ -103,509 +328,174 @@ const ConservativePage = () => {
         </div>
       </section>
 
-      {/* Popular Investment Options section with Tabs */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">
-            Popular Conservative Investment Options
-          </h2>
-          <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
-            These investment vehicles are commonly recommended for conservative investors seeking stability and income.
-          </p>
+      {/* MARKET SECTION */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Recommended Investments</h2>
+            <p className="text-gray-600 text-lg">Safe options suitable for conservative investors</p>
+          </div>
 
-          {/* Tabs component which shows different clickable investment categories */}
-          <Tabs defaultValue="bonds" className="max-w-5xl mx-auto">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="bonds">Bonds</TabsTrigger>
-              <TabsTrigger value="cash">Cash & Equivalents</TabsTrigger>
-              <TabsTrigger value="dividend">Dividend Stocks</TabsTrigger>
-              <TabsTrigger value="cds">CDs & Fixed Income</TabsTrigger>
-            </TabsList>
-            {/* TabsContent: Displays content for "Government & Municipal Bonds" tab */}
-            <TabsContent value="bonds" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">Government & Municipal Bonds</h3>
-                  <p className="text-gray-700 mb-6">
-                    Government and municipal bonds are typically among the safest investments available, backed by the full faith and credit of the issuing government entity.
-                  </p>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">U.S. Treasury Securities</h4>
-                    <p className="text-sm text-gray-700">
-                      Treasury bills, notes, and bonds are considered among the safest investments globally. They pay interest semi-annually and return principal at maturity.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Municipal Bonds</h4>
-                    <p className="text-sm text-gray-700">
-                      Issued by states, cities, and local governments. Interest is often exempt from federal taxes, and sometimes state and local taxes as well.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">TIPS (Treasury Inflation-Protected Securities)</h4>
-                    <p className="text-sm text-gray-700">
-                      These U.S. government bonds protect against inflation by adjusting principal value based on changes in the Consumer Price Index.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">Bond Investment Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Interest Rate Risk:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Bond prices typically fall when interest rates rise.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Credit Risk:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Potential for issuer to default on payments.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Inflation Risk:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Fixed returns may not keep pace with inflation.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Liquidity:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Some bonds may be harder to sell quickly.</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Treasury Bonds:</span>
-                      <span className="text-sm font-medium">2-4%</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Municipal Bonds:</span>
-                      <span className="text-sm font-medium">3-5%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Investment-Grade Corporate:</span>
-                      <span className="text-sm font-medium">3-6%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* TabsContent: Displays content for "Cash and Equivalent" tab */}
-            <TabsContent value="cash" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">Cash & Equivalents</h3>
-                  <p className="text-gray-700 mb-6">
-                    Cash and cash equivalents are highly liquid assets that can be easily converted into cash with little to no risk of loss in value.
-                  </p>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">High-Yield Savings Accounts</h4>
-                    <p className="text-sm text-gray-700">
-                      Savings accounts that offer higher interest rates compared to traditional savings accounts.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Money Market Accounts</h4>
-                    <p className="text-sm text-gray-700">
-                      A type of savings account that typically offers a higher interest rate than a traditional savings account and may come with check-writing privileges.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">Certificates of Deposit (CDs)</h4>
-                    <p className="text-sm text-gray-700">
-                      A savings certificate entitling the bearer to receive interest. A CD bears a maturity date, a specified fixed interest rate, and can be issued in any denomination.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">Cash Investment Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Inflation Risk:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Returns may not keep pace with inflation, leading to a decrease in purchasing power.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Interest Rate Risk:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Returns may not keep pace with rising interest rates.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">FDIC Insurance:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Most cash accounts are insured by the FDIC up to $250,000 per depositor, per insured bank.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Liquidity:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Cash accounts are highly liquid and can be easily accessed when needed.</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">High-Yield Savings Accounts:</span>
-                      <span className="text-sm font-medium">0.5-1.5%</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Money Market Accounts:</span>
-                      <span className="text-sm font-medium">0.5-1.5%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Certificates of Deposit (CDs):</span>
-                      <span className="text-sm font-medium">1-3%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* TabsContent: Displays content for "Dividend Stocks" tab */}
-            <TabsContent value="dividend" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">Dividend Stocks</h3>
-                  <p className="text-gray-700 mb-6">
-                    Dividend stocks are shares of companies that distribute a portion of their earnings to shareholders on a regular basis, typically quarterly.
-                  </p>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Blue-Chip Dividend Stocks</h4>
-                    <p className="text-sm text-gray-700">
-                      Shares of large, well-established companies with a history of consistent dividend payments.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Dividend ETFs</h4>
-                    <p className="text-sm text-gray-700">
-                      Exchange-Traded Funds (ETFs) that focus on dividend-paying stocks, providing diversification and income.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">REITs (Real Estate Investment Trusts)</h4>
-                    <p className="text-sm text-gray-700">
-                      Companies that own or finance income-producing real estate, often distributing a significant portion of their income as dividends.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">Dividend Stock Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Dividend Yield:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">The annual dividend payment as a percentage of the stock's current price.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Dividend Payout Ratio:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">The percentage of a company's earnings paid out as dividends.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Dividend Growth:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">The rate at which a company has been increasing its dividend payments over time.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Tax Implications:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Dividends are typically taxed as ordinary income or at a lower qualified dividend rate.</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Blue-Chip Dividend Stocks:</span>
-                      <span className="text-sm font-medium">2-4%</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Dividend ETFs:</span>
-                      <span className="text-sm font-medium">2-5%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">REITs:</span>
-                      <span className="text-sm font-medium">3-6%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            
-            {/* TabsContent: Displays content for "CDs & Fixed Income" tab */}
-            <TabsContent value="cds" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">CDs & Fixed Income</h3>
-                  <p className="text-gray-700 mb-6">
-                    Certificates of Deposit (CDs) and other fixed income investments offer a fixed interest rate over a specific period of time, providing a predictable income stream.
-                  </p>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Certificates of Deposit (CDs)</h4>
-                    <p className="text-sm text-gray-700">
-                      A savings certificate entitling the bearer to receive interest. A CD bears a maturity date, a specified fixed interest rate, and can be issued in any denomination.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Fixed Annuities</h4>
-                    <p className="text-sm text-gray-700">
-                      A contract with an insurance company that guarantees a fixed rate of return for a specified period of time.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">Treasury Inflation-Protected Securities (TIPS)</h4>
-                    <p className="text-sm text-gray-700">
-                      U.S. government bonds that protect against inflation by adjusting principal value based on changes in the Consumer Price Index.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">CDs & Fixed Income Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Interest Rate Risk:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Rising interest rates may make existing CDs and fixed income investments less attractive.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Inflation Risk:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Fixed returns may not keep pace with inflation, leading to a decrease in purchasing power.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">Liquidity:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">CDs typically have penalties for early withdrawal, limiting liquidity.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-blue-500 mr-2">$</span>
-                      <span className="font-medium">FDIC Insurance:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">CDs are insured by the FDIC up to $250,000 per depositor, per insured bank.</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Certificates of Deposit (CDs):</span>
-                      <span className="text-sm font-medium">1-3%</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Fixed Annuities:</span>
-                      <span className="text-sm font-medium">2-4%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Treasury Inflation-Protected Securities (TIPS):</span>
-                      <span className="text-sm font-medium">0.5-1.5% + Inflation</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+              <span>🇸🇬</span> Singapore
+            </h3>
+            <div className="grid md:grid-cols-4 gap-6">
+              {markets.singapore.map(market => <MarketCard key={market.id} market={market} />)}
+            </div>
+          </div>
 
-      {/* Portfolio Allocation section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          {/* Section heading */}
-          <h2 className="text-3xl font-bold text-center mb-16">
-            Conservative Portfolio Allocation
-          </h2>
-          {/* Section description */}
-          <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
-            A typical conservative portfolio emphasizes capital preservation with some income generation.
-          </p>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Sample Conservative Allocation card */}
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-2">Sample Conservative Allocation</h3>
-              <p className="text-sm text-gray-600 mb-6">A balanced approach focused on stability with some income potential</p>
-              {/* Allocation bars for different asset classes */}
-              <div className="space-y-4 mb-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Government Bonds</span>
-                    <span className="text-sm">40%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '40%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">CDs & Money Market</span>
-                    <span className="text-sm">25%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-400 h-2 rounded-full" style={{ width: '25%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">High-Quality Corporate Bonds</span>
-                    <span className="text-sm">15%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '15%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Blue-Chip Dividend Stocks</span>
-                    <span className="text-sm">10%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-300 h-2 rounded-full" style={{ width: '10%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Cash & Equivalents</span>
-                    <span className="text-sm">10%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-200 h-2 rounded-full" style={{ width: '10%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-            {/* Expected Outcomes card */}
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-2">Expected Outcomes</h3>
-              <p className="text-sm text-gray-600 mb-6">Historical performance metrics for conservative portfolios</p>
-              {/* Outcome metrics with simulated progress bars */}
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Potential Annual Return</span>
-                    <span>3-5%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-blue-500 h-3 rounded-full" style={{ width: '30%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Based on historical average annual returns</p>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Volatility</span>
-                    <span>Low</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-blue-500 h-3 rounded-full" style={{ width: '15%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Lower price fluctuations compared to growth-oriented portfolios</p>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Income Focus</span>
-                    <span>High</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-blue-500 h-3 rounded-full" style={{ width: '80%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Regular interest and dividend payments</p>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Inflation Protection</span>
-                    <span>Moderate</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-blue-500 h-3 rounded-full" style={{ width: '40%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">May struggle to keep pace with high inflation</p>
-                </div>
-              </div>
-            </Card>
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+              <span>🇺🇸</span> United States
+            </h3>
+            <div className="grid md:grid-cols-4 gap-6">
+              {markets.usa.map(market => <MarketCard key={market.id} market={market} />)}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+              <span>🌍</span> International
+            </h3>
+            <div className="grid md:grid-cols-4 gap-6">
+              {markets.international.map(market => <MarketCard key={market.id} market={market} />)}
+            </div>
           </div>
         </div>
       </section>
-      {/*Call to action: Prompts users to take a risk assessment */}
-      <section className="py-16 bg-blue-800 text-white">
+
+      {/* INVESTMENT OPTIONS */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Investment Vehicles</h2>
+            <p className="text-gray-600 text-lg">Click to explore</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {investmentOptions.map((option) => (
+              <div
+                key={option.id}
+                className="cursor-pointer"
+                onClick={() => setExpandedCard(expandedCard === option.id ? null : option.id)}
+              >
+                <Card className="h-full transition-all duration-300 hover:shadow-lg border-2 border-transparent hover:border-blue-400">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <span className="text-4xl mb-3 block">{option.icon}</span>
+                        <h3 className="text-xl font-bold text-gray-900">{option.title}</h3>
+                      </div>
+                      <ChevronDown 
+                        className={`w-6 h-6 text-gray-400 transition-transform ${
+                          expandedCard === option.id ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-gray-200">
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase">Return</p>
+                        <p className="text-lg font-bold text-blue-600">{option.returns}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase">Time Horizon</p>
+                        <p className="text-lg font-bold text-blue-600">{option.time}</p>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-700 text-sm mb-3">{option.snippet}</p>
+
+                    <div className={`overflow-hidden transition-all ${
+                      expandedCard === option.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                    }`}>
+                      <div className="pt-4 border-t border-gray-200 space-y-2">
+                        {option.details.map((detail, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <span className="text-blue-500 font-bold">✓</span>
+                            <p className="text-sm text-gray-700">{detail}</p>
+                          </div>
+                        ))}
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                          <p className="text-sm font-semibold text-blue-900">{option.highlight}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ALLOCATION */}
+      <section className="py-20 px-4 bg-blue-50">
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-4xl font-bold text-center mb-4">Build Your Portfolio</h2>
+          <p className="text-center text-gray-600 mb-12">Choose your allocation strategy</p>
+
+          <div className="flex gap-4 justify-center mb-12 flex-wrap">
+            {Object.entries(allocations).map(([key, data]) => (
+              <Button
+                key={key}
+                onClick={() => setActiveAllocation(key)}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all ${
+                  activeAllocation === key
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border-2 border-gray-300'
+                }`}
+              >
+                {data.name}
+              </Button>
+            ))}
+          </div>
+
+          <Card>
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold mb-2">{allocations[activeAllocation].name}</h3>
+              <p className="text-gray-600 mb-6">{allocations[activeAllocation].description}</p>
+
+              <div className="space-y-4">
+                {allocations[activeAllocation].items.map((item, idx) => (
+                  <div key={idx}>
+                    <div className="flex justify-between mb-2">
+                      <span className="font-medium text-gray-800">{item.name}</span>
+                      <span className="font-bold text-gray-900">{item.pct}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div
+                        className={`h-3 rounded-full bg-gradient-to-r ${item.color}`}
+                        style={{ width: `${item.pct}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8 p-4 bg-green-50 border-l-4 border-green-500 rounded">
+                <p className="text-sm text-green-900">
+                  <span className="font-bold">Expected Annual Return: </span>
+                  {activeAllocation === 'basic' ? '3-4%' : '4-5%'}
+                </p>
+                <p className="text-xs text-green-700 mt-1">*Past performance not indicative of future results</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="py-16 bg-gradient-to-r from-blue-600 to-indigo-700 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Build Your Conservative Portfolio?
-          </h2>
-          <p className="text-lg opacity-90 max-w-2xl mx-auto mb-8">
-            Get personalized investment recommendations based on your specific goals and risk tolerance.
+          <h2 className="text-3xl font-bold mb-4">Ready to Start?</h2>
+          <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
+            Find out which strategy matches your goals and risk tolerance.
           </p>
-          <Link to="/assessment">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-              Take the Risk Assessment
-            </Button>
-          </Link>
+          <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 font-semibold">
+            Take Risk Assessment
+          </Button>
         </div>
       </section>
     </div>

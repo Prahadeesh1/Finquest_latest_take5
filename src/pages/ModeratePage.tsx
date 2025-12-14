@@ -1,635 +1,504 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link } from 'react-router-dom';
+import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
-import { 
-  TrendingUp, DollarSign, PieChart, BarChart3, Target, Shield, Coins, Wallet,LineChart,Calculator,Banknote,CreditCard,ArrowRight,Star
-} from 'lucide-react';
+import { BarChart3, TrendingUp, DollarSign, ChevronDown } from 'lucide-react';
 
-const Card = ({ children, className }) => (
-  <div className={`rounded-lg ${className}`}>
-    {children}
-  </div>
-);
-
-const CardContent = ({ children, className }) => (
-  <div className={className}>
-    {children}
-  </div>
-);
-
-
-//Main ModeratePage component for displaying moderate investment options
 const ModeratePage = () => {
-  return (//Main container for the entire page
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar component for site navigation */}
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [expandedMarket, setExpandedMarket] = useState(null);
+  const [activeAllocation, setActiveAllocation] = useState('basic');
+
+  const investmentOptions = [
+    {
+      id: 'balanced',
+      title: 'Balanced Funds',
+      icon: '⚖️',
+      returns: '5-7%',
+      time: '5-10 years',
+      snippet: 'Mix of stocks & bonds with auto-rebalancing',
+      details: [
+        'Lion Global Balanced Fund, NTUC Income Balanced',
+        'Vanguard Balanced Index, Fidelity Balanced',
+        'HSBC Global Multi-Asset',
+        '50-60% stocks, 40-50% bonds'
+      ],
+      highlight: 'Best for: Passive investors wanting simplicity'
+    },
+    {
+      id: 'index',
+      title: 'Index Funds & ETFs',
+      icon: '📊',
+      returns: '6-8%',
+      time: '5-10 years',
+      snippet: 'Low-cost diversified index tracking',
+      details: [
+        'Singapore: STI ETF, Nikko AM STI ETF',
+        'USA: S&P 500 ETF, Total Market Index',
+        'International: MSCI World ETF, iShares MSCI EAFE',
+        'Very low fees (0.05-0.20% annually)'
+      ],
+      highlight: 'Best for: Cost-conscious long-term investors'
+    },
+    {
+      id: 'dividend-growth',
+      title: 'Dividend Growth Stocks',
+      icon: '💰',
+      returns: '4-6%',
+      time: '5-10 years',
+      snippet: 'Companies with consistent dividend increases',
+      details: [
+        'Singapore: DBS, OCBC, UOB (Banks)',
+        'USA: Dividend Aristocrats, Vanguard Dividend Growth',
+        'International: European Dividend ETFs',
+        'Steady income + capital appreciation'
+      ],
+      highlight: 'Best for: Income-focused balanced approach'
+    },
+    {
+      id: 'commercial-reits',
+      title: 'Commercial REITs',
+      icon: '🏢',
+      returns: '4-6%',
+      time: '5-10 years',
+      snippet: 'Diversified real estate across sectors',
+      details: [
+        'Singapore: Mapletree Industrial Trust, Frasers Logistics',
+        'USA: Digital Realty, Prologis',
+        'International: European Logistics REITs',
+        'Higher quality, diversified properties'
+      ],
+      highlight: 'Best for: Commercial real estate diversification'
+    }
+  ];
+
+  const markets = {
+    singapore: [
+      {
+        id: 'balanced-sg',
+        name: 'Balanced Funds',
+        emoji: '⚖️',
+        historical: '5-6%',
+        description: 'Lion Global Balanced Fund, NTUC Income Balanced - mix of SG stocks & bonds',
+        companies: 'SGX-listed funds',
+        why: 'Simple diversification, auto-rebalancing'
+      },
+      {
+        id: 'index-sg',
+        name: 'Index ETFs',
+        emoji: '📊',
+        historical: '5-7%',
+        description: 'STI ETF, Nikko AM STI ETF - track Straits Times Index',
+        companies: 'STI constituents',
+        why: 'Low cost, transparent, market exposure'
+      },
+      {
+        id: 'dividend-sg',
+        name: 'Dividend Growth',
+        emoji: '💼',
+        historical: '3-5%',
+        description: 'DBS, OCBC, UOB (Banks) - consistent dividends',
+        companies: 'DBS, OCBC, UOB',
+        why: 'Income + growth, banking stability'
+      },
+      {
+        id: 'reit-sg',
+        name: 'Commercial REITs',
+        emoji: '🏢',
+        historical: '4-6%',
+        description: 'Mapletree Industrial Trust, Frasers Logistics - industrial & logistics',
+        companies: 'Mapletree, Frasers',
+        why: 'Strong rental income, diversified assets'
+      }
+    ],
+    usa: [
+      {
+        id: 'balanced-us',
+        name: 'Balanced Funds',
+        emoji: '⚖️',
+        historical: '5-7%',
+        description: 'Vanguard Balanced Index, Fidelity Balanced - 60/40 allocation',
+        companies: 'Vanguard, Fidelity',
+        why: 'Professional allocation, rebalancing'
+      },
+      {
+        id: 'index-us',
+        name: 'Index Funds',
+        emoji: '📊',
+        historical: '8-10%',
+        description: 'S&P 500 ETF, Total Market Index - diversified US exposure',
+        companies: 'S&P 500 constituents',
+        why: 'Proven returns, diversified, liquid'
+      },
+      {
+        id: 'dividend-us',
+        name: 'Dividend Growth',
+        emoji: '💼',
+        historical: '3-5%',
+        description: 'Dividend Aristocrats, Vanguard Dividend Growth - 25+ years increases',
+        companies: 'J&J, P&G, Coca-Cola',
+        why: 'Proven dividend safety, capital growth'
+      },
+      {
+        id: 'reit-us',
+        name: 'Commercial REITs',
+        emoji: '🏢',
+        historical: '4-6%',
+        description: 'Digital Realty, Prologis - data centers & logistics',
+        companies: 'Digital Realty, Prologis',
+        why: 'Growth sectors, strong fundamentals'
+      }
+    ],
+    international: [
+      {
+        id: 'balanced-intl',
+        name: 'Global Balanced',
+        emoji: '⚖️',
+        historical: '5-7%',
+        description: 'HSBC Global Multi-Asset - diversified globally',
+        companies: 'Global fund',
+        why: 'Global diversification, professional managed'
+      },
+      {
+        id: 'index-intl',
+        name: 'World Index ETFs',
+        emoji: '📊',
+        historical: '6-8%',
+        description: 'MSCI World ETF, iShares MSCI EAFE - developed markets',
+        companies: 'MSCI constituents',
+        why: 'Geographic diversification, developed markets'
+      },
+      {
+        id: 'dividend-intl',
+        name: 'Dividend ETFs',
+        emoji: '💼',
+        historical: '3-5%',
+        description: 'European Dividend ETFs - consistent payers',
+        companies: 'European blue-chips',
+        why: 'International income, currency diversification'
+      },
+      {
+        id: 'reit-intl',
+        name: 'European Logistics',
+        emoji: '🏢',
+        historical: '4-6%',
+        description: 'European Logistics REITs - industrial focus',
+        companies: 'European REITs',
+        why: 'EU property exposure, growing sector'
+      }
+    ]
+  };
+
+  const allocations = {
+    basic: {
+      name: 'Moderate Starter',
+      description: 'Conservative balanced approach',
+      items: [
+        { name: 'Balanced Funds', pct: 50, color: 'from-amber-600 to-amber-400' },
+        { name: 'Index Funds (SG & US)', pct: 40, color: 'from-yellow-500 to-yellow-400' },
+        { name: 'REITs', pct: 10, color: 'from-orange-500 to-orange-400' }
+      ]
+    },
+    balanced: {
+      name: 'Moderate Global',
+      description: 'Diversified across continents',
+      items: [
+        { name: 'Balanced Funds', pct: 35, color: 'from-amber-600 to-amber-400' },
+        { name: 'SG Index ETFs', pct: 15, color: 'from-yellow-600 to-yellow-500' },
+        { name: 'US Index Funds (S&P 500)', pct: 25, color: 'from-orange-600 to-orange-500' },
+        { name: 'World Index ETFs', pct: 15, color: 'from-yellow-500 to-yellow-400' },
+        { name: 'Dividend & REITs', pct: 10, color: 'from-orange-500 to-orange-400' }
+      ]
+    }
+  };
+
+  const MarketCard = ({ market }) => (
+    <div 
+      className="cursor-pointer"
+      onClick={() => setExpandedMarket(expandedMarket === market.id ? null : market.id)}
+    >
+      <Card className="h-full transition-all duration-300 hover:shadow-lg border-2 border-transparent hover:border-amber-400 overflow-hidden">
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <span className="text-5xl block mb-3">{market.emoji}</span>
+              <h3 className="text-lg font-bold text-gray-900">{market.name}</h3>
+            </div>
+            <ChevronDown 
+              className={`w-5 h-5 text-gray-400 transition-transform ${
+                expandedMarket === market.id ? 'rotate-180' : ''
+              }`}
+            />
+          </div>
+
+          <div className="mb-4 pb-4 border-b border-gray-200">
+            <p className="text-xs text-gray-500 uppercase">Historical Return</p>
+            <p className="text-xl font-bold text-amber-600">{market.historical}</p>
+          </div>
+
+          <p className="text-sm text-gray-700 line-clamp-2">{market.description}</p>
+
+          <div className={`overflow-hidden transition-all duration-300 ${
+            expandedMarket === market.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}>
+            <div className="pt-4 border-t border-gray-200 space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Overview</p>
+                <p className="text-sm text-gray-700">{market.description}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Examples</p>
+                <p className="text-sm text-gray-700">{market.companies}</p>
+              </div>
+              <div className="p-3 bg-amber-50 rounded-lg border-l-4 border-amber-400">
+                <p className="text-xs text-gray-500 uppercase font-bold mb-1">Why Choose</p>
+                <p className="text-sm font-semibold text-amber-900">{market.why}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navbar />
-      {/* Introduces the Moderate Profile and its characteristics */}
+      {/* HERO SECTION */}
       <section className="relative pt-20 pb-32 overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 via-amber-700 to-orange-800"></div>
-      
-      {/* Animated background elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white rounded-full mix-blend-overlay animate-pulse"></div>
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-white rounded-full mix-blend-overlay animate-pulse delay-1000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-white rounded-full mix-blend-overlay animate-pulse delay-500"></div>
-      </div>
-      
-      {/* Floating elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 animate-bounce">
-          <TrendingUp className="w-8 h-8 text-white/20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-yellow-600 via-amber-700 to-orange-800"></div>
+        
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white rounded-full mix-blend-overlay animate-pulse"></div>
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-white rounded-full mix-blend-overlay animate-pulse delay-1000"></div>
+          <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-white rounded-full mix-blend-overlay animate-pulse delay-500"></div>
         </div>
-        <div className="absolute top-40 right-20 animate-bounce" style={{ animationDelay: '1s' }}>
-          <PieChart className="w-10 h-10 text-white/20" />
-        </div>
-        <div className="absolute bottom-40 left-20 animate-bounce" style={{ animationDelay: '0.5s' }}>
-          <BarChart3 className="w-12 h-12 text-white/20" />
-        </div>
-        <div className="absolute top-32 right-1/3 animate-bounce" style={{ animationDelay: '1.5s' }}>
-          <Target className="w-6 h-6 text-white/20" />
-        </div>
-        <div className="absolute bottom-32 right-12 animate-bounce" style={{ animationDelay: '2s' }}>
-          <Coins className="w-9 h-9 text-white/20" />
-        </div>
-        <div className="absolute top-1/2 left-8 animate-bounce" style={{ animationDelay: '2.5s' }}>
-          <Wallet className="w-7 h-7 text-white/20" />
-        </div>
-        <div className="absolute bottom-16 right-1/4 animate-bounce" style={{ animationDelay: '3s' }}>
-          <Calculator className="w-8 h-8 text-white/20" />
-        </div>
-        <div className="absolute top-24 left-1/3 animate-bounce" style={{ animationDelay: '0.8s' }}>
-          <LineChart className="w-6 h-6 text-white/20" />
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="flex flex-wrap items-center min-h-[500px]">
-          <div className="w-full lg:w-7/12 pr-0 lg:pr-8">
-            <div className="bg-white/20 backdrop-blur-sm text-white inline-block py-2 px-4 rounded-full text-sm font-medium mb-6 border border-white/30">
-              <BarChart3 className="w-4 h-4 inline mr-2" />
-              Moderate Profile
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex flex-wrap items-center min-h-[500px]">
+            <div className="w-full lg:w-7/12 pr-0 lg:pr-8">
+              <div className="bg-white/20 backdrop-blur-sm text-white inline-block py-2 px-4 rounded-full text-sm font-medium mb-6 border border-white/30">
+                <BarChart3 className="w-4 h-4 inline mr-2" />
+                Moderate Profile
+              </div>
+              
+              <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
+                Moderate
+                <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
+                  Investment Options
+                </span>
+              </h1>
+              
+              <p className="text-xl text-amber-100 mb-8 leading-relaxed max-w-xl">
+                Balance growth with stability. Perfect for medium to long-term goals with a mix of local & international exposure.
+              </p>
+              
+              <div className="flex flex-wrap gap-4">
+                <Button size="lg" className="bg-white text-amber-600 hover:bg-amber-50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                  <TrendingUp className="w-5 h-5 mr-2" />
+                  Explore Options
+                </Button>
+              </div>
             </div>
             
-            <h1 className="text-5xl lg:text-6xl font-bold mb-6 text-white leading-tight">
-              Moderate
-              <span className="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-                Investment Options
-              </span>
-            </h1>
-            
-            <p className="text-xl text-amber-100 mb-8 leading-relaxed max-w-xl">
-              Balance growth potential with stability through our expertly managed moderate investment strategies, perfect for medium to long-term financial goals.
-            </p>
-            
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-white text-amber-600 hover:bg-amber-50 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                <TrendingUp className="w-5 h-5 mr-2" />
-                Explore Options
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white/30 text-amber-700 hover:bg-white/10 backdrop-blur-sm"
+            <div className="w-full lg:w-5/12 mt-12 lg:mt-0">
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+                <CardContent className="p-8">
+                  <h3 className="text-2xl font-bold mb-2 flex items-center text-white">
+                    <BarChart3 className="w-6 h-6 text-yellow-300 mr-3" />
+                    Key Characteristics
+                  </h3>
+                  <p className="text-amber-100 mb-6 text-lg">Medium Risk, Medium Returns (5-10%)</p>
+                  
+                  <ul className="space-y-3">
+                    {[
+                      'Growth + income balanced',
+                      'Medium market volatility',
+                      'Some inflation protection',
+                      '5-10 year time horizon',
+                      'Diversified asset mix'
+                    ].map((item, index) => (
+                      <li key={index} className="flex items-center text-white text-sm">
+                        <div className="w-2 h-2 rounded-full bg-yellow-300 mr-3"></div>
+                        <span className="text-amber-50">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* MARKET SECTION */}
+      <section className="py-20 px-4 bg-gray-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Recommended Investments</h2>
+            <p className="text-gray-600 text-lg">Balanced options suitable for moderate investors</p>
+          </div>
+
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+              <span>🇸🇬</span> Singapore
+            </h3>
+            <div className="grid md:grid-cols-4 gap-6">
+              {markets.singapore.map(market => <MarketCard key={market.id} market={market} />)}
+            </div>
+          </div>
+
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+              <span>🇺🇸</span> United States
+            </h3>
+            <div className="grid md:grid-cols-4 gap-6">
+              {markets.usa.map(market => <MarketCard key={market.id} market={market} />)}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-3 text-gray-900">
+              <span>🌍</span> International
+            </h3>
+            <div className="grid md:grid-cols-4 gap-6">
+              {markets.international.map(market => <MarketCard key={market.id} market={market} />)}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INVESTMENT OPTIONS */}
+      <section className="py-20 px-4">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Investment Vehicles</h2>
+            <p className="text-gray-600 text-lg">Click to explore</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {investmentOptions.map((option) => (
+              <div
+                key={option.id}
+                className="cursor-pointer"
+                onClick={() => setExpandedCard(expandedCard === option.id ? null : option.id)}
               >
-                Compare Strategies
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <Card className="h-full transition-all duration-300 hover:shadow-lg border-2 border-transparent hover:border-amber-400">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <span className="text-4xl mb-3 block">{option.icon}</span>
+                        <h3 className="text-xl font-bold text-gray-900">{option.title}</h3>
+                      </div>
+                      <ChevronDown 
+                        className={`w-6 h-6 text-gray-400 transition-transform ${
+                          expandedCard === option.id ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-gray-200">
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase">Return</p>
+                        <p className="text-lg font-bold text-amber-600">{option.returns}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase">Time Horizon</p>
+                        <p className="text-lg font-bold text-amber-600">{option.time}</p>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-700 text-sm mb-3">{option.snippet}</p>
+
+                    <div className={`overflow-hidden transition-all ${
+                      expandedCard === option.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                    }`}>
+                      <div className="pt-4 border-t border-gray-200 space-y-2">
+                        {option.details.map((detail, idx) => (
+                          <div key={idx} className="flex items-start gap-2">
+                            <span className="text-amber-500 font-bold">✓</span>
+                            <p className="text-sm text-gray-700">{detail}</p>
+                          </div>
+                        ))}
+                        <div className="mt-4 p-3 bg-amber-50 rounded-lg border-l-4 border-amber-400">
+                          <p className="text-sm font-semibold text-amber-900">{option.highlight}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ALLOCATION */}
+      <section className="py-20 px-4 bg-amber-50">
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="text-4xl font-bold text-center mb-4">Build Your Portfolio</h2>
+          <p className="text-center text-gray-600 mb-12">Choose your allocation strategy</p>
+
+          <div className="flex gap-4 justify-center mb-12 flex-wrap">
+            {Object.entries(allocations).map(([key, data]) => (
+              <Button
+                key={key}
+                onClick={() => setActiveAllocation(key)}
+                className={`px-8 py-3 rounded-lg font-semibold transition-all ${
+                  activeAllocation === key
+                    ? 'bg-amber-600 text-white shadow-lg'
+                    : 'bg-white text-gray-700 border-2 border-gray-300'
+                }`}
+              >
+                {data.name}
               </Button>
-            </div>
+            ))}
           </div>
-          
-          {/* Enhanced Key Characteristics card */}
-          <div className="w-full lg:w-5/12 mt-12 lg:mt-0">
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 rounded-2xl border">
-              <CardContent className="p-8">
-                <h3 className="text-2xl font-bold mb-2 flex items-center text-white">
-                  <Star className="w-6 h-6 text-yellow-300 mr-3" />
-                  Key Characteristics
-                </h3>
-                <p className="text-amber-100 mb-6 text-lg">Balanced risk and return profile</p>
-                
-                <ul className="space-y-4">
-                  {[
-                    'Growth and income balanced',
-                    'Medium market volatility',
-                    'Some inflation protection',
-                    'Time horizon of 5-10 years',
-                    'Diversified asset mix'
-                  ].map((item, index) => (
-                    <li key={index} className="flex items-center text-white">
-                      <div className="w-3 h-3 rounded-full bg-gradient-to-r from-yellow-300 to-orange-300 mr-4 animate-pulse"></div>
-                      <span className="text-amber-50">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    </section>
-      {/* Popular Investment Options section with Tabs */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-4">
-            Popular Moderate Investment Options
-          </h2>
-          <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
-            These investment vehicles are commonly recommended for moderate investors seeking balanced growth and stability.
-          </p>
-          {/* Tabs component which shows different clickable investment categories */}
-          <Tabs defaultValue="balanced" className="max-w-5xl mx-auto">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="balanced">Balanced Funds</TabsTrigger>
-              <TabsTrigger value="index">Index Funds</TabsTrigger>
-              <TabsTrigger value="stocks">Dividend Growth</TabsTrigger>
-              <TabsTrigger value="reits">REITs</TabsTrigger>
-            </TabsList>
-            {/* TabsContent: Displays content for "Balanced Mutual Funds" tab */}
-            <TabsContent value="balanced" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">Balanced Mutual Funds</h3>
-                  <p className="text-gray-700 mb-6">
-                    Balanced funds invest in a mix of stocks, bonds, and cash equivalents, offering a middle ground between growth and income.
-                  </p>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">60/40 Portfolio</h4>
-                    <p className="text-sm text-gray-700">
-                      Classic allocation with 60% stocks and 40% bonds, providing moderate growth potential while limiting volatility through diversification.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Target-Date Funds</h4>
-                    <p className="text-sm text-gray-700">
-                      Automatically adjusts asset allocation based on your target retirement date, becoming more conservative as you approach retirement.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">Global Allocation Funds</h4>
-                    <p className="text-sm text-gray-700">
-                      Invests across multiple asset classes and geographical regions to manage risk while pursuing moderate returns.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">Balanced Fund Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Asset Mix:</span>
+
+          <Card>
+            <CardContent className="p-8">
+              <h3 className="text-2xl font-bold mb-2">{allocations[activeAllocation].name}</h3>
+              <p className="text-gray-600 mb-6">{allocations[activeAllocation].description}</p>
+
+              <div className="space-y-4">
+                {allocations[activeAllocation].items.map((item, idx) => (
+                  <div key={idx}>
+                    <div className="flex justify-between mb-2">
+                      <span className="font-medium text-gray-800">{item.name}</span>
+                      <span className="font-bold text-gray-900">{item.pct}%</span>
                     </div>
-                    <p className="text-sm text-gray-600 pl-6">Typically 40-70% stocks, 30-60% bonds.</p>
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                      <div
+                        className={`h-3 rounded-full bg-gradient-to-r ${item.color}`}
+                        style={{ width: `${item.pct}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Fund Expenses:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Compare expense ratios across similar funds.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Management Style:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Active vs. passive management approaches.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Tax Efficiency:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Consider tax implications and placement.</p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Conservative Balanced:</span>
-                      <span className="text-sm font-medium">4-6%</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Moderate Balanced:</span>
-                      <span className="text-sm font-medium">6-8%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Growth-Oriented Balanced:</span>
-                      <span className="text-sm font-medium">7-9%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
+                ))}
               </div>
-            </TabsContent>
-            {/* TabsContent: Displays content for "Index Funds" tab */}
-            <TabsContent value="index" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">Index Funds</h3>
-                  <p className="text-gray-700 mb-6">
-                    Index funds track a specific market index, offering broad market exposure with lower fees than actively managed funds.
-                  </p>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">S&P 500 Index Funds</h4>
-                    <p className="text-sm text-gray-700">
-                      Tracks the 500 largest U.S. companies, providing exposure to a significant portion of the U.S. stock market.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Total Market Index Funds</h4>
-                    <p className="text-sm text-gray-700">
-                      Tracks the entire U.S. stock market, including small and mid-cap companies for broader diversification.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">International Index Funds</h4>
-                    <p className="text-sm text-gray-700">
-                      Tracks non-U.S. markets, providing global diversification to complement domestic investments.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">Index Fund Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Expense Ratios:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Typically much lower than actively managed funds.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Index Selection:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Different indexes offer varying exposure and risk profiles.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Tax Efficiency:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Generally more tax-efficient than actively managed funds.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Tracking Error:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">How closely the fund follows its benchmark index.</p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">S&P 500 Index (Long-term):</span>
-                      <span className="text-sm font-medium">7-10%</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Total Bond Market Index:</span>
-                      <span className="text-sm font-medium">3-5%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">International Index:</span>
-                      <span className="text-sm font-medium">6-9%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
+
+              <div className="mt-8 p-4 bg-green-50 border-l-4 border-green-500 rounded">
+                <p className="text-sm text-green-900">
+                  <span className="font-bold">Expected Annual Return: </span>
+                  5-7%
+                </p>
+                <p className="text-xs text-green-700 mt-1">*Past performance not indicative of future results</p>
               </div>
-            </TabsContent>
-            {/* TabsContent: Displays content for "Dividend Growth Stocks" tab */}
-            <TabsContent value="stocks" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">Dividend Growth Stocks</h3>
-                  <p className="text-gray-700 mb-6">
-                    Stocks of companies with a history of increasing dividend payments, offering both income and potential capital appreciation.
-                  </p>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Dividend Aristocrats</h4>
-                    <p className="text-sm text-gray-700">
-                      S&P 500 companies that have increased dividends for at least 25 consecutive years, demonstrating financial stability.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Dividend Growth ETFs</h4>
-                    <p className="text-sm text-gray-700">
-                      Exchange-Traded Funds focused on companies with consistent dividend growth, offering diversification and income.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">Mid-Yield Dividend Stocks</h4>
-                    <p className="text-sm text-gray-700">
-                      Companies with moderate current yields but strong dividend growth potential, balancing income and growth.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">Dividend Stock Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Dividend Growth Rate:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Historical pace of dividend increases over time.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Payout Ratio:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Percentage of earnings paid as dividends; lower is generally safer.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Industry Position:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Competitive advantages that support sustainable dividend growth.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Tax Treatment:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Qualified dividends receive preferential tax treatment.</p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Dividend Yield:</span>
-                      <span className="text-sm font-medium">2-4%</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Dividend Growth Rate:</span>
-                      <span className="text-sm font-medium">5-10% annually</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Return:</span>
-                      <span className="text-sm font-medium">7-11%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            {/* TabsContent: Displays content for "Real Estate Investment Trusts (REITs)" tab */}
-            <TabsContent value="reits" className="mt-6">
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="md:col-span-3 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-xl font-bold mb-4">Real Estate Investment Trusts (REITs)</h3>
-                  <p className="text-gray-700 mb-6">
-                    Companies that own, operate, or finance income-producing real estate, offering exposure to real estate markets with liquidity.
-                  </p>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Equity REITs</h4>
-                    <p className="text-sm text-gray-700">
-                      Own and operate income-producing real estate like apartments, offices, retail centers, and warehouses.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4 mb-4">
-                    <h4 className="font-medium mb-2">Mortgage REITs</h4>
-                    <p className="text-sm text-gray-700">
-                      Provide financing for real estate by purchasing or originating mortgages and mortgage-backed securities.
-                    </p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 rounded-lg p-4">
-                    <h4 className="font-medium mb-2">REIT ETFs and Mutual Funds</h4>
-                    <p className="text-sm text-gray-700">
-                      Diversified portfolios of various REITs, providing broad exposure to the real estate sector.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="md:col-span-2 bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="text-lg font-bold mb-4">REIT Considerations</h3>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Dividend Yield:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">REITs must distribute at least 90% of taxable income.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Property Type:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">Different sectors (residential, commercial, healthcare) have varying risk profiles.</p>
-                  </div>
-                  
-                  <div className="mb-4">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Interest Rate Sensitivity:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">REITs can be affected by changes in interest rates.</p>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <div className="flex items-center mb-1">
-                      <span className="text-yellow-500 mr-2">$</span>
-                      <span className="font-medium">Tax Considerations:</span>
-                    </div>
-                    <p className="text-sm text-gray-600 pl-6">REIT dividends are generally taxed as ordinary income.</p>
-                  </div>
-                  
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium mb-3">Typical Returns</h4>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Equity REITs:</span>
-                      <span className="text-sm font-medium">8-12% total return</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm text-gray-600">Mortgage REITs:</span>
-                      <span className="text-sm font-medium">6-9% total return</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Dividend Yield:</span>
-                      <span className="text-sm font-medium">3-6%</span>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2 italic">*Historical average returns; actual returns may vary</p>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </section>
-      {/* Portfolio Allocation section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          {/* Section heading */}
-          <h2 className="text-3xl font-bold text-center mb-16">
-            Moderate Portfolio Allocation
-          </h2>
-          {/* Section description */}
-          <p className="text-gray-600 text-center mb-12 max-w-3xl mx-auto">
-            A typical moderate portfolio balances growth and stability for medium-term financial goals.
-          </p>
-          
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Sample Moderate Allocation card */}
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-2">Sample Moderate Allocation</h3>
-              <p className="text-sm text-gray-600 mb-6">A balanced approach with emphasis on long-term growth</p>
-              {/* Allocation bars for different asset classes */}
-              <div className="space-y-4 mb-4">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Domestic Stocks</span>
-                    <span className="text-sm">35%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-500 h-2 rounded-full" style={{ width: '35%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Investment-Grade Bonds</span>
-                    <span className="text-sm">30%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-400 h-2 rounded-full" style={{ width: '30%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">International Stocks</span>
-                    <span className="text-sm">15%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '15%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">REITs</span>
-                    <span className="text-sm">10%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-300 h-2 rounded-full" style={{ width: '10%' }}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium">Cash & Equivalents</span>
-                    <span className="text-sm">10%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-200 h-2 rounded-full" style={{ width: '10%' }}></div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-            {/* Expected Outcomes card */}
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-2">Expected Outcomes</h3>
-              <p className="text-sm text-gray-600 mb-6">Historical performance metrics for moderate portfolios</p>
-              {/* Outcome metrics with simulated progress bars */}
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Potential Annual Return</span>
-                    <span>6-8%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-yellow-500 h-3 rounded-full" style={{ width: '60%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Based on historical average annual returns</p>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Volatility</span>
-                    <span>Medium</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-yellow-500 h-3 rounded-full" style={{ width: '50%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Moderate price fluctuations expected</p>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Income Focus</span>
-                    <span>Moderate</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-yellow-500 h-3 rounded-full" style={{ width: '50%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Balance between growth and income generation</p>
-                </div>
-                
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-medium">Inflation Protection</span>
-                    <span>Good</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div className="bg-yellow-500 h-3 rounded-full" style={{ width: '65%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">Reasonable hedge against moderate inflation</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-      {/*Call to action: Prompts users to take a risk assessment */}
-      <section className="py-16 bg-yellow-700 text-white">
+
+      {/* CTA */}
+      <section className="py-16 bg-gradient-to-r from-amber-600 to-orange-700 text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            Ready to Build Your Moderate Portfolio?
-          </h2>
-          <p className="text-lg opacity-90 max-w-2xl mx-auto mb-8">
-            Get personalized investment recommendations based on your specific goals and risk tolerance.
+          <h2 className="text-3xl font-bold mb-4">Ready to Start?</h2>
+          <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
+            Get personalized recommendations based on your goals.
           </p>
-          <Link to="/assessment">
-            <Button size="lg" className="bg-white text-yellow-600 hover:bg-gray-100">
-              Take the Risk Assessment
-            </Button>
-          </Link>
+          <Button size="lg" className="bg-white text-amber-600 hover:bg-gray-100 font-semibold">
+            Take Risk Assessment
+          </Button>
         </div>
       </section>
     </div>

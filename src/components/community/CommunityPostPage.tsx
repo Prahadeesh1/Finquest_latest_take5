@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useComments } from "@/hooks/useComments";
@@ -16,9 +16,18 @@ import {
   Reply,
   ChevronDown,
   ChevronUp,
-  Loader
+  Loader,
+  Home,
+  Trash2,
+  MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
 // Local interface for display purposes
@@ -27,8 +36,8 @@ interface DisplayComment {
   author: string;
   content: string;
   timePosted: string;
-  upvotes: number;
-  downvotes: number;
+  likes: number;
+  dislikes: number;
   replies?: { [key: string]: DisplayComment };
 }
 
@@ -45,10 +54,10 @@ const CommentItem = ({
   comment: DisplayComment; 
   postId: string;
   isReply?: boolean;
-  voteOnComment: (commentId: string, voteType: 'upvote' | 'downvote') => Promise<void>;
-  voteOnReply: (commentId: string, replyId: string, voteType: 'upvote' | 'downvote') => Promise<void>;
+  voteOnComment: (commentId: string, voteType: 'like' | 'dislike') => Promise<void>;
+  voteOnReply: (commentId: string, replyId: string, voteType: 'like' | 'dislike') => Promise<void>;
   addReply: (commentId: string, content: string) => Promise<void>;
-  commentUserVotes: Record<string, 'upvote' | 'downvote'>;
+  commentUserVotes: Record<string, 'like' | 'dislike'>;
   currentUser: any;
 }) => {
   const [showReplies, setShowReplies] = useState(false);
@@ -56,7 +65,7 @@ const CommentItem = ({
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
-  const handleVoteOnComment = async (voteType: 'upvote' | 'downvote') => {
+  const handleVoteOnComment = async (voteType: 'like' | 'dislike') => {
     if (!currentUser) {
       toast.error('Please login to vote');
       return;
@@ -108,20 +117,20 @@ const CommentItem = ({
             variant="ghost" 
             size="icon" 
             className={`h-6 w-6 rounded-full hover:bg-blue-50 ${
-              commentVote === 'upvote' ? 'text-blue-500 bg-blue-50' : 'text-gray-400 hover:text-blue-500'
+              commentVote === 'like' ? 'text-blue-500 bg-blue-50' : 'text-gray-400 hover:text-blue-500'
             }`}
-            onClick={() => handleVoteOnComment('upvote')}
+            onClick={() => handleVoteOnComment('like')}
           >
             <ThumbsUp className="h-3 w-3" />
           </Button>
-          <span className="text-xs font-medium text-gray-600">{comment.upvotes}</span>
+          <span className="text-xs font-medium text-gray-600">{comment.likes}</span>
           <Button 
             variant="ghost" 
             size="icon" 
             className={`h-6 w-6 rounded-full hover:bg-red-50 ${
-              commentVote === 'downvote' ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500'
+              commentVote === 'dislike' ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-red-500'
             }`}
-            onClick={() => handleVoteOnComment('downvote')}
+            onClick={() => handleVoteOnComment('dislike')}
           >
             <ThumbsDown className="h-3 w-3" />
           </Button>
@@ -212,16 +221,17 @@ const CommentItem = ({
 
 const PostDetailPage = () => {
   const { postId } = useParams<{ postId: string }>();
-  const location = useLocation();
   const navigate = useNavigate();
   const { currentUser, userData } = useAuth();
   
   const [post, setPost] = useState<Post | null>(null);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
-  const [postVoteState, setPostVoteState] = useState<'upvote' | 'downvote' | null>(null);
+  const [postVoteState, setPostVoteState] = useState<'like' | 'dislike' | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [imageLoadError, setImageLoadError] = useState(false);
 
   const {
     comments,
@@ -233,6 +243,9 @@ const PostDetailPage = () => {
     voteOnComment,
     voteOnReply
   } = useComments(postId || "");
+
+  // Check if current user owns this post
+  const isOwner = currentUser && post && currentUser.uid === post.authorId;
 
   // Load post data
   useEffect(() => {
@@ -258,26 +271,7 @@ const PostDetailPage = () => {
             setIsBookmarked(bookmarkStatus.includes(postId));
           }
         } else {
-          // Use fallback data from navigation state
-          const fallbackData = location.state;
-          if (fallbackData) {
-            setPost({
-              id: postId,
-              title: fallbackData.title,
-              content: fallbackData.content,
-              author: fallbackData.author,
-              authorId: "unknown",
-              community: fallbackData.community,
-              type: 'text',
-              upvotes: fallbackData.upvotes || 0,
-              downvotes: 0,
-              commentCount: fallbackData.commentCount || 0,
-              tags: [],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              isBookmarked: fallbackData.isBookmarked || false
-            });
-          }
+          toast.error('Post not found');
         }
       } catch (error) {
         console.error('Error loading post:', error);
@@ -288,9 +282,9 @@ const PostDetailPage = () => {
     };
 
     loadPostData();
-  }, [postId, currentUser, location.state]);
+  }, [postId, currentUser]);
 
-  const handleVoteOnPost = async (voteType: 'upvote' | 'downvote') => {
+  const handleVoteOnPost = async (voteType: 'like' | 'dislike') => {
     if (!currentUser || !post) {
       toast.error('Please login to vote');
       return;
@@ -347,8 +341,62 @@ const PostDetailPage = () => {
     }
   };
 
+  // ✅ FIXED: Better back navigation handling
   const handleGoBack = () => {
-    navigate(-1);
+    // Check if there's history to go back to
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      // If no history (direct link), go to community page
+      navigate('/community');
+    }
+  };
+
+  // ✅ NEW: Handle post deletion
+  const handleDeletePost = async () => {
+    if (!currentUser || !post || !isOwner) return;
+
+    const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await PostService.deletePost(post.id, currentUser.uid);
+      toast.success('Post deleted successfully');
+      navigate('/community');
+    } catch (error: any) {
+      console.error('Error deleting post:', error);
+      toast.error(error.message || 'Failed to delete post');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // ✅ FIXED: Share functionality
+  const handleShare = async () => {
+    if (!post) return;
+
+    try {
+      const shareUrl = `${window.location.origin}/post/${post.id}`;
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: post.title,
+          text: post.content,
+          url: shareUrl
+        });
+        toast.success('Post shared successfully!');
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('Link copied to clipboard!');
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
+        toast.error('Failed to share post');
+      }
+    }
   };
 
   if (loading) {
@@ -372,8 +420,18 @@ const PostDetailPage = () => {
         <Navbar />
         <div className="flex-grow flex items-center justify-center">
           <div className="text-center">
+            <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">Post not found</p>
-            <Button onClick={handleGoBack}>Go Back</Button>
+            <div className="space-x-3">
+              <Button onClick={handleGoBack} variant="outline">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Go Back
+              </Button>
+              <Button onClick={() => navigate('/community')}>
+                <Home className="h-4 w-4 mr-2" />
+                Go to Community
+              </Button>
+            </div>
           </div>
         </div>
         <Footer />
@@ -388,14 +446,23 @@ const PostDetailPage = () => {
       <main className="flex-grow">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Back Button */}
-          <div className="mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <Button 
               variant="ghost" 
               onClick={handleGoBack}
               className="text-gray-600 hover:text-gray-800"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Community
+              Back
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/community')}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Community Home
             </Button>
           </div>
 
@@ -409,20 +476,20 @@ const PostDetailPage = () => {
                     variant="ghost" 
                     size="icon" 
                     className={`h-10 w-10 rounded-full hover:bg-blue-50 ${
-                      postVoteState === 'upvote' ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-600'
+                      postVoteState === 'like' ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-600'
                     }`}
-                    onClick={() => handleVoteOnPost('upvote')}
+                    onClick={() => handleVoteOnPost('like')}
                   >
                     <ThumbsUp className="h-5 w-5" />
                   </Button>
-                  <span className="text-lg font-semibold text-gray-700">{post.upvotes}</span>
+                  <span className="text-lg font-semibold text-gray-700">{post.likes || 0}</span>
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     className={`h-10 w-10 rounded-full hover:bg-red-50 ${
-                      postVoteState === 'downvote' ? 'text-red-500 bg-red-50' : 'text-gray-500 hover:text-red-500'
+                      postVoteState === 'dislike' ? 'text-red-500 bg-red-50' : 'text-gray-500 hover:text-red-500'
                     }`}
-                    onClick={() => handleVoteOnPost('downvote')}
+                    onClick={() => handleVoteOnPost('dislike')}
                   >
                     <ThumbsDown className="h-5 w-5" />
                   </Button>
@@ -430,11 +497,34 @@ const PostDetailPage = () => {
                 
                 {/* Post Content */}
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 text-sm text-gray-500 mb-3">
-                    <span className="bg-blue-100 px-3 py-1 rounded-full text-blue-700 font-medium text-xs">
-                      {post.community}
-                    </span>
-                    <span>Posted by u/{post.author} • {new Date(post.createdAt).toLocaleString()}</span>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <span className="bg-blue-100 px-3 py-1 rounded-full text-blue-700 font-medium text-xs">
+                        {post.community}
+                      </span>
+                      <span>Posted by u/{post.author} • {new Date(post.createdAt).toLocaleString()}</span>
+                    </div>
+                    
+                    {/* Delete button for owner */}
+                    {isOwner && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem 
+                            onClick={handleDeletePost}
+                            disabled={isDeleting}
+                            className="text-red-600 focus:text-red-600 cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {isDeleting ? 'Deleting...' : 'Delete Post'}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                   
                   <h1 className="text-2xl font-bold text-gray-900 mb-4">{post.title}</h1>
@@ -443,25 +533,30 @@ const PostDetailPage = () => {
                     {post.content}
                   </div>
 
-                  {/* Image display for image posts */}
-                  {post.type === 'image' && post.imageUrl && (
-                    <div className="mb-6">
+                  {/* ✅ FIXED: Image display */}
+                  {post.type === 'image' && post.imageUrl && !imageLoadError && (
+                    <div className="mb-6 rounded-lg overflow-hidden">
                       <img 
                         src={post.imageUrl} 
-                        alt="Post image" 
-                        className="max-w-full h-auto rounded-lg"
+                        alt="Post content" 
+                        className="max-w-full h-auto max-h-[600px] object-contain mx-auto"
+                        onError={() => {
+                          console.error('Failed to load image:', post.imageUrl);
+                          setImageLoadError(true);
+                        }}
+                        loading="lazy"
                       />
                     </div>
                   )}
 
-                  {/* Link display for link posts */}
+                  {/* Link display */}
                   {post.type === 'link' && post.linkUrl && (
-                    <div className="mb-6">
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                       <a 
                         href={post.linkUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 underline"
+                        className="text-blue-600 hover:text-blue-800 underline break-all"
                       >
                         {post.linkUrl}
                       </a>
@@ -474,7 +569,12 @@ const PostDetailPage = () => {
                       <span>{comments.length} Comments</span>
                     </div>
                     
-                    <Button variant="ghost" size="sm" className="h-8 space-x-1 rounded-full hover:bg-gray-100">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 space-x-1 rounded-full hover:bg-gray-100"
+                      onClick={handleShare}
+                    >
                       <Share2 className="h-4 w-4" />
                       <span>Share</span>
                     </Button>
@@ -485,7 +585,7 @@ const PostDetailPage = () => {
                       className={`h-8 space-x-1 rounded-full hover:bg-gray-100 ${isBookmarked ? 'text-blue-600' : ''}`}
                       onClick={handleBookmark}
                     >
-                      <Bookmark className="h-4 w-4" />
+                      <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-current' : ''}`} />
                       <span>{isBookmarked ? 'Saved' : 'Save'}</span>
                     </Button>
                   </div>
@@ -560,14 +660,13 @@ const PostDetailPage = () => {
             ) : (
               <div className="divide-y divide-gray-100">
                 {comments.map((comment) => {
-                  // Convert service comment to display comment format
                   const displayComment: DisplayComment = {
                     id: comment.id,
                     author: comment.author,
                     content: comment.content,
                     timePosted: new Date(comment.createdAt).toLocaleString(),
-                    upvotes: comment.upvotes,
-                    downvotes: comment.downvotes,
+                    likes: comment.likes || 0,
+                    dislikes: comment.dislikes || 0,
                     replies: comment.replies ? 
                       Object.fromEntries(
                         Object.entries(comment.replies).map(([key, reply]) => [
@@ -576,8 +675,8 @@ const PostDetailPage = () => {
                             author: reply.author,
                             content: reply.content,
                             timePosted: new Date(reply.createdAt).toLocaleString(),
-                            upvotes: reply.upvotes,
-                            downvotes: reply.downvotes
+                            likes: reply.likes || 0,
+                            dislikes: reply.dislikes || 0
                           }
                         ])
                       ) : undefined

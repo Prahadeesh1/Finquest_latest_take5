@@ -8,7 +8,7 @@ export const useComments = (postId: string) => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userVotes, setUserVotes] = useState<Record<string, 'upvote' | 'downvote'>>({});
+  const [userVotes, setUserVotes] = useState<Record<string, 'like' | 'dislike'>>({});
   
   // Prevent race conditions
   const isMountedRef = useRef(true);
@@ -24,7 +24,7 @@ export const useComments = (postId: string) => {
       );
       const votes = await Promise.all(votePromises);
       
-      const voteMap: Record<string, 'upvote' | 'downvote'> = {};
+      const voteMap: Record<string, 'like' | 'dislike'> = {};
       commentIds.forEach((commentId, index) => {
         if (votes[index]) {
           voteMap[commentId] = votes[index]!;
@@ -78,7 +78,7 @@ export const useComments = (postId: string) => {
   }, [currentUser, userData, postId]);
 
   // Vote on comment with optimistic updates
-  const voteOnComment = useCallback(async (commentId: string, voteType: 'upvote' | 'downvote') => {
+  const voteOnComment = useCallback(async (commentId: string, voteType: 'like' | 'dislike') => {
     if (!currentUser) throw new Error('Must be logged in to vote');
 
     const currentVote = userVotes[commentId];
@@ -115,7 +115,7 @@ export const useComments = (postId: string) => {
   }, [currentUser, postId, userVotes]);
 
   // Vote on reply
-  const voteOnReply = useCallback(async (commentId: string, replyId: string, voteType: 'upvote' | 'downvote') => {
+  const voteOnReply = useCallback(async (commentId: string, replyId: string, voteType: 'like' | 'dislike') => {
     if (!currentUser) throw new Error('Must be logged in to vote');
 
     try {
@@ -137,8 +137,8 @@ export const useComments = (postId: string) => {
       
       // Sort comments
       updatedComments.sort((a, b) => {
-        if (b.upvotes !== a.upvotes) {
-          return b.upvotes - a.upvotes;
+        if (b.likes !== a.likes) {
+          return b.likes - a.likes;
         }
         return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
       });
