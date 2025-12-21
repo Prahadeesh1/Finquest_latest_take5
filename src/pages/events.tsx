@@ -292,10 +292,6 @@ export default function FinanceEventsSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {filteredEvents.map((event) => {
             const CategoryIcon = categoryIcons[event.category];
-              function handleDeleteEvent(id: string) {
-                  throw new Error('Function not implemented.');
-              }
-
             return (
               <div
                 key={event.id}
@@ -339,7 +335,6 @@ export default function FinanceEventsSection() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeleteEvent(event.id);
                       }}
                       className="p-2 text-red-600 hover:bg-red-50 transition-all"
                     >
