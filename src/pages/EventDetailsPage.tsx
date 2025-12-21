@@ -34,13 +34,11 @@ interface FinanceEvent {
   image?: string;
 }
 
-// Mock events (replace with API/db later)
 const mockEvents: FinanceEvent[] = [
   {
     id: "1",
     title: "Cryptocurrency Investment Workshop",
-    description:
-      "Learn the fundamentals of cryptocurrency investing, blockchain technology, and portfolio diversification strategies.",
+    description: "Learn the fundamentals of cryptocurrency investing, blockchain technology, and portfolio diversification strategies.",
     date: "2025-06-20",
     time: "14:00",
     location: "Marina Bay Financial Centre, Singapore",
@@ -54,8 +52,7 @@ const mockEvents: FinanceEvent[] = [
   {
     id: "2",
     title: "Personal Finance Mastery Seminar",
-    description:
-      "Master your personal finances with budgeting, saving strategies, and retirement planning tips from certified financial planners.",
+    description: "Master your personal finances with budgeting, saving strategies, and retirement planning tips from certified financial planners.",
     date: "2025-06-25",
     time: "19:00",
     location: "Raffles City Convention Centre",
@@ -69,8 +66,7 @@ const mockEvents: FinanceEvent[] = [
   {
     id: "3",
     title: "Algorithmic Trading Bootcamp",
-    description:
-      "Intensive 2-day bootcamp covering algorithmic trading strategies, backtesting, and automated trading systems.",
+    description: "Intensive 2-day bootcamp covering algorithmic trading strategies, backtesting, and automated trading systems.",
     date: "2025-07-02",
     time: "09:00",
     location: "One Raffles Quay, Level 18",
@@ -115,13 +111,8 @@ export default function EventDetailsPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
 
-  // keep events in local state so attendee updates re-render the UI
-  const [events, setEvents] = React.useState<FinanceEvent[]>(mockEvents);
-
-  // list of event ids the user has joined (persisted in localStorage)
   const [joinedEvents, setJoinedEvents] = React.useState<string[]>([]);
 
-  // load joined events from localStorage once on mount
   React.useEffect(() => {
     try {
       const stored = localStorage.getItem("joinedEvents");
@@ -129,15 +120,17 @@ export default function EventDetailsPage() {
         setJoinedEvents(JSON.parse(stored));
       }
     } catch (err) {
-      // ignore JSON parse errors, leave joinedEvents empty
       console.warn("Failed to load joinedEvents from localStorage", err);
     }
   }, []);
 
-  // derive current event from state
-  const event = events.find((e) => e.id === eventId);
+  // LOGIC FIX: Always derive from original mockEvents to prevent double counting
+  const baseEvent = mockEvents.find((e) => e.id === eventId);
+  const event = baseEvent ? {
+    ...baseEvent,
+    attendees: joinedEvents.includes(baseEvent.id) ? baseEvent.attendees + 1 : baseEvent.attendees
+  } : null;
 
-  // hasJoined should be false if event not found
   const hasJoined = event ? joinedEvents.includes(event.id) : false;
 
   if (!event) {
@@ -145,19 +138,10 @@ export default function EventDetailsPage() {
       <div className="min-h-screen bg-slate-50">
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 py-16">
-          <button
-            onClick={() => navigate(-1)}
-            className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 mb-6"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Events
+          <button onClick={() => navigate(-1)} className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Events
           </button>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Event not found
-          </h1>
-          <p className="text-gray-600">
-            The event you’re looking for doesn’t exist or may have been removed.
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Event not found</h1>
         </div>
         <Footer />
       </div>
@@ -167,68 +151,27 @@ export default function EventDetailsPage() {
   const isEventFull = event.attendees >= event.capacity;
 
   const handleJoin = () => {
-    // guard: full
     if (isEventFull) {
       alert("This event is currently full.");
       return;
     }
-
-    // guard: already joined
     if (hasJoined) {
       alert("You have already joined this event!");
       return;
     }
-
-    // Optimistic local update: increment attendees
-    setEvents((prev) =>
-      prev.map((ev) =>
-        ev.id === event.id
-          ? { ...ev, attendees: Math.min(ev.attendees + 1, ev.capacity) }
-          : ev
-      )
-    );
-
-    // Record join locally and persist to localStorage
     const updatedJoined = [...joinedEvents, event.id];
     setJoinedEvents(updatedJoined);
-    try {
-      localStorage.setItem("joinedEvents", JSON.stringify(updatedJoined));
-    } catch (err) {
-      console.warn("Failed to save joinedEvents to localStorage", err);
-    }
-
-    // feedback to user
+    localStorage.setItem("joinedEvents", JSON.stringify(updatedJoined));
     alert("You have successfully joined this event!");
   };
 
   const handleWithdraw = () => {
-    if (!hasJoined) {
-      alert("You are not currently joined to this event.");
-      return;
-    }
-
+    if (!hasJoined) return;
     const confirmWithdraw = window.confirm("Are you sure you want to withdraw from this event?");
     if (!confirmWithdraw) return;
-
-    // Optimistic local update: decrement attendees
-    setEvents((prev) =>
-      prev.map((ev) =>
-        ev.id === event.id
-          ? { ...ev, attendees: Math.max(ev.attendees - 1, 0) } // Ensure attendees doesn't go below 0
-          : ev
-      )
-    );
-
-    // Record withdraw locally and persist to localStorage
     const updatedJoined = joinedEvents.filter((id) => id !== event.id);
     setJoinedEvents(updatedJoined);
-    try {
-      localStorage.setItem("joinedEvents", JSON.stringify(updatedJoined));
-    } catch (err) {
-      console.warn("Failed to save joinedEvents to localStorage", err);
-    }
-
-    // feedback to user
+    localStorage.setItem("joinedEvents", JSON.stringify(updatedJoined));
     alert("You have successfully withdrawn from this event.");
   };
 
@@ -237,39 +180,26 @@ export default function EventDetailsPage() {
       <Navbar />
 
       <div className="max-w-5xl mx-auto px-4 py-10 lg:py-14">
-        {/* Back link */}
-        <button
-          onClick={() => navigate(-1)}
-          className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 mb-6"
-        >
+        <button onClick={() => navigate(-1)} className="inline-flex items-center text-sm text-gray-600 hover:text-blue-600 mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Events
         </button>
 
-        {/* Hero */}
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-8 text-white">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
               <div>
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border mb-3 ${categoryBadgeClasses[event.category]}`}
-                >
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border mb-3 ${categoryBadgeClasses[event.category]}`}>
                   {categoryLabels[event.category]}
                 </span>
-                <h1 className="text-3xl lg:text-4xl font-bold mb-3">
-                  {event.title}
-                </h1>
-                <p className="text-sm lg:text-base text-blue-100 max-w-2xl">
-                  {event.description}
-                </p>
+                <h1 className="text-3xl lg:text-4xl font-bold mb-3">{event.title}</h1>
+                <p className="text-sm lg:text-base text-blue-100 max-w-2xl">{event.description}</p>
               </div>
 
               <div className="flex flex-col items-start lg:items-end gap-3">
                 <div className="text-sm text-blue-100 flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  <span>
-                    {formatDate(event.date)} · {event.time}
-                  </span>
+                  <span>{formatDate(event.date)} · {event.time}</span>
                 </div>
                 <div className="text-sm text-blue-100 flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
@@ -277,100 +207,59 @@ export default function EventDetailsPage() {
                 </div>
                 <div className="text-sm text-blue-100 flex items-center gap-2">
                   <Users className="w-4 h-4" />
-                  <span>
-                    {event.attendees}/{event.capacity} attendees
-                  </span>
+                  <span>{event.attendees}/{event.capacity} attendees</span>
                 </div>
                 <div className="flex items-center gap-3 mt-2">
                   {event.fee === 0 ? (
-                    <span className="px-3 py-1 rounded-full bg-emerald-500 text-xs font-semibold">
-                      Free Event
-                    </span>
+                    <span className="px-3 py-1 rounded-full bg-emerald-500 text-xs font-semibold">Free Event</span>
                   ) : (
                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-black/20 text-xs font-semibold">
-                      <DollarSign className="w-3 h-3 mr-1" />
-                      ${event.fee.toFixed(2)}
+                      <DollarSign className="w-3 h-3 mr-1" /> ${event.fee.toFixed(2)}
                     </span>
                   )}
-
                   <button
-                    onClick={hasJoined ? handleWithdraw : handleJoin} // Dynamic function call
-                    disabled={isEventFull && !hasJoined} // Only disable if full AND not joined
+                    onClick={hasJoined ? handleWithdraw : handleJoin}
+                    disabled={isEventFull && !hasJoined}
                     className={`px-5 py-2.5 rounded-full text-sm font-semibold shadow-lg transition ${
-                      hasJoined
-                        ? "bg-red-500 text-white hover:bg-red-600" // Withdraw style
-                        : isEventFull
-                        ? "bg-gray-300 text-gray-600 cursor-not-allowed"
-                        : "bg-white text-blue-700 hover:bg-blue-50"
+                      hasJoined ? "bg-red-500 text-white hover:bg-red-600" : isEventFull ? "bg-gray-300 text-gray-600 cursor-not-allowed" : "bg-white text-blue-700 hover:bg-blue-50"
                     }`}
                   >
-                    {hasJoined
-                      ? "Withdraw"
-                      : isEventFull
-                      ? "Event Full"
-                      : "Join Event"}
+                    {hasJoined ? "Withdraw" : isEventFull ? "Event Full" : "Join Event"}
                   </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Body */}
           <div className="px-8 py-8 lg:py-10 space-y-8">
-            {/* Summary strip */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
               <div className="flex items-start gap-3">
                 <Calendar className="w-4 h-4 mt-0.5 text-blue-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">Date & Time</p>
-                  <p className="text-gray-600">
-                    {formatDate(event.date)} · {event.time}
-                  </p>
-                </div>
+                <div><p className="font-semibold text-gray-800">Date & Time</p><p className="text-gray-600">{formatDate(event.date)} · {event.time}</p></div>
               </div>
               <div className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 mt-0.5 text-blue-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">Location</p>
-                  <p className="text-gray-600">{event.location}</p>
-                </div>
+                <div><p className="font-semibold text-gray-800">Location</p><p className="text-gray-600">{event.location}</p></div>
               </div>
               <div className="flex items-start gap-3">
                 <Users className="w-4 h-4 mt-0.5 text-blue-600" />
-                <div>
-                  <p className="font-semibold text-gray-800">Capacity</p>
-                  <p className="text-gray-600">
-                    {event.attendees}/{event.capacity} registered
-                  </p>
-                </div>
+                <div><p className="font-semibold text-gray-800">Capacity</p><p className="text-gray-600">{event.attendees}/{event.capacity} registered</p></div>
               </div>
             </div>
 
             <hr className="border-gray-100" />
 
-            {/* Overview + What you'll learn */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Overview
-                </h2>
-                <p className="text-gray-700 leading-relaxed">
-                  {event.description}
-                </p>
+                <h2 className="text-xl font-semibold text-gray-900">Overview</h2>
+                <p className="text-gray-700 leading-relaxed">{event.description}</p>
                 <p className="text-gray-700 leading-relaxed text-sm">
-                  This session is designed to give you practical, actionable
-                  strategies that you can immediately apply to your own financial
-                  journey. Whether you’re just getting started or building on
-                  existing knowledge, you’ll walk away with clearer next steps
-                  and curated resources.
+                  This session is designed to give you practical, actionable strategies that you can immediately apply to your own financial journey.
                 </p>
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  What you’ll learn
-                </h3>
-                {/* IMPROVED WRAPPING: added leading-relaxed */}
+                <h3 className="text-lg font-semibold text-gray-900">What you’ll learn</h3>
                 <ul className="text-sm text-gray-700 space-y-2 list-disc list-inside leading-relaxed">
                   {event.category === "crypto" && (
                     <>
@@ -383,9 +272,7 @@ export default function EventDetailsPage() {
                     <>
                       <li>Key algorithmic trading concepts and workflows</li>
                       <li>How to backtest and validate your strategies</li>
-                      <li>
-                        Setting up basic automations using code-friendly tools
-                      </li>
+                      <li>Setting up basic automations using code-friendly tools</li>
                     </>
                   )}
                   {event.category === "personal-finance" && (
@@ -395,39 +282,23 @@ export default function EventDetailsPage() {
                       <li>Frameworks for retirement and long-term goals</li>
                     </>
                   )}
-                  {!(
-                    event.category === "crypto" ||
-                    event.category === "trading" ||
-                    event.category === "personal-finance"
-                  ) && (
+                  {!(event.category === "crypto" || event.category === "trading" || event.category === "personal-finance") && (
                     <>
                       <li>Foundational concepts tailored to this topic</li>
                       <li>Simple frameworks for better financial decisions</li>
-                      <li>Practical next steps and recommended tools</li>
                     </>
                   )}
                 </ul>
               </div>
             </div>
 
-            {/* Who it's for + Agenda */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Who this is for
-                </h3>
-                {/* IMPROVED WRAPPING: added leading-relaxed and pl-2 for better alignment */}
+                <h3 className="text-lg font-semibold text-gray-900">Who this is for</h3>
                 <ul className="text-sm text-gray-700 space-y-2 list-disc list-inside leading-relaxed pl-2">
                   <li>Students and young professionals exploring finance</li>
-                  <li>
-                    Beginners who want structured guidance instead of random
-                    YouTube videos
-                  </li>
-                  <li>
-                    Anyone interested in{" "}
-                    {categoryLabels[event.category].toLowerCase()} as a skill for
-                    their future career or investments
-                  </li>
+                  <li>Beginners who want structured guidance</li>
+                  <li>Anyone interested in {categoryLabels[event.category].toLowerCase()}</li>
                 </ul>
               </div>
 
@@ -437,70 +308,38 @@ export default function EventDetailsPage() {
                   Agenda (sample)
                 </h3>
                 <ul className="text-sm text-gray-700 space-y-2">
-                  <li>
-                    <span className="font-medium">00:00 – 00:15</span> ·
-                    Registration & introductions
-                  </li>
-                  <li>
-                    <span className="font-medium">00:15 – 00:45</span> · Core
-                    concepts overview
-                  </li>
-                  <li>
-                    <span className="font-medium">00:45 – 01:15</span> · Live
-                    demo / case study
-                  </li>
-                  <li>
-                    <span className="font-medium">01:15 – 01:30</span> · Q&A and
-                    networking
-                  </li>
+                  <li><span className="font-medium">00:00 – 00:15</span> · Registration & introductions</li>
+                  <li><span className="font-medium">00:15 – 00:45</span> · Core concepts overview</li>
+                  <li><span className="font-medium">00:45 – 01:15</span> · Live demo / case study</li>
+                  <li><span className="font-medium">01:15 – 01:30</span> · Q&A and networking</li>
                 </ul>
               </div>
             </div>
 
-            {/* Tags & organizer */}
             <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
               <div className="flex items-center gap-2 flex-wrap">
                 <Tag className="w-4 h-4 text-blue-600" />
                 {event.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs"
-                  >
-                    {tag}
-                  </span>
+                  <span key={tag} className="px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs">{tag}</span>
                 ))}
               </div>
-              <div className="text-sm text-gray-500">
-                Organised by{" "}
-                <span className="font-medium text-gray-700">
-                  {event.organizer}
-                </span>
-              </div>
+              <div className="text-sm text-gray-500">Organised by <span className="font-medium text-gray-700">{event.organizer}</span></div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Optional sticky join bar on mobile */}
       <div className="fixed bottom-0 left-0 right-0 bg-white shadow-inner border-t border-gray-200 px-4 py-3 flex items-center justify-between lg:hidden">
         <div className="flex flex-col text-xs text-gray-600">
           <span className="font-semibold text-gray-900">{event.title}</span>
-          <span>
-            {formatDate(event.date)} · {event.time}
-          </span>
+          <span>{formatDate(event.date)} · {event.time}</span>
         </div>
         <button
-          onClick={hasJoined ? handleWithdraw : handleJoin} // Dynamic function call
+          onClick={hasJoined ? handleWithdraw : handleJoin}
           disabled={isEventFull && !hasJoined}
-          className={`px-4 py-2 rounded-full text-xs font-semibold ${
-            hasJoined
-              ? "bg-red-500 text-white hover:bg-red-600" // Withdraw style
-              : isEventFull
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-blue-600 text-white"
-          }`}
+          className={`px-4 py-2 rounded-full text-xs font-semibold ${hasJoined ? "bg-red-500 text-white" : "bg-blue-600 text-white"}`}
         >
-          {hasJoined ? "Withdraw" : isEventFull ? "Event Full" : "Join Event"}
+          {hasJoined ? "Withdraw" : "Join Event"}
         </button>
       </div>
 
