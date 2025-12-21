@@ -84,8 +84,8 @@ const BudgetingCommunity = () => {
       switch (activeFilter) {
         case "Hot":
           filtered.sort((a, b) => {
-            const scoreA = (a.likes || 0) - (a.dislikes || 0) + (a.commentCount || 0) * 2;
-            const scoreB = (b.likes || 0) - (b.dislikes || 0) + (b.commentCount || 0) * 2;
+            const scoreA = (a.upvotes || 0) - (a.downvotes || 0) + (a.commentCount || 0) * 2;
+            const scoreB = (b.upvotes || 0) - (b.downvotes || 0) + (b.commentCount || 0) * 2;
             const timeA = new Date(a.createdAt).getTime();
             const timeB = new Date(b.createdAt).getTime();
             
@@ -105,8 +105,8 @@ const BudgetingCommunity = () => {
         case "Success":
           // Success = posts with positive engagement
           filtered.sort((a, b) => {
-            const scoreA = (a.likes || 0) - (a.dislikes || 0);
-            const scoreB = (b.likes || 0) - (b.dislikes || 0);
+            const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+            const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
             return scoreB - scoreA;
           });
           break;
@@ -559,8 +559,8 @@ const BudgetingCommunity = () => {
                               community={post.community}
                               timePosted={new Date(post.createdAt).toLocaleString()}
                               content={post.content}
-                              likes={post.likes || 0}
-                              dislikes={post.dislikes || 0}
+                              likes={post.upvotes || 0}
+                              dislikes={post.downvotes || 0}
                               commentCount={post.commentCount}
                               isBookmarked={post.isBookmarked}
                               imageUrl={post.imageUrl}
@@ -608,8 +608,8 @@ const BudgetingCommunity = () => {
                           community={post.community}
                           timePosted={new Date(post.createdAt).toLocaleString()}
                           content={post.content}
-                          likes={post.likes || 0}
-                          dislikes={post.dislikes || 0}
+                          likes={post.upvotes || 0}
+                          dislikes={post.downvotes || 0}
                           commentCount={post.commentCount}
                           isBookmarked={post.isBookmarked}
                           imageUrl={post.imageUrl}

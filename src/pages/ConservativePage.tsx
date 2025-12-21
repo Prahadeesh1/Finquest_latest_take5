@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
 import { Shield, TrendingUp, DollarSign, ChevronDown } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 const ConservativePage = () => {
   const [expandedCard, setExpandedCard] = useState(null);
@@ -493,9 +494,11 @@ const ConservativePage = () => {
           <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
             Find out which strategy matches your goals and risk tolerance.
           </p>
+          <Link to="/assessment">
           <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 font-semibold">
             Take Risk Assessment
           </Button>
+          </Link>
         </div>
       </section>
     </div>

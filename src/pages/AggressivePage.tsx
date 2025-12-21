@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
 import { Rocket, TrendingUp, DollarSign, ChevronDown } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 const AggressivePage = () => {
   const [expandedCard, setExpandedCard] = useState(null);
@@ -500,9 +501,14 @@ const AggressivePage = () => {
           <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
             For 10+ year horizons with high risk tolerance only.
           </p>
-          <Button size="lg" className="bg-white text-red-600 hover:bg-gray-100 font-semibold">
+          <Link to="/assessment">
+          <Button
+            size="lg"
+            className="bg-white text-red-600 hover:bg-gray-100 font-semibold"
+            >
             Take Risk Assessment
-          </Button>
+            </Button>
+          </Link>
         </div>
       </section>
     </div>

@@ -17,8 +17,7 @@ import {
   DataSnapshot,
   runTransaction
 } from 'firebase/database';
-import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { rtdb, storage } from '../firebase/config';
+import { rtdb } from '../firebase/config';
 
 export interface Post {
   id: string;
@@ -28,8 +27,8 @@ export interface Post {
   authorId: string;
   community: string;
   type: 'text' | 'image' | 'link';
-  likes: number; // ✅ FIXED: Explicit likes count
-  dislikes: number; // ✅ FIXED: Explicit dislikes count
+  upvotes: number;
+  downvotes: number;
   commentCount: number;
   tags: string[];
   createdAt: string;
@@ -47,8 +46,8 @@ export interface Comment {
   author: string;
   authorId: string;
   content: string;
-  likes: number; // ✅ FIXED
-  dislikes: number; // ✅ FIXED
+  upvotes: number;
+  downvotes: number;
   createdAt: string;
   replies?: { [key: string]: Reply };
 }
@@ -59,8 +58,8 @@ export interface Reply {
   author: string;
   authorId: string;
   content: string;
-  likes: number; // ✅ FIXED
-  dislikes: number; // ✅ FIXED
+  upvotes: number;
+  downvotes: number;
   createdAt: string;
 }
 
@@ -77,48 +76,24 @@ export interface Community {
 }
 
 export class PostService {
-  // ✅ NEW: Upload image to Firebase Storage
-  static async uploadImage(file: File, postId: string): Promise<string> {
-    try {
-      const imageRef = storageRef(storage, `posts/${postId}/${file.name}`);
-      await uploadBytes(imageRef, file);
-      const downloadURL = await getDownloadURL(imageRef);
-      return downloadURL;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      throw error;
-    }
-  }
-
-  // ✅ FIXED: Create post with image support
-  static async createPost(
-    postData: Omit<Post, 'id' | 'likes' | 'dislikes' | 'commentCount' | 'createdAt' | 'updatedAt'>,
-    imageFile?: File
-  ): Promise<string> {
+  // Create a new post
+  static async createPost(postData: Omit<Post, 'id' | 'upvotes' | 'downvotes' | 'commentCount' | 'createdAt' | 'updatedAt'>): Promise<string> {
     try {
       const postsRef = ref(rtdb, 'posts');
       const newPostRef = push(postsRef);
       const postId = newPostRef.key!;
       
-      let imageUrl: string | undefined;
-      
-      // Upload image if provided
-      if (imageFile && postData.type === 'image') {
-        imageUrl = await this.uploadImage(imageFile, postId);
-      }
-
       const now = new Date().toISOString();
       const post: Post = {
         id: postId,
         ...postData,
-        likes: 0, // ✅ FIXED
-        dislikes: 0, // ✅ FIXED
+        upvotes: 0,
+        downvotes: 0,
         commentCount: 0,
         createdAt: now,
         updatedAt: now,
         isPinned: false,
-        category: 'community-discussion',
-        ...(imageUrl && { imageUrl })
+        category: 'community-discussion'
       };
 
       await set(newPostRef, post);
@@ -139,58 +114,6 @@ export class PostService {
       return postId;
     } catch (error) {
       console.error('Error creating post:', error);
-      throw error;
-    }
-  }
-
-  // ✅ NEW: Delete post (with image cleanup)
-  static async deletePost(postId: string, userId: string): Promise<void> {
-    try {
-      const postRef = ref(rtdb, `posts/${postId}`);
-      const postSnapshot = await get(postRef);
-      
-      if (!postSnapshot.exists()) {
-        throw new Error('Post not found');
-      }
-
-      const post = postSnapshot.val() as Post;
-      
-      // Check ownership
-      if (post.authorId !== userId) {
-        throw new Error('Unauthorized: You can only delete your own posts');
-      }
-
-      // Delete image from storage if exists
-      if (post.imageUrl) {
-        try {
-          const imageRef = storageRef(storage, post.imageUrl);
-          await deleteObject(imageRef);
-        } catch (imgError) {
-          console.warn('Error deleting image from storage:', imgError);
-          // Continue with post deletion even if image deletion fails
-        }
-      }
-
-      // Delete all comments
-      const commentsRef = ref(rtdb, `comments/${postId}`);
-      await remove(commentsRef);
-
-      // Delete all votes on this post
-      const votesRef = ref(rtdb, `votes/posts/${postId}`);
-      await remove(votesRef);
-
-      // Delete post
-      await remove(postRef);
-
-      // Update user's posts count
-      const userRef = ref(rtdb, `users/${userId}/postsCount`);
-      const userSnapshot = await get(userRef);
-      const currentCount = userSnapshot.val() || 0;
-      await set(userRef, Math.max(0, currentCount - 1));
-
-      console.log(`Post ${postId} deleted successfully`);
-    } catch (error) {
-      console.error('Error deleting post:', error);
       throw error;
     }
   }
@@ -273,8 +196,8 @@ export class PostService {
     }
   }
 
-  // ✅ FIXED: Vote on post with explicit likes/dislikes
-  static async voteOnPost(postId: string, userId: string, voteType: 'like' | 'dislike' | 'remove'): Promise<void> {
+  // Vote on a post - FIXED TO NOT TOGGLE
+  static async voteOnPost(postId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
       const voteRef = ref(rtdb, `votes/posts/${postId}/${userId}`);
       const postRef = ref(rtdb, `posts/${postId}`);
@@ -283,44 +206,43 @@ export class PostService {
       const voteSnapshot = await get(voteRef);
       const currentVote = voteSnapshot.val();
       
-      // If trying to apply same vote, treat as remove
-      const actualVoteType = currentVote === voteType ? 'remove' : voteType;
-      
       // Use transaction to safely update vote counts
       await runTransaction(postRef, (post) => {
         if (!post) return post;
         
         // Calculate changes
-        let likeChange = 0;
-        let dislikeChange = 0;
+        let upvoteChange = 0;
+        let downvoteChange = 0;
         
         // Remove previous vote effect
-        if (currentVote === 'like') {
-          likeChange = -1;
-        } else if (currentVote === 'dislike') {
-          dislikeChange = -1;
+        if (currentVote === 'upvote') {
+          upvoteChange = -1;
+        } else if (currentVote === 'downvote') {
+          downvoteChange = -1;
         }
         
-        // Apply new vote effect
-        if (actualVoteType === 'like') {
-          likeChange += 1;
-        } else if (actualVoteType === 'dislike') {
-          dislikeChange += 1;
+        // Apply new vote effect (no toggle - if same vote clicked, remove it)
+        if (voteType !== 'remove') {
+          if (voteType === 'upvote' && currentVote !== 'upvote') {
+            upvoteChange += 1;
+          } else if (voteType === 'downvote' && currentVote !== 'downvote') {
+            downvoteChange += 1;
+          }
         }
         
         // Update counts
-        post.likes = Math.max(0, (post.likes || 0) + likeChange);
-        post.dislikes = Math.max(0, (post.dislikes || 0) + dislikeChange);
+        post.upvotes = Math.max(0, (post.upvotes || 0) + upvoteChange);
+        post.downvotes = Math.max(0, (post.downvotes || 0) + downvoteChange);
         post.updatedAt = new Date().toISOString();
         
         return post;
       });
       
       // Update vote record
-      if (actualVoteType === 'remove') {
+      if (voteType === 'remove' || voteType === currentVote) {
         await remove(voteRef);
       } else {
-        await set(voteRef, actualVoteType);
+        await set(voteRef, voteType);
       }
       
     } catch (error) {
@@ -351,7 +273,7 @@ export class PostService {
   }
 
   // Add comment to post
-  static async addComment(postId: string, commentData: Omit<Comment, 'id' | 'likes' | 'dislikes' | 'createdAt'>): Promise<string> {
+  static async addComment(postId: string, commentData: Omit<Comment, 'id' | 'upvotes' | 'downvotes' | 'createdAt'>): Promise<string> {
     try {
       const commentsRef = ref(rtdb, `comments/${postId}`);
       const newCommentRef = push(commentsRef);
@@ -360,8 +282,8 @@ export class PostService {
       const comment: Comment = {
         id: commentId,
         ...commentData,
-        likes: 0, // ✅ FIXED
-        dislikes: 0, // ✅ FIXED
+        upvotes: 0,
+        downvotes: 0,
         createdAt: new Date().toISOString()
       };
 
@@ -390,7 +312,7 @@ export class PostService {
   }
 
   // Add reply to comment
-  static async addReply(postId: string, commentId: string, replyData: Omit<Reply, 'id' | 'likes' | 'dislikes' | 'createdAt'>): Promise<string> {
+  static async addReply(postId: string, commentId: string, replyData: Omit<Reply, 'id' | 'upvotes' | 'downvotes' | 'createdAt'>): Promise<string> {
     try {
       const repliesRef = ref(rtdb, `comments/${postId}/${commentId}/replies`);
       const newReplyRef = push(repliesRef);
@@ -399,8 +321,8 @@ export class PostService {
       const reply: Reply = {
         id: replyId,
         ...replyData,
-        likes: 0, // ✅ FIXED
-        dislikes: 0, // ✅ FIXED
+        upvotes: 0,
+        downvotes: 0,
         createdAt: new Date().toISOString()
       };
 
@@ -422,45 +344,52 @@ export class PostService {
     }
   }
 
-  // ✅ FIXED: Vote on comment with likes/dislikes
-  static async voteOnComment(postId: string, commentId: string, userId: string, voteType: 'like' | 'dislike' | 'remove'): Promise<void> {
+  // Vote on comment - FIXED TO NOT TOGGLE
+  static async voteOnComment(postId: string, commentId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
       const voteRef = ref(rtdb, `votes/comments/${commentId}/${userId}`);
       const commentRef = ref(rtdb, `comments/${postId}/${commentId}`);
       
+      // Get current vote status
       const voteSnapshot = await get(voteRef);
       const currentVote = voteSnapshot.val();
       
-      const actualVoteType = currentVote === voteType ? 'remove' : voteType;
-      
+      // Use transaction to safely update vote counts
       await runTransaction(commentRef, (comment) => {
         if (!comment) return comment;
         
-        let likeChange = 0;
-        let dislikeChange = 0;
+        // Calculate changes
+        let upvoteChange = 0;
+        let downvoteChange = 0;
         
-        if (currentVote === 'like') {
-          likeChange = -1;
-        } else if (currentVote === 'dislike') {
-          dislikeChange = -1;
+        // Remove previous vote effect
+        if (currentVote === 'upvote') {
+          upvoteChange = -1;
+        } else if (currentVote === 'downvote') {
+          downvoteChange = -1;
         }
         
-        if (actualVoteType === 'like') {
-          likeChange += 1;
-        } else if (actualVoteType === 'dislike') {
-          dislikeChange += 1;
+        // Apply new vote effect (no toggle)
+        if (voteType !== 'remove') {
+          if (voteType === 'upvote' && currentVote !== 'upvote') {
+            upvoteChange += 1;
+          } else if (voteType === 'downvote' && currentVote !== 'downvote') {
+            downvoteChange += 1;
+          }
         }
         
-        comment.likes = Math.max(0, (comment.likes || 0) + likeChange);
-        comment.dislikes = Math.max(0, (comment.dislikes || 0) + dislikeChange);
+        // Update counts
+        comment.upvotes = Math.max(0, (comment.upvotes || 0) + upvoteChange);
+        comment.downvotes = Math.max(0, (comment.downvotes || 0) + downvoteChange);
         
         return comment;
       });
       
-      if (actualVoteType === 'remove') {
+      // Update vote record
+      if (voteType === 'remove' || voteType === currentVote) {
         await remove(voteRef);
       } else {
-        await set(voteRef, actualVoteType);
+        await set(voteRef, voteType);
       }
       
     } catch (error) {
@@ -469,45 +398,52 @@ export class PostService {
     }
   }
 
-  // ✅ FIXED: Vote on reply
-  static async voteOnReply(postId: string, commentId: string, replyId: string, userId: string, voteType: 'like' | 'dislike' | 'remove'): Promise<void> {
+  // Vote on reply - FIXED TO NOT TOGGLE
+  static async voteOnReply(postId: string, commentId: string, replyId: string, userId: string, voteType: 'upvote' | 'downvote' | 'remove'): Promise<void> {
     try {
       const voteRef = ref(rtdb, `votes/replies/${replyId}/${userId}`);
       const replyRef = ref(rtdb, `comments/${postId}/${commentId}/replies/${replyId}`);
       
+      // Get current vote status
       const voteSnapshot = await get(voteRef);
       const currentVote = voteSnapshot.val();
       
-      const actualVoteType = currentVote === voteType ? 'remove' : voteType;
-      
+      // Use transaction to safely update vote counts
       await runTransaction(replyRef, (reply) => {
         if (!reply) return reply;
         
-        let likeChange = 0;
-        let dislikeChange = 0;
+        // Calculate changes
+        let upvoteChange = 0;
+        let downvoteChange = 0;
         
-        if (currentVote === 'like') {
-          likeChange = -1;
-        } else if (currentVote === 'dislike') {
-          dislikeChange = -1;
+        // Remove previous vote effect
+        if (currentVote === 'upvote') {
+          upvoteChange = -1;
+        } else if (currentVote === 'downvote') {
+          downvoteChange = -1;
         }
         
-        if (actualVoteType === 'like') {
-          likeChange += 1;
-        } else if (actualVoteType === 'dislike') {
-          dislikeChange += 1;
+        // Apply new vote effect (no toggle)
+        if (voteType !== 'remove') {
+          if (voteType === 'upvote' && currentVote !== 'upvote') {
+            upvoteChange += 1;
+          } else if (voteType === 'downvote' && currentVote !== 'downvote') {
+            downvoteChange += 1;
+          }
         }
         
-        reply.likes = Math.max(0, (reply.likes || 0) + likeChange);
-        reply.dislikes = Math.max(0, (reply.dislikes || 0) + dislikeChange);
+        // Update counts
+        reply.upvotes = Math.max(0, (reply.upvotes || 0) + upvoteChange);
+        reply.downvotes = Math.max(0, (reply.downvotes || 0) + downvoteChange);
         
         return reply;
       });
       
-      if (actualVoteType === 'remove') {
+      // Update vote record
+      if (voteType === 'remove' || voteType === currentVote) {
         await remove(voteRef);
       } else {
-        await set(voteRef, actualVoteType);
+        await set(voteRef, voteType);
       }
       
     } catch (error) {
@@ -516,8 +452,8 @@ export class PostService {
     }
   }
 
-  // ✅ FIXED: Get user's vote on post
-  static async getUserVoteOnPost(postId: string, userId: string): Promise<'like' | 'dislike' | null> {
+  // Get user's vote on post
+  static async getUserVoteOnPost(postId: string, userId: string): Promise<'upvote' | 'downvote' | null> {
     try {
       const voteRef = ref(rtdb, `votes/posts/${postId}/${userId}`);
       const snapshot = await get(voteRef);
@@ -528,8 +464,8 @@ export class PostService {
     }
   }
 
-  // ✅ FIXED: Get user's vote on comment
-  static async getUserVoteOnComment(commentId: string, userId: string): Promise<'like' | 'dislike' | null> {
+  // Get user's vote on comment
+  static async getUserVoteOnComment(commentId: string, userId: string): Promise<'upvote' | 'downvote' | null> {
     try {
       const voteRef = ref(rtdb, `votes/comments/${commentId}/${userId}`);
       const snapshot = await get(voteRef);
@@ -632,21 +568,25 @@ export class PostService {
       const userCommunitiesRef = ref(rtdb, `users/${userId}/communities/${communityId}`);
       const memberCountRef = ref(rtdb, `communities/${communityId}/memberCount`);
 
+      // Check if already a member
       const memberSnapshot = await get(communityMembersRef);
       if (memberSnapshot.exists()) {
         console.log('User already a member');
         return;
       }
 
+      // Use transaction to safely increment member count
       await runTransaction(memberCountRef, (currentCount) => {
         return (currentCount || 0) + 1;
       });
 
+      // Add user to community members
       await set(communityMembersRef, {
         joinedAt: new Date().toISOString(),
         userId: userId
       });
 
+      // Add community to user's communities
       await set(userCommunitiesRef, {
         joinedAt: new Date().toISOString(),
         communityId: communityId
@@ -666,17 +606,22 @@ export class PostService {
       const userCommunitiesRef = ref(rtdb, `users/${userId}/communities/${communityId}`);
       const memberCountRef = ref(rtdb, `communities/${communityId}/memberCount`);
 
+      // Check if user is a member
       const memberSnapshot = await get(communityMembersRef);
       if (!memberSnapshot.exists()) {
         console.log('User is not a member');
         return;
       }
 
+      // Use transaction to safely decrement member count
       await runTransaction(memberCountRef, (currentCount) => {
         return Math.max(0, (currentCount || 0) - 1);
       });
 
+      // Remove user from community members
       await remove(communityMembersRef);
+
+      // Remove community from user's communities
       await remove(userCommunitiesRef);
 
       console.log(`User ${userId} left community ${communityId}`);

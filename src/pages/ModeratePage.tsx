@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/layout/Navbar';
 import { BarChart3, TrendingUp, DollarSign, ChevronDown } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 const ModeratePage = () => {
   const [expandedCard, setExpandedCard] = useState(null);
@@ -496,9 +497,11 @@ const ModeratePage = () => {
           <p className="text-lg opacity-90 mb-8 max-w-2xl mx-auto">
             Get personalized recommendations based on your goals.
           </p>
+          <Link to="/assessment">
           <Button size="lg" className="bg-white text-amber-600 hover:bg-gray-100 font-semibold">
             Take Risk Assessment
           </Button>
+          </Link>
         </div>
       </section>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CommunityPost from "@/components/community/CommunityPost";
@@ -16,7 +16,8 @@ import {
   Search,
   Users,
   MessageCircle,
-  Loader
+  Loader,
+  AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -38,17 +39,54 @@ const Community = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [currentLimit, setCurrentLimit] = useState(20);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     totalMembers: 0,
     discussionsToday: 0,
     questionsAnswered: 0
   });
 
+  // Calculate stats with proper null checking
+  const calculateStats = useCallback((allPosts: Post[]) => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const discussionsToday = allPosts.filter(post => {
+        const postDate = new Date(post.createdAt);
+        postDate.setHours(0, 0, 0, 0);
+        return postDate.getTime() === today.getTime();
+      }).length;
+
+      // Fix for NaN issue - ensure commentCount is a valid number
+      const questionsAnswered = allPosts.reduce((sum, post) => {
+        const commentCount = Number(post.commentCount) || 0;
+        return sum + commentCount;
+      }, 0);
+      
+      const uniqueAuthors = new Set(allPosts.map(post => post.authorId).filter(Boolean));
+
+      setStats({
+        totalMembers: uniqueAuthors.size,
+        discussionsToday,
+        questionsAnswered
+      });
+    } catch (err) {
+      console.error('Error calculating stats:', err);
+      setStats({
+        totalMembers: 0,
+        discussionsToday: 0,
+        questionsAnswered: 0
+      });
+    }
+  }, []);
+
   // Load all posts from all communities
-  const loadPosts = async (limit: number = 20, append: boolean = false) => {
+  const loadPosts = useCallback(async (limit: number = 20, append: boolean = false) => {
     try {
       if (!append) {
         setLoading(true);
+        setError(null);
       } else {
         setLoadingMore(true);
       }
@@ -67,63 +105,115 @@ const Community = () => {
         setHasMore(allPosts.length === limit);
       }
 
-      // Calculate real statistics
       calculateStats(allPosts);
 
     } catch (error) {
       console.error('Error loading posts:', error);
+      setError('Failed to load posts. Please try again.');
       toast.error('Failed to load posts');
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [calculateStats]);
 
-  // C// Replace the calculateStats function in Community.tsx with this:
-
-const calculateStats = (allPosts: Post[]) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const discussionsToday = allPosts.filter(post => {
-    const postDate = new Date(post.createdAt);
-    postDate.setHours(0, 0, 0, 0);
-    return postDate.getTime() === today.getTime();
-  }).length;
-
-  // Fix for NaN issue - ensure commentCount is a valid number
-  const questionsAnswered = allPosts.reduce((sum, post) => {
-    const commentCount = typeof post.commentCount === 'number' ? post.commentCount : 0;
-    return sum + commentCount;
-  }, 0);
-  
-  const uniqueAuthors = new Set(allPosts.map(post => post.authorId));
-
-  setStats({
-    totalMembers: uniqueAuthors.size,
-    discussionsToday,
-    questionsAnswered
-  });
-};
-  // Handle voting on posts
-  const handleVote = async (postId: string, voteType: 'upvote' | 'downvote') => {
-    if (!currentUser) {
-      toast.error('Please login to vote');
-      return;
-    }
-
+  // ✅ FIXED: Properly filtered and sorted posts with memoization
+  const filteredAndSortedPosts = useMemo(() => {
     try {
-      await PostService.voteOnPost(postId, currentUser.uid, voteType);
-      // Refresh posts to show updated vote counts
-      await loadPosts(currentLimit);
-      toast.success(`Post ${voteType}d successfully!`);
-    } catch (error) {
-      toast.error(`Failed to ${voteType} post`);
+      let filtered = [...posts];
+
+      // Apply search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(post => 
+          post.title?.toLowerCase().includes(query) ||
+          post.content?.toLowerCase().includes(query) ||
+          post.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+          post.author?.toLowerCase().includes(query)
+        );
+      }
+
+      // Apply sort filter
+      switch (activeFilter) {
+        case "Hot":
+          filtered.sort((a, b) => {
+            // 🔁 FIXED SORT LOGIC (NO UI CHANGE)
+            const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+            const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+            const timeA = new Date(a.createdAt).getTime();
+            const timeB = new Date(b.createdAt).getTime();
+            
+            const finalScoreA = scoreA * 0.7 + (timeA / 1000000) * 0.3;
+            const finalScoreB = scoreB * 0.7 + (timeB / 1000000) * 0.3;
+            
+            return finalScoreB - finalScoreA;
+          });
+          break;
+          
+        case "New":
+          filtered.sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+          break;
+          
+        case "Top":
+          filtered.sort((a, b) => {
+            const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+            const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+            return scoreB - scoreA;
+          });
+          break;
+          
+        case "Trending":
+          const now = Date.now();
+          filtered.sort((a, b) => {
+            const ageA = (now - new Date(a.createdAt).getTime()) / (1000 * 60 * 60);
+            const ageB = (now - new Date(b.createdAt).getTime()) / (1000 * 60 * 60);
+            
+            const scoreA = ((a.upvotes || 0) - (a.downvotes || 0) + (a.commentCount || 0)) / (ageA + 2);
+            const scoreB = ((b.upvotes || 0) - (b.downvotes || 0) + (b.commentCount || 0)) / (ageB + 2);
+            
+            return scoreB - scoreA;
+          });
+          break;
+      }
+
+      return filtered;
+    } catch (err) {
+      console.error('Error filtering/sorting posts:', err);
+      return posts;
     }
-  };
+  }, [posts, searchQuery, activeFilter]);
+
+  // ✅ FIXED: Handle voting on posts with correct type signature
+// ✅ FIXED: Handle voting with correct DB signature
+  const handleVote = useCallback(
+    async (postId: string, voteType: 'like' | 'dislike' | 'remove') => {
+      if (!currentUser) {
+        toast.error('Please login to vote');
+        return;
+      }
+
+      const mappedVote =
+        voteType === 'like'
+          ? 'upvote'
+          : voteType === 'dislike'
+          ? 'downvote'
+          : 'remove';
+
+      try {
+        await PostService.voteOnPost(postId, currentUser.uid, mappedVote);
+        await loadPosts(currentLimit);
+      } catch {
+        toast.error('Failed to vote');
+      }
+    },
+    [currentUser, loadPosts, currentLimit]
+  );
+
 
   // Handle bookmarking
-  const handleBookmark = async (postId: string) => {
+  const handleBookmark = useCallback(async (postId: string) => {
     if (!currentUser) {
       toast.error('Please login to bookmark');
       return;
@@ -139,37 +229,52 @@ const calculateStats = (allPosts: Post[]) => {
     } catch (error) {
       toast.error('Failed to update bookmark');
     }
-  };
+  }, [currentUser]);
 
   // Load more posts
-  const loadMorePosts = async () => {
+  const loadMorePosts = useCallback(async () => {
     if (loadingMore || !hasMore) return;
     
     const newLimit = currentLimit + 20;
     setCurrentLimit(newLimit);
     await loadPosts(newLimit, true);
-  };
+  }, [loadingMore, hasMore, currentLimit, loadPosts]);
 
-  // Filter and search posts
-  const filteredPosts = posts.filter(post => {
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      return post.title.toLowerCase().includes(query) ||
-             post.content.toLowerCase().includes(query) ||
-             post.tags.some(tag => tag.toLowerCase().includes(query)) ||
-             post.author.toLowerCase().includes(query);
-    }
-    return true;
-  });
-
-  // Handle post creation callback
-  const handlePostCreated = async () => {
+  // ✅ ONLY REFRESH when a new post is created
+  const handlePostCreated = useCallback(async () => {
     await loadPosts(currentLimit);
-  };
+    toast.success('Post created successfully!');
+  }, [loadPosts, currentLimit]);
 
-  useEffect(() => {
+  // ✅ ONLY REFRESH when a post is deleted
+  const handlePostDeleted = useCallback(async () => {
+    await loadPosts(currentLimit);
+  }, [loadPosts, currentLimit]);
+
+  // Initial load only
+  React.useEffect(() => {
     loadPosts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
+  if (error && !loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center p-8">
+            <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button onClick={() => window.location.reload()}>
+              Reload Page
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -233,10 +338,9 @@ const calculateStats = (allPosts: Post[]) => {
 
           {/* Main Content Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            {/* Sidebar - Moved to left for better hierarchy */}
+            {/* Sidebar */}
             <div className="lg:col-span-2 order-2 lg:order-1">
               <div className="space-y-6">
-                {/* Popular Communities */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <Star className="h-5 w-5 text-yellow-500 mr-2" />
@@ -245,7 +349,6 @@ const calculateStats = (allPosts: Post[]) => {
                   <CommunityList />
                 </div>
 
-                {/* Community Guidelines */}
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Community Guidelines
@@ -267,7 +370,6 @@ const calculateStats = (allPosts: Post[]) => {
               {/* Search and Filter Section */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
                 <div className="flex flex-col space-y-4">
-                  {/* Search Bar */}
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <Search className="h-5 w-5 text-gray-400" />
@@ -281,7 +383,6 @@ const calculateStats = (allPosts: Post[]) => {
                     />
                   </div>
                   
-                  {/* Filter Buttons */}
                   <div className="flex flex-wrap gap-2">
                     <span className="text-sm font-medium text-gray-700 flex items-center mr-4">
                       Sort by:
@@ -329,7 +430,7 @@ const calculateStats = (allPosts: Post[]) => {
                     Recent Discussions
                   </h2>
                   <span className="text-sm text-gray-500">
-                    {filteredPosts.length} posts
+                    {filteredAndSortedPosts.length} posts
                   </span>
                 </div>
                 
@@ -353,7 +454,7 @@ const calculateStats = (allPosts: Post[]) => {
                       </div>
                     ))}
                   </div>
-                ) : filteredPosts.length === 0 ? (
+                ) : filteredAndSortedPosts.length === 0 ? (
                   <div className="text-center py-12 bg-white rounded-lg">
                     <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-500 mb-2">
@@ -364,21 +465,25 @@ const calculateStats = (allPosts: Post[]) => {
                     </p>
                   </div>
                 ) : (
-                  filteredPosts.map((post, index) => (
+                  filteredAndSortedPosts.map((post) => (
                     <div key={post.id} className="transform transition-all duration-200 hover:scale-[1.02]">
                       <CommunityPost
                         postId={post.id}
                         title={post.title}
                         author={post.author}
+                        authorId={post.authorId}
                         authorAvatar="/placeholder.svg"
                         community={post.community}
                         timePosted={new Date(post.createdAt).toLocaleString()}
                         content={post.content}
-                        upvotes={post.upvotes}
+                        likes={post.upvotes || 0}
+                        dislikes={post.downvotes || 0}
                         commentCount={post.commentCount}
                         isBookmarked={post.isBookmarked}
+                        imageUrl={post.imageUrl}
                         onVote={handleVote}
                         onBookmark={handleBookmark}
+                        onDelete={handlePostDeleted}
                       />
                     </div>
                   ))
@@ -386,7 +491,7 @@ const calculateStats = (allPosts: Post[]) => {
               </div>
               
               {/* Load More Button */}
-              {hasMore && !loading && filteredPosts.length > 0 && (
+              {hasMore && !loading && filteredAndSortedPosts.length > 0 && (
                 <div className="mt-10 text-center">
                   <Button 
                     variant="outline" 
