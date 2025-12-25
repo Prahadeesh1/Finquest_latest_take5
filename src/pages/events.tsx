@@ -162,12 +162,12 @@ export default function FinanceEventsSection() {
     setFilteredEvents(filtered);
   }, [events, searchTerm, selectedCategory, startDateFilter, endDateFilter]);
 
- /* const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = (eventId: string) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this event?');
     if (!confirmDelete) return;
     setEvents(prev => prev.filter(event => event.id !== eventId));
   };
-  */
+  
 
   const handleEventClick = (eventId: string) => {
     window.location.href = `/events/${eventId}`;
@@ -335,6 +335,7 @@ export default function FinanceEventsSection() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        handleDeleteEvent(event.id);
                       }}
                       className="p-2 text-red-600 hover:bg-red-50 transition-all"
                     >

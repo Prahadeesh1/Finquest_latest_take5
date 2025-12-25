@@ -1,10 +1,11 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Edit, Image as ImageIcon, Link2, PenSquare, Loader, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { PostService } from "@/services/realtimeDB";
+import { StorageService } from "@/services/storageService";
 import { useAuth } from "@/contexts/Auth";
 
 interface CreatePostBoxProps {
@@ -21,13 +22,10 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
   const [postType, setPostType] = useState<'text' | 'image' | 'link'>('text');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
-  
-  // ✅ NEW: Image upload state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Available communities for posting
   const communities = [
     { id: "financeflow-together", name: "FinanceFlow Together" },
     { id: "stockmarket", name: "StockMarket" },
@@ -35,7 +33,6 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
     { id: "easy-invest-hub", name: "Easy Invest Hub" }
   ];
 
-  // ✅ NEW: Handle image selection
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -46,9 +43,9 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
       return;
     }
 
-    // Validate file size (5MB max)
+    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size must be less than 5MB');
+      toast.error('Image must be less than 5MB');
       return;
     }
 
@@ -62,13 +59,10 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
     reader.readAsDataURL(file);
   };
 
-  // ✅ NEW: Remove image
-  const handleRemoveImage = () => {
+  const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    setUploadProgress(0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,11 +78,6 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
       return;
     }
 
-    if (postType === 'image' && !imageFile) {
-      toast.error("Please select an image for your post");
-      return;
-    }
-
     if (postType === 'text' && postContent.trim() === "") {
       toast.error("Post content cannot be empty");
       return;
@@ -99,25 +88,39 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
       return;
     }
 
+    if (postType === 'image' && !imageFile) {
+      toast.error("Please select an image");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Extract tags from content (simple hashtag extraction)
+      let imageUrl = "";
+
+      // Upload image if it's an image post
+      if (postType === 'image' && imageFile) {
+        toast.info('Uploading image...');
+        setUploadProgress(50);
+        imageUrl = await StorageService.uploadPostImage(imageFile, currentUser.uid);
+        setUploadProgress(100);
+      }
+
       const tags = extractTags(postContent + " " + postTitle);
       
       const postData = {
         title: postTitle.trim(),
-        content: postContent.trim(),
+        content: postContent.trim() || (postType === 'image' ? 'Image post' : ''),
         author: userData.firstName + " " + userData.lastName,
         authorId: currentUser.uid,
         community: selectedCommunity,
         tags: tags,
         type: postType,
-        ...(postType === 'link' && { linkUrl: linkUrl.trim() })
+        ...(postType === 'link' && { linkUrl: linkUrl.trim() }),
+        ...(postType === 'image' && imageUrl && { imageUrl })
       };
 
-      // ✅ FIXED: Pass image file to createPost
-      const postId = await PostService.createPost(postData, imageFile || undefined);
+      await PostService.createPost(postData);
       
       toast.success("Post created successfully!");
       
@@ -125,16 +128,12 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
       setPostContent("");
       setPostTitle("");
       setLinkUrl("");
-      setPostType('text');
       setImageFile(null);
       setImagePreview(null);
+      setPostType('text');
       setIsExpanded(false);
+      setUploadProgress(0);
       
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      
-      // Call callback if provided
       if (onPostCreated) {
         onPostCreated();
       }
@@ -155,15 +154,11 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
 
   const handlePostTypeChange = (type: 'text' | 'image' | 'link') => {
     setPostType(type);
-    if (type === 'text') {
+    if (type !== 'link') {
       setLinkUrl("");
-      setImageFile(null);
-      setImagePreview(null);
-    } else if (type === 'image') {
-      setLinkUrl("");
-    } else if (type === 'link') {
-      setImageFile(null);
-      setImagePreview(null);
+    }
+    if (type !== 'image') {
+      removeImage();
     }
     setIsExpanded(true);
   };
@@ -212,7 +207,6 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               size="sm"
               className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 space-x-2 flex-1 mr-2"
               onClick={() => handlePostTypeChange('text')}
-              title="Create a text post"
             >
               <Edit className="h-4 w-4" />
               <span>Text Post</span>
@@ -223,7 +217,6 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               size="sm"
               className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 space-x-2 flex-1 mr-2"
               onClick={() => handlePostTypeChange('image')}
-              title="Share an image"
             >
               <ImageIcon className="h-4 w-4" />
               <span>Image</span>
@@ -234,7 +227,6 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               size="sm"
               className="text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 space-x-2 flex-1"
               onClick={() => handlePostTypeChange('link')}
-              title="Share a link"
             >
               <Link2 className="h-4 w-4" />
               <span>Link</span>
@@ -282,6 +274,54 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               maxLength={200}
             />
 
+            {/* Image Upload */}
+            {postType === 'image' && (
+              <div className="mb-4">
+                {!imagePreview ? (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Upload Image
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="w-full p-2 border border-gray-200 rounded-md"
+                      disabled={isSubmitting}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Max size: 5MB</p>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full max-h-96 object-contain rounded-lg border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      disabled={isSubmitting}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div className="mt-2">
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-finance-primary h-2 rounded-full transition-all"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Uploading... {uploadProgress}%</p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Post Content */}
             <textarea
               className="w-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md p-3 h-32 focus:outline-none focus:ring-2 focus:ring-finance-primary/50 mb-4 resize-none"
@@ -289,60 +329,17 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
                 postType === 'link' 
                   ? "Describe why this link is valuable to the community..."
                   : postType === 'image'
-                  ? "Describe your image... Use #hashtags to categorize your post!"
+                  ? "Add a description for your image... Use #hashtags to categorize!"
                   : "Share something insightful about finance... Use #hashtags to categorize your post!"
               }
               value={postContent}
               onChange={(e) => setPostContent(e.target.value)}
-              autoFocus
+              autoFocus={postType === 'text'}
               disabled={isSubmitting}
               maxLength={2000}
             />
 
-            {/* ✅ NEW: Image upload section */}
-            {postType === 'image' && (
-              <div className="mb-4">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageSelect}
-                  className="hidden"
-                  disabled={isSubmitting}
-                />
-                
-                {!imagePreview ? (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full p-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-finance-primary transition-colors cursor-pointer"
-                    disabled={isSubmitting}
-                  >
-                    <ImageIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 text-sm">Click to upload image</p>
-                    <p className="text-gray-400 text-xs mt-1">Max size: 5MB</p>
-                  </button>
-                ) : (
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full max-h-64 object-contain rounded-lg border border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                      disabled={isSubmitting}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Link URL input for link posts */}
+            {/* Link URL */}
             {postType === 'link' && (
               <input
                 type="url"
@@ -369,8 +366,7 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
                   setPostTitle("");
                   setPostContent("");
                   setLinkUrl("");
-                  setImageFile(null);
-                  setImagePreview(null);
+                  removeImage();
                   setPostType('text');
                 }}
                 disabled={isSubmitting}
@@ -381,7 +377,7 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
               <Button
                 type="submit"
                 className="bg-finance-primary hover:bg-finance-primary/90 text-white min-w-[100px]"
-                disabled={isSubmitting || (!postTitle.trim() || (postType === 'text' && !postContent.trim()) || (postType === 'link' && !linkUrl.trim()) || (postType === 'image' && !imageFile))}
+                disabled={isSubmitting || !postTitle.trim() || (postType === 'image' && !imageFile)}
               >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
@@ -416,3 +412,19 @@ const CreatePostBox = ({ communityId = "financeflow-together", onPostCreated }: 
 };
 
 export default CreatePostBox;
+
+// Add this to CommunityPost.tsx to display images:
+// In the post content section, after the text content div, add:
+/*
+{postType === 'image' && imageUrl && (
+  <div className="mb-4 mt-4">
+    <img 
+      src={imageUrl} 
+      alt={title}
+      className="w-full max-h-[500px] object-contain rounded-lg border border-gray-200 cursor-pointer hover:opacity-95 transition-opacity"
+      onClick={() => window.open(imageUrl, '_blank')}
+      loading="lazy"
+    />
+  </div>
+)}
+*/

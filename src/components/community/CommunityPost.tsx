@@ -6,16 +6,9 @@ import {
   MessageSquare, 
   Share2, 
   Bookmark,
-  Trash2,
-  MoreVertical
+  ExternalLink 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { PostService } from "@/services/realtimeDB";
 import { useAuth } from "@/contexts/Auth";
 import { toast } from "sonner";
@@ -24,53 +17,47 @@ interface PostProps {
   postId?: string;
   title: string;
   author: string;
-  authorId?: string;
   authorAvatar: string;
   community: string;
   timePosted: string;
   content: string;
-  likes: number;
-  dislikes: number;
+  upvotes: number;
+  downvotes?: number;
   commentCount: number;
   isBookmarked?: boolean;
+  postType?: 'text' | 'image' | 'link';
   imageUrl?: string;
   linkUrl?: string;
-  onVote?: (postId: string, voteType: 'like' | 'dislike') => void;
+  onVote?: (postId: string, voteType: 'upvote' | 'downvote') => void;
   onBookmark?: (postId: string) => void;
-  onDelete?: () => void;
 }
 
 const CommunityPost = ({
   postId = "1",
   title,
   author,
-  authorId,
   authorAvatar,
   community,
   timePosted,
   content,
-  likes,
-  dislikes,
+  upvotes,
+  downvotes = 0,
   commentCount,
   isBookmarked = false,
+  postType = 'text',
   imageUrl,
   linkUrl,
   onVote,
-  onBookmark,
-  onDelete
+  onBookmark
 }: PostProps) => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null);
+  const [userVote, setUserVote] = useState<'upvote' | 'downvote' | null>(null);
   const [bookmarked, setBookmarked] = useState(isBookmarked);
-  const [currentLikes, setCurrentLikes] = useState(likes);
-  const [currentDislikes, setCurrentDislikes] = useState(dislikes);
+  const [currentUpvotes, setCurrentUpvotes] = useState(upvotes);
+  const [currentDownvotes, setCurrentDownvotes] = useState(downvotes);
   const [isVoting, setIsVoting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [imageLoadError, setImageLoadError] = useState(false);
-
-  // Check if current user owns this post
-  const isOwner = currentUser && authorId && currentUser.uid === authorId;
+  const [imageError, setImageError] = useState(false);
 
   // Load user's vote status when component mounts
   useEffect(() => {
@@ -91,16 +78,32 @@ const CommunityPost = ({
   // Update local state when props change
   useEffect(() => {
     setBookmarked(isBookmarked);
-    setCurrentLikes(likes);
-    setCurrentDislikes(dislikes);
-  }, [isBookmarked, likes, dislikes]);
+    setCurrentUpvotes(upvotes);
+    setCurrentDownvotes(downvotes);
+  }, [isBookmarked, upvotes, downvotes]);
 
   const handleCommentsClick = () => {
-    navigate(`/post/${postId}`);
+    navigate(`/post/${postId}`, {
+      state: {
+        title,
+        author,
+        authorAvatar,
+        community,
+        timePosted,
+        content,
+        upvotes: currentUpvotes,
+        downvotes: currentDownvotes,
+        commentCount,
+        isBookmarked: bookmarked,
+        postType,
+        imageUrl,
+        linkUrl
+      }
+    });
     window.scrollTo(0, 0);
   };
 
-  const handleVote = async (voteType: 'like' | 'dislike') => {
+  const handleVote = async (voteType: 'upvote' | 'downvote') => {
     if (!currentUser) {
       toast.error('Please login to vote');
       return;
@@ -114,38 +117,32 @@ const CommunityPost = ({
       const previousVote = userVote;
       const newVoteType = previousVote === voteType ? 'remove' : voteType;
       
-      // Calculate vote changes
-      let likeChange = 0;
-      let dislikeChange = 0;
+      let upvoteChange = 0;
+      let downvoteChange = 0;
 
-      // Remove previous vote
-      if (previousVote === 'like') {
-        likeChange = -1;
-      } else if (previousVote === 'dislike') {
-        dislikeChange = -1;
+      if (previousVote === 'upvote') {
+        upvoteChange = -1;
+      } else if (previousVote === 'downvote') {
+        downvoteChange = -1;
       }
 
-      // Add new vote
-      if (newVoteType === 'like') {
-        likeChange += 1;
-      } else if (newVoteType === 'dislike') {
-        dislikeChange += 1;
+      if (newVoteType === 'upvote') {
+        upvoteChange += 1;
+      } else if (newVoteType === 'downvote') {
+        downvoteChange += 1;
       }
 
-      // Optimistic update
       setUserVote(newVoteType === 'remove' ? null : newVoteType);
-      setCurrentLikes(prev => Math.max(0, prev + likeChange));
-      setCurrentDislikes(prev => Math.max(0, prev + dislikeChange));
+      setCurrentUpvotes(prev => Math.max(0, prev + upvoteChange));
+      setCurrentDownvotes(prev => Math.max(0, prev + downvoteChange));
 
-      // Send to backend
       await PostService.voteOnPost(postId, currentUser.uid, newVoteType);
       
     } catch (error) {
       console.error('Error voting:', error);
-      // Revert on error
       setUserVote(userVote);
-      setCurrentLikes(likes);
-      setCurrentDislikes(dislikes);
+      setCurrentUpvotes(upvotes);
+      setCurrentDownvotes(downvotes);
       toast.error('Failed to vote');
     } finally {
       setIsVoting(false);
@@ -173,43 +170,17 @@ const CommunityPost = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (!currentUser || !postId || !isOwner) return;
-
-    const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
-    if (!confirmed) return;
-
-    setIsDeleting(true);
-    try {
-      await PostService.deletePost(postId, currentUser.uid);
-      toast.success('Post deleted successfully');
-      
-      if (onDelete) {
-        onDelete();
-      } else {
-        window.location.reload();
-      }
-    } catch (error: any) {
-      console.error('Error deleting post:', error);
-      toast.error(error.message || 'Failed to delete post');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   const handleShare = async () => {
     try {
-      const shareUrl = `${window.location.origin}/post/${postId}`;
-      
       if (navigator.share) {
         await navigator.share({
           title: title,
           text: content,
-          url: shareUrl
+          url: window.location.origin + `/post/${postId}`
         });
       } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success('Link copied to clipboard!');
+        await navigator.clipboard.writeText(window.location.origin + `/post/${postId}`);
+        toast.success('Link copied!');
       }
     } catch (error) {
       if (error instanceof Error && error.name !== 'AbortError') {
@@ -218,91 +189,59 @@ const CommunityPost = ({
     }
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md">
       <div className="p-4">
         <div className="flex items-start gap-3">
-          {/* Left side - voting with SEPARATE counts */}
-          <div className="flex flex-col items-center space-y-2">
-            {/* Like button with count */}
-            <div className="flex flex-col items-center">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`h-8 w-8 rounded-full transition-colors ${
-                  userVote === 'like' 
-                    ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
-                    : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-                onClick={() => handleVote('like')}
-                disabled={!currentUser || isVoting}
-                title="Like"
-              >
-                <ThumbsUp className="h-5 w-5" />
-              </Button>
-              <span className={`text-sm font-medium mt-1 ${
-                userVote === 'like' ? 'text-blue-600' : 'text-gray-700'
-              }`}>
-                {currentLikes}
-              </span>
-            </div>
-
-            {/* Divider */}
-            <div className="w-8 h-px bg-gray-200"></div>
-
-            {/* Dislike button with count */}
-            <div className="flex flex-col items-center">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className={`h-8 w-8 rounded-full transition-colors ${
-                  userVote === 'dislike' 
-                    ? 'text-red-500 bg-red-50 hover:bg-red-100' 
-                    : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
-                }`}
-                onClick={() => handleVote('dislike')}
-                disabled={!currentUser || isVoting}
-                title="Dislike"
-              >
-                <ThumbsDown className="h-5 w-5" />
-              </Button>
-              <span className={`text-sm font-medium mt-1 ${
-                userVote === 'dislike' ? 'text-red-500' : 'text-gray-700'
-              }`}>
-                {currentDislikes}
-              </span>
-            </div>
+          {/* Left side - voting */}
+          <div className="flex flex-col items-center space-y-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-8 w-8 rounded-full transition-colors ${
+                userVote === 'upvote' 
+                  ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' 
+                  : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+              onClick={() => handleVote('upvote')}
+              disabled={!currentUser || isVoting}
+            >
+              <ThumbsUp className="h-5 w-5" />
+            </Button>
+            <span className="text-sm font-medium text-gray-700">{currentUpvotes}</span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`h-8 w-8 rounded-full transition-colors ${
+                userVote === 'downvote' 
+                  ? 'text-red-500 bg-red-50 hover:bg-red-100' 
+                  : 'text-gray-500 hover:text-red-500 hover:bg-red-50'
+              }`}
+              onClick={() => handleVote('downvote')}
+              disabled={!currentUser || isVoting}
+            >
+              <ThumbsDown className="h-5 w-5" />
+            </Button>
           </div>
           
           {/* Main content */}
           <div className="flex-1">
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center space-x-2 text-xs text-gray-500">
-                <span className="bg-finance-light px-2 py-0.5 rounded-full text-finance-primary font-medium">
-                  {community}
+            <div className="flex items-center space-x-2 text-xs text-gray-500 mb-1">
+              <span className="bg-finance-light px-2 py-0.5 rounded-full text-finance-primary font-medium">
+                {community}
+              </span>
+              <span>Posted by u/{author} • {timePosted}</span>
+              {postType !== 'text' && (
+                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                  postType === 'image' ? 'bg-green-100 text-green-700' :
+                  'bg-purple-100 text-purple-700'
+                }`}>
+                  {postType.toUpperCase()}
                 </span>
-                <span>Posted by u/{author} • {timePosted}</span>
-              </div>
-              
-              {/* Delete button for post owner */}
-              {isOwner && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem 
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                      className="text-red-600 focus:text-red-600 cursor-pointer"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {isDeleting ? 'Deleting...' : 'Delete Post'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               )}
             </div>
             
@@ -310,42 +249,50 @@ const CommunityPost = ({
               {title}
             </h3>
             
-            <div className="text-gray-700 mb-3 line-clamp-3">
-              {content}
-            </div>
+            {/* Text content */}
+            {content && (
+              <div className="text-gray-700 mb-3 line-clamp-3">
+                {content}
+              </div>
+            )}
 
             {/* Image display */}
-            {imageUrl && !imageLoadError && (
-              <div className="mb-3 rounded-lg overflow-hidden">
+            {postType === 'image' && imageUrl && !imageError && (
+              <div className="mb-3 mt-3">
                 <img 
                   src={imageUrl} 
-                  alt="Post content"
-                  className="max-w-full h-auto max-h-96 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                  alt={title}
+                  className="w-full max-h-[400px] object-contain rounded-lg border border-gray-200 cursor-pointer hover:opacity-95 transition-opacity"
                   onClick={handleCommentsClick}
-                  onError={() => {
-                    console.error('Failed to load image:', imageUrl);
-                    setImageLoadError(true);
-                  }}
+                  onError={handleImageError}
                   loading="lazy"
                 />
               </div>
             )}
 
-            {/* Link display */}
-            {linkUrl && (
-              <div className="mb-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <a 
-                  href={linkUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline text-sm break-all"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {linkUrl}
-                </a>
+            {/* Image error fallback */}
+            {postType === 'image' && imageError && (
+              <div className="mb-3 mt-3 p-4 bg-gray-100 rounded-lg border border-gray-200 text-center">
+                <p className="text-gray-500 text-sm">Image failed to load</p>
               </div>
             )}
+
+            {/* Link display */}
+            {postType === 'link' && linkUrl && (
+              <a 
+                href={linkUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="mb-3 mt-3 flex items-center space-x-2 p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors group"
+              >
+                <ExternalLink className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <span className="text-blue-600 text-sm truncate group-hover:underline">
+                  {linkUrl}
+                </span>
+              </a>
+            )}
             
+            {/* Action buttons */}
             <div className="flex items-center space-x-2 text-gray-500 text-sm">
               <Button 
                 variant="ghost" 
